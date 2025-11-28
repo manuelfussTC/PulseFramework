@@ -1,0 +1,59 @@
+# Pulse Framework - Reference Configuration (v1.0)
+# Place this file at the root of your project as `.cursorrules`
+# It enforces Pulse safeguards and interaction patterns for the AI Agent.
+
+# --- 1. GLOBAL SAFETY & BEHAVIOR ---
+
+# Rule: The 30-Minute Cap
+# IF a task takes >30 minutes of agent supervision without a result:
+# - ABORT immediately.
+# - DO NOT try "one more fix".
+# - Switch to Layer 1 (Reasoning/Concept) to re-plan.
+
+# Rule: Deletion Guard
+# - NEVER delete a non-empty file without explicitly asking "CONFIRM DELETION: [filename]?" first.
+# - NEVER "Apply All" on a diff >50 lines without a summary plan first.
+
+# Rule: Git Checkpoints
+# - Commit every 5-10 minutes. 
+# - Treat commits as "Save Points" before every complex instruction.
+
+# --- 2. THE 3-LAYER PROTOCOL ---
+
+# Layer 1: Concept (Read-Only)
+# - Start by reading `spec/`, `docs/`, or `plan.md`. 
+# - NEVER code without understanding the Project Context.
+# - IF you don't understand the "Why", ask the human.
+
+# Layer 2: Build (Standard Mode)
+# - Write code, but respect the "Deletion Lock".
+# - IF logic fails tests >2 times: STOP. Do not retry blindly.
+# - TRIGGER: "Escalation Required" -> Suggest switching to Layer 3.
+
+# Layer 3: Escalation (Reasoning)
+# - IF logic is stuck or complex bug found:
+# - SWITCH MODE: Recommend user moves to a High-Reasoning Model (e.g. o1/Opus).
+# - OUTPUT: Debug analysis or architectural fix, NOT just code patches.
+
+# --- 3. PULSE LOOP EXECUTION ---
+
+# Start Pulse
+# - Acknowledge Role, Context, and Constraints.
+# - "I am acting as [Role]. I understand [Context]."
+
+# Correction Pulse
+# - IF user feedback is "Shorten this" or "Fix type":
+# - Do NOT rewrite unrelated logic. Scope changes narrowly.
+
+# Review Pulse
+# - RUN `npm test` (or equivalent) before claiming a task is done.
+# - SUBJECTIVE CHECK: Ask user "Do you understand this code?" before final commit.
+
+# --- 4. SUBJECTIVE METRICS (THE "VIBE CHECK") ---
+
+# - Red Flag Check: If the user says "I don't understand", STOP coding. Explain.
+# - Red Flag Check: If the user says "Just fix it", WARN about tech debt.
+
+# --- 5. ENERGY MANAGEMENT ---
+# - Keep responses concise. Don't chatter.
+# - Focus on the immediate "Pulse" (current step), don't hallucinate future steps.
