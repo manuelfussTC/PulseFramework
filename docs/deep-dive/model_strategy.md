@@ -7,7 +7,7 @@ We use the **80/15/5 Protocol**.
 ---
 
 ## Level 1: The Daily Driver (80%)
-**Models:** Claude Sonnet (Latest), GPT-4o/5.x (via Cursor Agent Mode)
+**Models:** Claude 3.5 Sonnet, GPT-5.1 (via Cursor Agent Mode)
 **Context:** Inside the IDE.
 **Use Case:** 
 - Standard feature implementation.
@@ -19,7 +19,7 @@ We use the **80/15/5 Protocol**.
 ---
 
 ## Level 2: The Advisor (15%)
-**Models:** Claude Web Interface (Opus-Class), ChatGPT Plus (Standard/Pro)
+**Models:** Claude Web Interface (Opus 4.5), ChatGPT Plus (GPT-5.1)
 **Context:** External Browser Window.
 **Use Case:** 
 - "Agent is stuck" (Loop detected).
@@ -34,7 +34,7 @@ If the IDE Agent fails the same test **twice**, do NOT try a third time.
 ---
 
 ## Level 3: The Heavy Lifter (5%)
-**Models:** o1, Opus (Reasoning Models)
+**Models:** GPT-5.1 Reasoning Mode, Gemini 3 Pro (Reasoning Models)
 **Context:** External Browser or API.
 **Use Case:**
 - Architectural decisions ("How should we structure the DB?").
@@ -52,7 +52,7 @@ If Level 2 cannot explain the error, or if you are planning a feature >5 files.
 
 | Level | Role | Model Class | Trigger |
 |-------|------|-------------|---------|
-| **1** | **Builder** | High-Velocity (Sonnet/GPT-5.x) | Default State |
-| **2** | **Advisor** | Chat (GPT/Claude) | 2x Loop Failure |
-| **3** | **Architect** | Reasoning (o1/Opus) | Structural/Logic Failure |
+| **1** | **Builder** | High-Velocity (Sonnet/GPT-5.1) | Default State |
+| **2** | **Advisor** | Chat (GPT-5.1/Claude 4.5) | 2x Loop Failure |
+| **3** | **Architect** | Reasoning (GPT-5.1/Gemini 3 Pro) | Structural/Logic Failure |
 

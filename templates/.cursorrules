@@ -32,7 +32,7 @@
 
 # Layer 3: Escalation (Reasoning)
 # - IF logic is stuck or complex bug found:
-# - SWITCH MODE: Recommend user moves to a High-Reasoning Model (e.g. o1/Opus).
+# - SWITCH MODE: Recommend user moves to a High-Reasoning Model (e.g. GPT-5.1/Opus).
 # - OUTPUT: Debug analysis or architectural fix, NOT just code patches.
 
 # --- 3. PULSE LOOP EXECUTION ---

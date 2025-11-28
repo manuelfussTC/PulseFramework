@@ -94,13 +94,13 @@ Pulse is not just about code speed; it is about sustaining developer focus.
 
 ### Multi-Model Escalation Matrix
 Pulse uses a strict hierarchy of models based on the problem complexity:
-1.  **Level 1 (80% of cases): High-Velocity Models (e.g., Sonnet/GPT-4o)**
+1.  **Level 1 (80% of cases): High-Velocity Models (e.g., Sonnet/GPT-5.1)**
     -   *Use for:* Standard feature implementation, minor refactors.
     -   *Environment:* Inside IDE (Cursor Agent Mode).
 2.  **Level 2 (15% of cases): "Advisor" Models (e.g., Claude Web/ChatGPT)**
     -   *Trigger:* Agent stuck in a loop > 2 iterations.
     -   *Action:* Copy error + code to external chat. Ask: "What is wrong with this approach?"
-3.  **Level 3 (5% of cases): "Max" Reasoning Models (e.g., o1/Opus)**
+3.  **Level 3 (5% of cases): "Max" Reasoning Models (e.g., GPT-5.1/Opus)**
     -   *Trigger:* Fundamental logic flaw or complex architecture bug.
     -   *Action:* Full "Stop the Line". Re-plan the architecture using reasoning models.
 
