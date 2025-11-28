@@ -1,31 +1,28 @@
 # RFC / Feedback for Anthropic (Artifacts Team)
 
-**Subject:** "Artifacts" need Engineering Lifecycle States (Draft vs. Review)
+**Subject:** UX Request: "Freeze Mode" for Artifacts
 **To:** feedback@anthropic.com
 
 ---
 
 **Context:**
-Claude 4.5 Sonnet + Artifacts is currently the gold standard for our **Layer 1 (Concept)** and **Layer 2 (Build)** tasks in the **Pulse Framework**. However, Artifacts lack the lifecycle states necessary for safe deployment.
+Claude 4.5 Sonnet + Artifacts is our default "Build Environment" in the **Pulse Framework**. We love the real-time updates, but they pose a significant "Hot-Edit" risk in production workflows.
 
-**The Problem: The "Hot-Edit" Risk**
-Artifacts update instantly in real-time. In an engineering context, this is dangerous. A "Correction Pulse" (human feedback) often causes Claude to rewrite the entire component, losing edge-case handling from previous versions.
+**The Problem: Unwanted Overwrites**
+When we ask for a small change ("Make the button blue"), Claude often re-renders the *entire* Artifact logic, occasionally dropping edge-case handling we added 5 turns ago. We lose code without realizing it.
 
-**The Pulse Solution:**
-We require a **Review Pulse**—a frozen state where code is inspected before it is "accepted."
+**The Feature Request (Technically Feasible):**
+We need a **"Freeze / Thaw" Toggle** on the Artifact UI.
 
-**The Technical Challenge / Request:**
-We need **Artifact Version Control**.
+1.  **Freeze Mode:** When active, Claude CANNOT edit the Artifact code. It can only suggest changes in the chat or explain the code.
+2.  **Thaw (Edit Mode):** We explicitly click "Edit" to allow updates.
+3.  **Diff View:** When an update comes in, show us a "Review Diff" overlay before the Artifact re-renders.
 
-1.  **Draft vs. Published:** An Artifact should have a "Draft" mode where Claude iterates, and a "Published" mode which is pinned. Claude should not be able to overwrite the "Published" version without an explicit "Promote Draft" user action.
-2.  **Diff View:** Show us `diff(Version N, Version N-1)` directly in the Artifact UI.
-3.  **Test Runner:** Allow us to define a simple "Assertion" (e.g., "Must contain function X") that runs automatically against new Artifact versions.
+**Why this matters:**
+This allows us to implement a **"Review Pulse"**. We can discuss the change with Claude *before* it destroys the current working state.
 
 **Reference:**
-We define this "Review Pulse" requirement in our spec: [GitHub: PulseFramework/CHALLENGES.md].
-
-We believe Artifacts can replace local IDEs for many tasks, but only if they adopt these software engineering primitives.
+[GitHub: PulseFramework/CHALLENGES.md]
 
 Best,
 [Your Name]
-

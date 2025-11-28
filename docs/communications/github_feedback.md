@@ -1,30 +1,30 @@
 # RFC / Feedback for GitHub Next (Copilot Workspace)
 
-**Subject:** "Copilot Workspace" violates 3-Layer Architecture principles
+**Subject:** Architectural Flaw: "One-Shot" Workflow vs. Model Specialization
 **To:** next@github.com
 
 ---
 
 **Context:**
-We are evaluating Copilot Workspace against the **Pulse Framework** (our internal standard for controlled AI development). While we admire the "Task-centric" approach, the current implementation encourages a "One-Shot" workflow that is dangerous for complex software.
+We are evaluating Copilot Workspace against the **Pulse Framework**. We appreciate the task-centric approach, but the current implementation treats "Plan" and "Code" as a single continuous stream.
 
-**The Problem: Collapsed Layers**
-Copilot Workspace tries to go from "Issue" (Concept) to "Plan" to "Code" (Build) in one continuous flow.
-In **Pulse**, we strictly separate **Layer 1 (Concept/Plan)** from **Layer 2 (Build/Code)**.
-Why? because hallucinations in the Plan phase ("I will use library X") propagate into the Build phase before the human can verify if library X is the right choice.
+**The Problem: Model Collapse**
+You are likely using the same model class (or a blend) for both Planning and Coding.
+In **Pulse**, we strictly separate **Layer 1 (Reasoning)** from **Layer 2 (Execution)**.
+Using a fast model for planning leads to hallucinated dependencies. Using a slow reasoning model for coding leads to timeouts and verbosity.
 
-**The Technical Challenge / Request:**
-We need a **"Stop-at-Plan" Configuration**.
+**The Feature Request (Strategic):**
+We need **Explicit Model Binding per Step**.
 
-1.  **Mandatory Gate:** A setting where the Agent *cannot* generate code until the Human has explicitly approved the "Plan" step. Currently, it feels too easy to "Run all".
-2.  **Layer Separation:** The model used for Planning (Reasoning) should be distinct from the model used for Coding (Token prediction). Allow us to configure specific reasoning models (e.g., GPT-5.1) for the Plan step and execution models for the Code step.
-3.  **Pulse Integration:** We want to define a "Definition of Done" (e.g., "Passes CI") that automatically triggers a "Review Pulse" notification.
+1.  **The Plan Step:** Must force the use of a Reasoning Model (e.g., **GPT-5.1** or **o1-class** logic). It should not write code, only spec.
+2.  **The Code Step:** Must switch to a High-Velocity Model (e.g., **GPT-4o** or **Sonnet**).
+3.  **The Gate:** The user *must* approve the Plan (Layer 1) before the Code Model (Layer 2) is even instantiated.
+
+**Why this matters:**
+This prevents "Cascading Hallucination". If the Plan is wrong, the Code *will* be wrong. We need a hard stop between them.
 
 **Reference:**
-See our spec on "The 3-Layer Architecture": [GitHub: PulseFramework/spec/pulse-spec-v1.md]
-
-We believe GitHub is uniquely positioned to enforce these standards via the PR workflow.
+[GitHub: PulseFramework/spec/pulse-spec-v1.md]
 
 Best,
 [Your Name]
-
