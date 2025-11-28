@@ -6,7 +6,7 @@
 ---
 
 **Context:**
-Claude 3.5 Sonnet + Artifacts is currently the gold standard for our **Layer 1 (Concept)** and **Layer 2 (Build)** tasks in the **Pulse Framework**. However, Artifacts lack the lifecycle states necessary for safe deployment.
+Claude 4.5 Sonnet + Artifacts is currently the gold standard for our **Layer 1 (Concept)** and **Layer 2 (Build)** tasks in the **Pulse Framework**. However, Artifacts lack the lifecycle states necessary for safe deployment.
 
 **The Problem: The "Hot-Edit" Risk**
 Artifacts update instantly in real-time. In an engineering context, this is dangerous. A "Correction Pulse" (human feedback) often causes Claude to rewrite the entire component, losing edge-case handling from previous versions.

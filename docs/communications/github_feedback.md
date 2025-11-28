@@ -17,7 +17,7 @@ Why? because hallucinations in the Plan phase ("I will use library X") propagate
 We need a **"Stop-at-Plan" Configuration**.
 
 1.  **Mandatory Gate:** A setting where the Agent *cannot* generate code until the Human has explicitly approved the "Plan" step. Currently, it feels too easy to "Run all".
-2.  **Layer Separation:** The model used for Planning (Reasoning) should be distinct from the model used for Coding (Token prediction). Allow us to configure specific reasoning models (e.g., o1) for the Plan step and execution models for the Code step.
+2.  **Layer Separation:** The model used for Planning (Reasoning) should be distinct from the model used for Coding (Token prediction). Allow us to configure specific reasoning models (e.g., GPT-5.1) for the Plan step and execution models for the Code step.
 3.  **Pulse Integration:** We want to define a "Definition of Done" (e.g., "Passes CI") that automatically triggers a "Review Pulse" notification.
 
 **Reference:**
