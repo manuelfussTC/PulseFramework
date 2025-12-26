@@ -59,7 +59,24 @@ When facing a broken build after an Agent edit:
 
 If you feel any of these, **STOP**. You have lost control of the loop.
 
-1.  **"I just copy what the AI says."** -> You are passive. The AI is the driver. Dangerous.
-2.  **"I don't understand this regex, but it works."** -> You are introducing tech debt.
-3.  **"Everything is getting slower."** -> You are burning out. Take a break.
+---
+
+## Part 4: The Master Pulse Checklist
+
+Use this checklist before and after every "Pulse" (instruction) you give to an Agent.
+
+### Before the Start Pulse (Preparation)
+- [ ] **Pinned Context:** Have I pinned the relevant architectural docs (Layer 1)?
+- [ ] **Atomic Task:** Is the task small enough to be completed in <15 minutes?
+- [ ] **Git Checkpoint:** Did I commit my current working state?
+
+### During the Correction Pulse (Intervention)
+- [ ] **Pivot Check:** Am I just repeating myself? (If Yes -> Stop and Escalated to Layer 3).
+- [ ] **Scope Lock:** Is the agent trying to edit files I didn't ask it to?
+
+### During the Review Pulse (Finalization)
+- [ ] **Logic Audit:** Do I understand every line changed?
+- [ ] **Test Run:** Did I run the unit/integration tests?
+- [ ] **The Question:** Did I ask the model "What are the side effects of this change?"
+- [ ] **Subjective Check:** Am I proud of this code, or did I just "let it pass"?
 

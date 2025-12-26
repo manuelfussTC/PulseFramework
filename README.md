@@ -52,11 +52,13 @@ Development moves in discrete cycles called "Pulses":
 
 - `spec/`: The technical specification of the Pulse Framework (v1.0).
 - `examples/`: Reference implementations of Pulse loops in TypeScript.
-- `templates/`: Production-ready configuration files.
-  - `.cursorrules`: Drop-in safety rules for Cursor Agent Mode.
-- `docs/deep-dive/`: The Knowledge Base (Senior-Level Guides).
-- `CHALLENGES.md`: Open questions and challenges for tool vendors (Cursor, OpenAI, etc.).
-- `docs/`: Additional guides and workflow patterns.
+- `templates/`: Production-ready toolkit.
+  - `.cursorrules`: Global safety enforcer.
+  - `roles/`: Specialized rules for Architects, Backend, and Frontend.
+  - `prompts/recipes.md`: "Short-List" of copy-paste prompt recipes.
+- `docs/deep-dive/`: Senior-Level Guides (Model Strategy, Git, etc.).
+- `docs/blueprints/`: Proven folder structures and project setups.
+- `CHALLENGES.md`: Open questions for tool vendors.
 
 ## Getting Started
 
