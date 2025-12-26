@@ -3,6 +3,14 @@
 ## 1. Introduction
 Pulse is a methodology for controlled agentic development with Large Language Models (LLMs). It addresses the fundamental challenge of integrating autonomous coding agents into rigorous engineering workflows. Pulse is not a tool, but a standard—a set of protocols, architectural layers, and interaction patterns designed to ensure that human intent remains the governing force in AI-assisted software development.
 
+### Proven at Scale
+Pulse is forged in the trenches of massive real-world development. As of the 2025 release, the framework is built on:
+- **14.22 Billion Tokens** of AI-assisted engineering.
+- **21,900+ Agentic Sessions.**
+- **Top 3% Global Ranking** in developer velocity for AI-native workflows.
+
+This data underscores that Pulse is not a theoretical model, but a battle-tested strategy for high-stakes software engineering.
+
 ## 2. Design Goals & Non-Goals
 
 ### Goals

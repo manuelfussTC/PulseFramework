@@ -1,4 +1,8 @@
 # Pulse Framework - Reference Configuration (v1.0)
+# Author: Manuel Fuß (kontakt@manuel-fuss.de)
+# Website: https://manuel-fuss.de/pulse
+# Repo: https://github.com/manuelfussTC/PulseFramework
+# 
 # Place this file at the root of your project as `.cursorrules`
 # It enforces Pulse safeguards and interaction patterns for the AI Agent.
 
