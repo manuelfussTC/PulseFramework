@@ -10,7 +10,8 @@ import { notify } from "../lib/notifications.js";
 export function registerWatchCommand(program: Command): void {
   program
     .command("watch")
-    .description("Background watcher: 30-min timer + git/fs change observation + reminders (terminal + macOS).")
+    .alias("w") // Kurzform: pulse w
+    .description("Background-Watcher: 30-Min-Timer + Checkpoint-Erinnerungen (macOS Notifications)")
     .option("--minutes <n>", "Minutes between checkpoint reminders", "30")
     .option("--poll-seconds <n>", "Polling interval seconds", "30")
     .action(async (opts: { minutes?: string; pollSeconds?: string }) => {

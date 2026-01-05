@@ -9,7 +9,8 @@ import { scanDiff } from "../lib/scanner.js";
 export function registerCheckpointCommand(program: Command): void {
   program
     .command("checkpoint")
-    .description("Checkpoint helper: show git context, warn on red flags, optionally run tests/commit, update last checkpoint time.")
+    .alias("c") // Kurzform: pulse c
+    .description("Git-Checkpoint: Status prüfen, Red Flags erkennen, optional Tests/Commit")
     .option("--staged", "Use staged diff")
     .option("--inspect-latest", "Inspect the latest commit diff (useful if Cursor auto-committed)")
     .option("--run-tests", "Run configured test command")

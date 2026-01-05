@@ -9,127 +9,299 @@ export type SixElements = {
   examples?: string;
 };
 
-const LAYER_HEADERS: Record<PulseLayer, string> = {
-  concept: `# LAYER 1: CONCEPT MODE
-Du bist im Konzept-Modus. NICHT CODEN. Nur denken und planen.
+// ════════════════════════════════════════════════════════════════════════════
+// TEMPLATE 1: 6-Elemente-Prompt (aus PULSE Framework Dokumentation)
+// ════════════════════════════════════════════════════════════════════════════
 
-## Deine Aufgabe
-- Analysiere das Problem
-- Erstelle einen Plan
-- Output: Markdown, Diagramme, Pseudo-Code, Architektur-Entscheidungen
+/**
+ * Generates a 6-Element prompt exactly as specified in the PULSE Framework.
+ * This is the core template that should be copy-pasted into AI tools.
+ */
+export function renderSixElementPrompt(layer: PulseLayer, el: SixElements): string {
+  const layerHint = getLayerHint(layer);
+  
+  const lines: string[] = [];
 
-## Regeln
-- KEIN ausführbarer Code
-- Stelle Rückfragen wenn etwas unklar ist
-- Identifiziere Risiken und Alternativen`,
+  // Header with layer context
+  lines.push(`# PULSE: ${layerHint.title}`);
+  lines.push("");
+  lines.push(layerHint.hint);
+  lines.push("");
+  lines.push("---");
+  lines.push("");
 
-  build: `# LAYER 2: BUILD MODE
-Du bist im Build-Modus. Implementiere mit striktem Scope.
+  // ┌─────────────────────────────────────────────────────────────────────────
+  // │ 6-ELEMENTE (exakt wie im Framework dokumentiert)
+  // └─────────────────────────────────────────────────────────────────────────
 
-## Deine Aufgabe
-- Implementiere GENAU was gefordert ist
-- Nicht mehr, nicht weniger
-- Output: Funktionierende Code-Änderungen
+  // 1. ROLLE
+  lines.push("**ROLLE:** " + (el.role?.trim() || "[Wer soll die KI sein? Senior Dev, Architekt, Code-Reviewer?]"));
+  lines.push("");
 
-## KRITISCHE REGELN (aus .cursorrules)
-⏱️ MAX 30 MINUTEN autonom arbeiten, dann Checkpoint + Rückfrage
-🔒 KEINE Deletes ohne Bestätigung
-🔒 KEIN Push ohne Bestätigung  
-🔒 KEINE Secrets im Code
-📋 Commit alle 5-10 Minuten
+  // 2. KONTEXT  
+  lines.push("**KONTEXT:** " + (el.context?.trim() || "[Wo bist du? Was ist passiert? Welches Projekt?]"));
+  lines.push("");
 
-## Bei Problemen
-- Wenn etwas >2x nicht funktioniert: STOP und erkläre das Problem
-- Wenn du unsicher bist: FRAGE
-- Wenn zu komplex: Schlage kleinere Milestones vor`,
+  // 3. INPUT
+  lines.push("**INPUT:** " + (el.input?.trim() || "[Was liegt vor? Code, Screenshot, Error, Konzept?]"));
+  lines.push("");
 
-  escalation: `# LAYER 3: ESCALATION MODE
-Du bist im Eskalations-Modus. Der Builder (Cursor) ist stuck.
+  // 4. OUTPUT
+  lines.push("**OUTPUT:** " + (el.output?.trim() || "[Was soll rauskommen? Code, Doku, Erklärung, Datei?]"));
+  lines.push("");
 
-## Deine Aufgabe
-- Analysiere die Root Cause
-- Erstelle eine klare Diagnose
-- Output: Analyse + konkrete Anweisungen für den Builder
+  // 5. ACTION
+  lines.push("**ACTION:** " + (el.action?.trim() || "[Was soll die KI tun? Bauen, analysieren, fixen, erklären?]"));
+  lines.push("");
 
-## Output-Format
-1. **Problem-Analyse**: Was ist das eigentliche Problem?
-2. **Root Cause**: Warum tritt es auf?
-3. **Lösung**: Schritt-für-Schritt Anweisungen
-4. **Code-Snippet**: Falls nötig, minimales Beispiel`,
+  // 6. BEISPIELE
+  if (el.examples?.trim()) {
+    lines.push("**BEISPIELE:**");
+    lines.push("✅ Wie es sein soll: " + el.examples.trim());
+    lines.push("❌ Wie es NICHT sein soll: [Negativ-Beispiel]");
+    lines.push("");
+  }
+
+  // ┌─────────────────────────────────────────────────────────────────────────
+  // │ SAFEGUARDS (aus .cursorrules)
+  // └─────────────────────────────────────────────────────────────────────────
+  if (layer === "build") {
+    lines.push("---");
+    lines.push("");
+    lines.push("⚠️ **SAFEGUARDS** (non-negotiable):");
+    lines.push("- ⏱️ MAX 30 Min autonom, dann STOP + Rückfrage");
+    lines.push("- 🗑️ KEIN DELETE ohne Nachfrage");
+    lines.push("- 📤 KEIN PUSH ohne Confirmation");
+    lines.push("- 🔐 KEINE Secrets im Code");
+    lines.push("- 📋 Git-Commit alle 5-10 Min");
+    lines.push("");
+  }
+
+  lines.push("---");
+  lines.push("Hast du das verstanden? Dann lass uns Schritt für Schritt vorgehen.");
+
+  return lines.join("\n");
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEMPLATE 2: IST/SOLL-Prompt (für schnelle Bug-Fixes)
+// ════════════════════════════════════════════════════════════════════════════
+
+export function renderIstSollPrompt(options: {
+  ist: string;
+  soll: string;
+  error?: string;
+  context?: string;
+}): string {
+  const lines: string[] = [];
+
+  lines.push("# IST/SOLL Bug-Fix");
+  lines.push("");
+  lines.push("**IST:** " + options.ist.trim());
+  lines.push("");
+  lines.push("**SOLL:** " + options.soll.trim());
+  lines.push("");
+
+  if (options.error?.trim()) {
+    lines.push("**ERROR-Log:**");
+    lines.push("```");
+    lines.push(options.error.trim());
+    lines.push("```");
+    lines.push("");
+  }
+
+  if (options.context?.trim()) {
+    lines.push("**KONTEXT:** " + options.context.trim());
+    lines.push("");
+  }
+
+  lines.push("---");
+  lines.push("⚠️ Safeguards: Kein Delete ohne Nachfrage, Commit nach Fix.");
+
+  return lines.join("\n");
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEMPLATE 3: Eskalations-Prompt (für externe Models wie GPT-5/Opus)
+// ════════════════════════════════════════════════════════════════════════════
+
+export function renderEscalationPrompt(options: {
+  cursorExplanation: string;
+  errorText: string;
+  gitLog: string;
+  gitDiff: string;
+  question: string;
+  codeSnippets?: string;
+  attempts?: string[];
+}): string {
+  const lines: string[] = [];
+
+  lines.push("# Eskalation: Cursor ist stuck");
+  lines.push("");
+  lines.push("Mein Entwickler (Cursor) hängt bei folgendem Problem:");
+  lines.push("");
+  lines.push("**Problem-Beschreibung:**");
+  lines.push(options.cursorExplanation.trim() || "[Cursor's Erklärung des Problems hier]");
+  lines.push("");
+
+  // Was Cursor versucht hat
+  lines.push("**Was Cursor versucht hat:**");
+  if (options.attempts && options.attempts.length > 0) {
+    options.attempts.forEach((attempt, i) => {
+      lines.push(`• ${attempt}`);
+    });
+  } else {
+    lines.push("• (Nicht dokumentiert)");
+  }
+  lines.push("");
+
+  // Error-Logs
+  if (options.errorText?.trim()) {
+    lines.push("**Fehlermeldung:**");
+    lines.push("```");
+    lines.push(options.errorText.trim());
+    lines.push("```");
+    lines.push("");
+  }
+
+  // Code-Context
+  if (options.codeSnippets?.trim()) {
+    lines.push("**Code-Context:**");
+    lines.push("```");
+    lines.push(options.codeSnippets.trim());
+    lines.push("```");
+    lines.push("");
+  }
+
+  // Git Context
+  if (options.gitLog?.trim()) {
+    lines.push("**Git-Log (letzte Commits):**");
+    lines.push("```");
+    lines.push(options.gitLog.trim());
+    lines.push("```");
+    lines.push("");
+  }
+
+  if (options.gitDiff?.trim()) {
+    lines.push("**Git-Diff:**");
+    lines.push("```");
+    lines.push(options.gitDiff.trim());
+    lines.push("```");
+    lines.push("");
+  }
+
+  // Call to action
+  lines.push("---");
+  lines.push("");
+  lines.push("**Meine Frage:** " + (options.question.trim() || "Was ist die Root Cause und wie löse ich das?"));
+  lines.push("");
+  lines.push("**Gib mir eine Lösung, die ich meinem Entwickler (Cursor) als Anweisung geben kann.**");
+  lines.push("");
+  lines.push("Format:");
+  lines.push("1. Root Cause (eine Zeile)");
+  lines.push("2. Schritt-für-Schritt Anweisungen für Cursor");
+  lines.push("3. Code-Snippet falls nötig");
+
+  return lines.join("\n");
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PROMPT VORLAGEN (für interaktive Auswahl)
+// ════════════════════════════════════════════════════════════════════════════
+
+export type PromptTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  layer: PulseLayer;
+  defaults: Partial<SixElements>;
 };
 
-export function renderSixElementPrompt(layer: PulseLayer, el: SixElements): string {
-  const header = LAYER_HEADERS[layer];
+export const PROMPT_TEMPLATES: PromptTemplate[] = [
+  {
+    id: "feature",
+    name: "🚀 Feature bauen",
+    description: "Neues Feature implementieren",
+    layer: "build",
+    defaults: {
+      role: "Senior Full-Stack Developer",
+      output: "Funktionierende Implementierung mit Tests",
+    },
+  },
+  {
+    id: "bugfix",
+    name: "🐛 Bug fixen",
+    description: "Fehler analysieren und beheben",
+    layer: "build",
+    defaults: {
+      role: "Erfahrener Debugger und Code-Analyst",
+      output: "1. Root Cause\n2. Fix\n3. Test dass es funktioniert",
+    },
+  },
+  {
+    id: "refactor",
+    name: "♻️ Refactoring",
+    description: "Code verbessern ohne Funktionalität zu ändern",
+    layer: "build",
+    defaults: {
+      role: "Code-Quality-Experte",
+      output: "Sauberer, wartbarer Code. Gleiche Funktionalität.",
+    },
+  },
+  {
+    id: "concept",
+    name: "📋 Konzept erstellen",
+    description: "Erst planen, dann bauen",
+    layer: "concept",
+    defaults: {
+      role: "Software-Architekt",
+      output: "Markdown-Dokument mit Plan, Architektur, Risiken",
+    },
+  },
+  {
+    id: "analyze",
+    name: "🔍 Code analysieren",
+    description: "Projekt verstehen und dokumentieren",
+    layer: "concept",
+    defaults: {
+      role: "Senior Developer der das Projekt übernimmt",
+      output: "Strukturierte Analyse: Was ist da, wie funktioniert es, was fehlt",
+    },
+  },
+  {
+    id: "review",
+    name: "👀 Code Review",
+    description: "Änderungen prüfen",
+    layer: "concept",
+    defaults: {
+      role: "Code-Reviewer mit Security-Fokus",
+      output: "Liste von Findings: Critical, High, Medium, Low",
+    },
+  },
+];
 
-  const sections: string[] = [
-    header,
-    "",
-    "---",
-    "",
-  ];
+// ════════════════════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ════════════════════════════════════════════════════════════════════════════
 
-  // Role
-  sections.push("## [ROLE] Deine Rolle");
-  sections.push(el.role?.trim() || "(Nicht angegeben - verwende dein Urteilsvermögen)");
-  sections.push("");
-
-  // Context
-  sections.push("## [CONTEXT] Projekt-Kontext");
-  if (el.context?.trim()) {
-    sections.push(el.context.trim());
-  } else {
-    sections.push("(Lies die relevanten Dateien im Projekt um den Kontext zu verstehen)");
+function getLayerHint(layer: PulseLayer): { title: string; hint: string } {
+  switch (layer) {
+    case "concept":
+      return {
+        title: "CONCEPT MODE",
+        hint: "🧠 Du bist im Konzept-Modus. KEIN CODE. Nur Analyse, Planung, Dokumentation.",
+      };
+    case "build":
+      return {
+        title: "BUILD MODE",
+        hint: "🔨 Du bist im Build-Modus. Implementiere GENAU was gefordert ist. Nicht mehr, nicht weniger.",
+      };
+    case "escalation":
+      return {
+        title: "ESCALATION MODE",
+        hint: "🚨 Eskalation aktiv. Analysiere das Problem und gib Anweisungen für den Builder.",
+      };
   }
-  sections.push("");
-
-  // Input
-  sections.push("## [INPUT] Zusätzliche Informationen");
-  if (el.input?.trim()) {
-    sections.push(el.input.trim());
-  } else {
-    sections.push("(Keine zusätzlichen Informationen)");
-  }
-  sections.push("");
-
-  // Action - THE MOST IMPORTANT PART
-  sections.push("## [ACTION] ⚡ Was du tun sollst");
-  sections.push("**WICHTIG: Fokussiere dich NUR auf diese eine Aktion.**");
-  sections.push("");
-  if (el.action?.trim()) {
-    sections.push(`> ${el.action.trim()}`);
-  } else {
-    sections.push("> (Keine Aktion angegeben - frage nach!)");
-  }
-  sections.push("");
-
-  // Output
-  sections.push("## [OUTPUT] Erwartetes Ergebnis");
-  if (el.output?.trim()) {
-    sections.push(el.output.trim());
-  } else {
-    sections.push("- Funktionierende Code-Änderungen");
-    sections.push("- Klare Commit-Messages");
-    sections.push("- Kurze Zusammenfassung was gemacht wurde");
-  }
-  sections.push("");
-
-  // Examples
-  if (el.examples?.trim()) {
-    sections.push("## [EXAMPLES] Beispiele / Referenzen");
-    sections.push(el.examples.trim());
-    sections.push("");
-  }
-
-  // Footer with reminders
-  sections.push("---");
-  sections.push("");
-  sections.push("## Erinnerung");
-  sections.push("- ⏱️ Nach 30 Min: STOP und frage ob du fortfahren sollst");
-  sections.push("- 📋 Commit alle 5-10 Min");
-  sections.push("- 🛑 Bei Unsicherheit: FRAGE statt rate");
-  sections.push("- 🔄 Bei Loop (>2 Versuche): STOP und erkläre das Problem");
-
-  return sections.join("\n");
 }
 
 export function countProvidedElements(el: SixElements): number {
@@ -139,92 +311,24 @@ export function countProvidedElements(el: SixElements): number {
 export function validateOneAction(action: string | undefined): string | null {
   const a = (action ?? "").trim();
   if (!a) return "Missing [ACTION].";
-  // heuristic: multiple bullet lines = likely multiple actions
+  
+  // Heuristic: multiple bullet lines = likely multiple actions
   const bulletLines = a.split("\n").filter((l) => /^\s*[-*]\s+/.test(l)).length;
-  if (bulletLines >= 2) return "ACTION looks like multiple actions (multiple bullets). Prefer one action per pulse.";
-  const andCount = (a.match(/\band\b/gi) ?? []).length;
-  if (andCount >= 3) return "ACTION likely contains multiple actions. Prefer splitting into milestones.";
+  if (bulletLines >= 3) {
+    return "⚠️ ACTION enthält mehrere Punkte. Besser: Eine Aktion pro Pulse.";
+  }
+  
+  const andCount = (a.match(/\b(und|and)\b/gi) ?? []).length;
+  if (andCount >= 2) {
+    return "⚠️ ACTION enthält mehrere 'und'. Besser: In Milestones aufteilen.";
+  }
+  
   return null;
 }
 
 /**
- * Generate an escalation prompt with full problem description
+ * Get template by ID
  */
-export function renderEscalationPrompt(options: {
-  cursorExplanation: string;
-  errorText: string;
-  gitLog: string;
-  gitDiff: string;
-  question: string;
-  codeSnippets?: string;
-}): string {
-  return `# ESKALATION: Builder Agent ist stuck
-
-## Situation
-Mein Builder Agent (Cursor AI) arbeitet an einem Problem und kommt nicht weiter.
-Ich brauche deine Analyse und konkrete Anweisungen, die ich zurück an Cursor geben kann.
-
----
-
-## Was Cursor versucht hat (Agent-Erklärung)
-${options.cursorExplanation.trim() || "(Keine Erklärung vom Agent)"}
-
----
-
-## Fehlermeldung / Logs
-\`\`\`
-${options.errorText.trim() || "(Keine Fehlermeldung)"}
-\`\`\`
-
----
-
-## Git-Kontext
-
-### Letzte Commits
-\`\`\`
-${options.gitLog.trim() || "(Keine Commits)"}
-\`\`\`
-
-### Aktuelle Änderungen (Diff Summary)
-\`\`\`
-${options.gitDiff.trim() || "(Keine Änderungen)"}
-\`\`\`
-
-${options.codeSnippets ? `---
-
-## Relevante Code-Snippets
-\`\`\`
-${options.codeSnippets.trim()}
-\`\`\`
-` : ""}
-
----
-
-## Meine konkrete Frage
-> ${options.question.trim() || "Was ist die Root Cause und wie löse ich das Problem?"}
-
----
-
-## Gewünschtes Output-Format
-
-Bitte antworte mit:
-
-### 1. Problem-Analyse
-Was ist das eigentliche Problem? (Nicht nur das Symptom)
-
-### 2. Root Cause
-Warum tritt dieses Problem auf?
-
-### 3. Lösung
-Schritt-für-Schritt Anweisungen, die ich an Cursor geben kann:
-1. ...
-2. ...
-3. ...
-
-### 4. Code-Snippet (falls nötig)
-Minimales Beispiel das zeigt wie es richtig geht.
-
-### 5. Vermeidung
-Wie vermeide ich dieses Problem in Zukunft?
-`;
+export function getTemplateById(id: string): PromptTemplate | undefined {
+  return PROMPT_TEMPLATES.find((t) => t.id === id);
 }

@@ -10,7 +10,8 @@ type HookName = "pre-commit" | "pre-push" | "none";
 export function registerDoctorCommand(program: Command): void {
   program
     .command("doctor")
-    .description("Scan current changes for Pulse Safeguards + Red Flags (mixed enforcement).")
+    .alias("d") // Kurzform: pulse d
+    .description("Safeguards + Red Flags prüfen (Secrets, Deletes, Loops)")
     .option("--staged", "Scan staged diff")
     .option("--ci", "CI mode: quieter output + exit codes")
     .option("--hook <name>", "Hook mode: pre-commit | pre-push", "none")

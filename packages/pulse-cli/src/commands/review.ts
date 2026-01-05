@@ -6,7 +6,8 @@ import { gitDiffStat, gitLogOneline, gitStatusPorcelain } from "../lib/git.js";
 export function registerReviewCommand(program: Command): void {
   program
     .command("review")
-    .description("Create a Review Pulse checklist artifact (based on Cheatsheet + PDF).")
+    .alias("r") // Kurzform: pulse r
+    .description("Review-Checkliste erstellen (Code-Quality, Security, Red Flags)")
     .option("--staged", "Review staged diff instead of working tree diff")
     .action(async (opts: { staged?: boolean }) => {
       const repoRoot = await findRepoRoot(process.cwd());
