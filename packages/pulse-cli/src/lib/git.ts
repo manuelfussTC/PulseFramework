@@ -42,10 +42,21 @@ export async function gitDiffNumstat(repoRoot: string, opts?: { staged?: boolean
   return res.stdout.trimEnd();
 }
 
-export async function gitDiffText(repoRoot: string, opts?: { staged?: boolean }): Promise<string> {
+export async function gitDiffText(
+  repoRoot: string,
+  opts?: { staged?: boolean; maxLines?: number }
+): Promise<string> {
   const baseArgs = ["diff"];
   if (opts?.staged) baseArgs.push("--staged");
   const res = await git(repoRoot, baseArgs);
+  
+  if (opts?.maxLines && res.stdout) {
+    const lines = res.stdout.split("\n");
+    if (lines.length > opts.maxLines) {
+      return lines.slice(0, opts.maxLines).join("\n") + `\n\n... (truncated, ${lines.length - opts.maxLines} more lines)`;
+    }
+  }
+  
   return res.stdout;
 }
 

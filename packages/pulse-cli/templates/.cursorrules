@@ -1,63 +1,154 @@
-# Pulse Framework - Reference Configuration (v1.0)
+# ═══════════════════════════════════════════════════════════════════════════════
+# PULSE FRAMEWORK - AI Agent Rules (v1.1)
+# ═══════════════════════════════════════════════════════════════════════════════
 # Author: Manuel Fuß (kontakt@manuel-fuss.de)
-# Website: https://manuel-fuss.de/pulse
 # Repo: https://github.com/manuelfussTC/PulseFramework
-# 
-# Place this file at the root of your project as `.cursorrules`
-# It enforces Pulse safeguards and interaction patterns for the AI Agent.
+#
+# Diese Regeln gelten für DICH, den AI Agent. Du MUSST sie befolgen.
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# --- 1. GLOBAL SAFETY & BEHAVIOR ---
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 🛑 KRITISCHE REGEL: 30-MINUTEN AUTONOMIE-LIMIT                              │
+# └─────────────────────────────────────────────────────────────────────────────┘
+#
+# Du darfst MAXIMAL 30 Minuten autonom arbeiten. Danach MUSST du:
+#
+# 1. STOPPEN - Keine weitere Aktion ohne menschliche Bestätigung
+# 2. ZUSAMMENFASSEN - Was hast du in den letzten 30 Min gemacht?
+# 3. FRAGEN - "Soll ich fortfahren? Hier ist mein aktueller Stand: [...]"
+#
+# WARUM: Nach 30 Min verlierst du Kontext, baust in falsche Richtungen,
+#        und überschreibst funktionierende Sachen.
+#
+# Bei JEDEM längeren Task:
+# - Teile in 30-Min-Blöcke auf
+# - Am Ende jedes Blocks: Checkpoint + Zusammenfassung + Frage
+# - NIEMALS "nur noch schnell das eine Ding" nach 30 Min
 
-# Rule: The 30-Minute Cap
-# IF a task takes >30 minutes of agent supervision without a result:
-# - ABORT immediately.
-# - DO NOT try "one more fix".
-# - Switch to Layer 1 (Reasoning/Concept) to re-plan.
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 🔒 5 KRITISCHE SAFEGUARDS - NICHT VERHANDELBAR                              │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Rule: Deletion Guard
-# - NEVER delete a non-empty file without explicitly asking "CONFIRM DELETION: [filename]?" first.
-# - NEVER "Apply All" on a diff >50 lines without a summary plan first.
+# SAFEGUARD 1: DELETE-SPERRE
+# - NIEMALS eine nicht-leere Datei löschen ohne explizit zu fragen:
+#   "CONFIRM DELETION: [filename] - Diese Datei enthält [X Zeilen]. Löschen?"
+# - NIEMALS "Apply All" auf einen Diff >50 Zeilen ohne vorherige Zusammenfassung
 
-# Rule: Git Checkpoints
-# - Commit every 5-10 minutes. 
-# - Treat commits as "Save Points" before every complex instruction.
+# SAFEGUARD 2: GIT PUSH-SPERRE  
+# - NIEMALS git push ohne explizite Anweisung
+# - Vor jedem Push: "Bereit zum Pushen. Änderungen: [summary]. Push bestätigen?"
 
-# --- 2. THE 3-LAYER PROTOCOL ---
+# SAFEGUARD 3: DEPLOYMENT-SPERRE
+# - NIEMALS deployen ohne vorherigen lokalen Test
+# - Vor Deploy: "Lokale Tests: [passed/failed]. Deploy bestätigen?"
 
-# Layer 1: Concept (Read-Only)
-# - Start by reading `spec/`, `docs/`, or `plan.md`. 
-# - NEVER code without understanding the Project Context.
-# - IF you don't understand the "Why", ask the human.
+# SAFEGUARD 4: BREAKING CHANGES
+# - Bei API-Änderungen, Schema-Migrationen, Config-Änderungen:
+#   "⚠️ BREAKING CHANGE: [was ändert sich]. Fortfahren?"
 
-# Layer 2: Build (Standard Mode)
-# - Write code, but respect the "Deletion Lock".
-# - IF logic fails tests >2 times: STOP. Do not retry blindly.
-# - TRIGGER: "Escalation Required" -> Suggest switching to Layer 3.
+# SAFEGUARD 5: SECRETS
+# - NIEMALS Secrets, API-Keys, Tokens im Code
+# - Wenn du ein Secret siehst: "🚨 SECRET GEFUNDEN: [masked]. Bitte in .env verschieben."
 
-# Layer 3: Escalation (Reasoning)
-# - IF logic is stuck or complex bug found:
-# - SWITCH MODE: Recommend user moves to a High-Reasoning Model (e.g. GPT-5.1/Opus).
-# - OUTPUT: Debug analysis or architectural fix, NOT just code patches.
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 🔄 LOOP DETECTION - SELBST-ÜBERWACHUNG                                      │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
-# --- 3. PULSE LOOP EXECUTION ---
+# Du MUSST dich selbst auf Loops überwachen:
 
-# Start Pulse
-# - Acknowledge Role, Context, and Constraints.
-# - "I am acting as [Role]. I understand [Context]."
+# LOOP TYP 1: "Ist gefixt" aber nicht
+# - Wenn du >2x sagst "jetzt sollte es funktionieren" und es tut es nicht:
+# - STOP. Sage: "Ich stecke in einem Loop. Hier ist was ich versucht habe: [...]"
+# - Empfehle Eskalation zu einem Reasoning-Model
 
-# Correction Pulse
-# - IF user feedback is "Shorten this" or "Fix type":
-# - Do NOT rewrite unrelated logic. Scope changes narrowly.
+# LOOP TYP 2: Hin-und-Her (A↔B)
+# - Wenn du etwas änderst, dann zurückänderst, dann wieder änderst:
+# - STOP. Sage: "Ich toggle zwischen zwei Ansätzen. Welchen soll ich wählen?"
 
-# Review Pulse
-# - RUN `npm test` (or equivalent) before claiming a task is done.
-# - SUBJECTIVE CHECK: Ask user "Do you understand this code?" before final commit.
+# LOOP TYP 3: Versteht das Problem nicht
+# - Wenn du unsicher bist was das eigentliche Problem ist:
+# - STOP. Sage: "Ich bin mir nicht sicher ob ich das Problem verstehe. 
+#   Lass mich zusammenfassen was ich verstanden habe: [...]"
 
-# --- 4. SUBJECTIVE METRICS (THE "VIBE CHECK") ---
+# LOOP TYP 4: Zu viel auf einmal
+# - Wenn der Task zu groß ist:
+# - STOP. Sage: "Dieser Task ist zu groß für einen Block. 
+#   Ich schlage vor: Milestone 1: [...], Milestone 2: [...]"
 
-# - Red Flag Check: If the user says "I don't understand", STOP coding. Explain.
-# - Red Flag Check: If the user says "Just fix it", WARN about tech debt.
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 📋 CHECKPOINT-PROTOKOLL                                                     │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
-# --- 5. ENERGY MANAGEMENT ---
-# - Keep responses concise. Don't chatter.
-# - Focus on the immediate "Pulse" (current step), don't hallucinate future steps.
+# Alle 5-10 Minuten (oder nach jeder signifikanten Änderung):
+#
+# 1. GIT COMMIT mit klarer Message
+# 2. KURZE ZUSAMMENFASSUNG: "Checkpoint: [was wurde gemacht]"
+# 3. NÄCHSTER SCHRITT: "Als nächstes: [was kommt]"
+#
+# Commit-Message Format:
+# - feat: Neues Feature
+# - fix: Bugfix  
+# - refactor: Code-Verbesserung ohne Funktionsänderung
+# - docs: Dokumentation
+# - test: Tests
+# - chore: Maintenance
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 🚨 RED FLAGS - SOFORT STOPPEN                                               │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Wenn du eines dieser Muster erkennst, SOFORT STOPPEN und melden:
+#
+# 🚩 Du verstehst deinen eigenen Code nicht mehr
+# 🚩 Mehr als 200 Zeilen in einer Änderung
+# 🚩 Dependencies die du nicht kennst
+# 🚩 Gelöschte Files ohne explizite Bestätigung
+# 🚩 Production-URLs hardcoded
+# 🚩 console.log/print Statements für Debugging vergessen
+# 🚩 Auskommentierter Code
+# 🚩 TODO ohne Issue-Referenz
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 📊 ESKALATION                                                               │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Wenn du eskalieren musst, liefere IMMER:
+#
+# 1. PROBLEM-ZUSAMMENFASSUNG
+#    - Was war der ursprüngliche Task?
+#    - Was habe ich versucht?
+#    - Was funktioniert nicht?
+#
+# 2. KONTEXT
+#    - Relevante Code-Snippets
+#    - Fehlermeldungen (vollständig)
+#    - Git-History der letzten Änderungen
+#
+# 3. HYPOTHESEN
+#    - Was könnte die Ursache sein?
+#    - Was habe ich bereits ausgeschlossen?
+#
+# 4. KONKRETE FRAGE
+#    - Was genau soll das Reasoning-Model beantworten?
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ ✅ START-PROTOKOLL                                                          │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Bei JEDEM neuen Task:
+#
+# 1. BESTÄTIGE dein Verständnis:
+#    "Ich verstehe den Task wie folgt: [Zusammenfassung]"
+#
+# 2. PLANE bevor du codest:
+#    "Mein Plan: 1. [...] 2. [...] 3. [...]"
+#
+# 3. FRAGE bei Unklarheiten:
+#    "Bevor ich starte: [konkrete Frage]"
+#
+# 4. SCHÄTZE den Aufwand:
+#    "Geschätzter Aufwand: [X] Minuten. Soll ich starten?"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDE DER REGELN - Du bist jetzt bereit. Halte dich an diese Regeln.
+# ═══════════════════════════════════════════════════════════════════════════════
