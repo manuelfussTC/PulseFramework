@@ -28,8 +28,8 @@ yarn-error.log*
 .pulse/
 pulse.config.json
 
-# IDE generated
-.cursorrules
+# IDE generated (root level only, templates are allowed)
+/.cursorrules
 
 docs/communications/
 plan.md
