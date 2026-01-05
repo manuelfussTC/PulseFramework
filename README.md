@@ -48,6 +48,17 @@ Development moves in discrete cycles called "Pulses":
 - **Git as Safety Net:** Commit frequency and branching strategies designed for rollback.
 - **Strict Boundaries:** Rules against unverified deletion or push actions.
 
+## 📋 Quick Reference (Cheat Sheet)
+
+No time for the full framework? The **PULSE Cheat-Sheet** gives you the 12 most important rules at a glance.
+
+| Format | Link |
+|--------|------|
+| 📄 Markdown (forkable) | [PULSE-Cheatsheet.md](docs/cheatsheet/PULSE-Cheatsheet.md) |
+| 🖼️ Visual (PNG) | [PULSE-Cheatsheet.png](docs/cheatsheet/PULSE-Cheatsheet.png) |
+
+> **Tip:** The Markdown version is forkable – take it into your own projects.
+
 ## Repository Structure
 
 - `spec/`: The technical specification of the Pulse Framework (v1.0).
@@ -56,6 +67,7 @@ Development moves in discrete cycles called "Pulses":
   - `.cursorrules`: Global safety enforcer.
   - `roles/`: Specialized rules for Architects, Backend, and Frontend.
   - `prompts/recipes.md`: "Short-List" of copy-paste prompt recipes.
+- `docs/cheatsheet/`: Quick Reference (the 12 rules at a glance).
 - `docs/deep-dive/`: Senior-Level Guides (Model Strategy, Git, etc.).
 - `docs/blueprints/`: Proven folder structures and project setups.
 - `CHALLENGES.md`: Open questions for tool vendors.
