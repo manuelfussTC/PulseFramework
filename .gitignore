@@ -24,5 +24,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Pulse local artifacts (generated per-project)
+.pulse/
+pulse.config.json
+
+# IDE generated
+.cursorrules
+
 docs/communications/
 plan.md

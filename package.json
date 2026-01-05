@@ -1,0 +1,20 @@
+{
+  "name": "pulseframework",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "npm run -ws --if-present build",
+    "typecheck": "npm run -ws --if-present typecheck",
+    "dev": "npm run -ws --if-present dev"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
+

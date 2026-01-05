@@ -1,0 +1,25 @@
+{
+  "name": "@pulseframework/pulse-cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pulse Toolkit CLI (loops, guardrails, checkpoints, watcher).",
+  "bin": {
+    "pulse": "dist/index.js"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "commander": "^12.1.0"
+  }
+}
+

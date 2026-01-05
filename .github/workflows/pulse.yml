@@ -1,0 +1,103 @@
+# Pulse CI: Safeguards + Tests on Pull Requests
+# 
+# This workflow runs `pulse doctor` to enforce critical safeguards
+# and optionally runs your test suite.
+
+name: Pulse CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  pulse-doctor:
+    name: Pulse Safeguards
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for diff analysis
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build Pulse CLI
+        run: npm run build -w @pulseframework/pulse-cli
+      
+      - name: Run Pulse Doctor (CI mode)
+        run: |
+          # Run against the PR diff (base...head)
+          # In CI mode: exit 2 = critical (fail), exit 1 = warnings (pass with annotation)
+          npx pulse doctor --ci --staged || {
+            exit_code=$?
+            if [ $exit_code -eq 2 ]; then
+              echo "::error::Critical safeguard violation detected. See output above."
+              exit 1
+            elif [ $exit_code -eq 1 ]; then
+              echo "::warning::Pulse warnings detected. Please review."
+              exit 0
+            fi
+          }
+        env:
+          # In CI, we block on secrets but allow deletes (they should be reviewed in PR)
+          PULSE_CONFIRM_DELETE: "1"
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: pulse-doctor  # Run after safeguards pass
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build --if-present
+      
+      - name: Run tests
+        run: npm test --if-present
+
+  # Optional: Check for review artifacts on PRs
+  review-artifacts:
+    name: Review Artifacts Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Check for review artifact
+        run: |
+          # Optional: Require a review artifact for larger PRs
+          # This is advisory only (doesn't fail the build)
+          
+          changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
+          
+          if [ "$changed_files" -gt 10 ]; then
+            if ! ls .pulse/reviews/*.md 2>/dev/null | head -1 > /dev/null; then
+              echo "::notice::Large PR ($changed_files files changed). Consider running 'pulse review' to create a review checklist."
+            else
+              echo "Review artifact found. Good practice!"
+            fi
+          fi
+        continue-on-error: true

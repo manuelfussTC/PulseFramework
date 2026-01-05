@@ -1,0 +1,168 @@
+{
+  "name": "pulse-framework",
+  "displayName": "Pulse Framework",
+  "description": "Guardrails, checkpoints, and escalation for AI-assisted development with Cursor Agent Mode.",
+  "version": "0.1.0",
+  "publisher": "pulse-framework",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manuelfussTC/PulseFramework"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Linters"
+  ],
+  "keywords": [
+    "pulse",
+    "ai",
+    "cursor",
+    "agent",
+    "guardrails",
+    "checkpoint"
+  ],
+  "activationEvents": [
+    "workspaceContains:.pulse",
+    "workspaceContains:pulse.config.json",
+    "onCommand:pulse.init"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "pulse.init",
+        "title": "Pulse: Initialize Project",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "pulse.start",
+        "title": "Pulse: Start New Task",
+        "icon": "$(play)"
+      },
+      {
+        "command": "pulse.checkpoint",
+        "title": "Pulse: Checkpoint Now",
+        "icon": "$(save)"
+      },
+      {
+        "command": "pulse.doctor",
+        "title": "Pulse: Run Doctor (Safeguards)",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "pulse.review",
+        "title": "Pulse: Create Review Checklist",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "pulse.escalate",
+        "title": "Pulse: Create Escalation Package",
+        "icon": "$(warning)"
+      },
+      {
+        "command": "pulse.watch.start",
+        "title": "Pulse: Start Watcher (30-min Timer)",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "pulse.watch.stop",
+        "title": "Pulse: Stop Watcher",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "pulse.profile.concept",
+        "title": "Pulse: Set Profile → Concept (Layer 1)"
+      },
+      {
+        "command": "pulse.profile.build",
+        "title": "Pulse: Set Profile → Build (Layer 2)"
+      },
+      {
+        "command": "pulse.profile.escalation",
+        "title": "Pulse: Set Profile → Escalation (Layer 3)"
+      },
+      {
+        "command": "pulse.openArtifacts",
+        "title": "Pulse: Open Artifacts Folder",
+        "icon": "$(folder)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "pulse.init",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "pulse.start",
+          "when": "pulse.initialized"
+        },
+        {
+          "command": "pulse.checkpoint",
+          "when": "pulse.initialized"
+        },
+        {
+          "command": "pulse.doctor",
+          "when": "pulse.initialized"
+        },
+        {
+          "command": "pulse.review",
+          "when": "pulse.initialized"
+        },
+        {
+          "command": "pulse.escalate",
+          "when": "pulse.initialized"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "pulse.checkpoint",
+          "group": "navigation",
+          "when": "pulse.initialized"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Pulse Framework",
+      "properties": {
+        "pulse.checkpointReminderMinutes": {
+          "type": "number",
+          "default": 30,
+          "description": "Minutes between checkpoint reminders (0 to disable)."
+        },
+        "pulse.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Pulse status bar item with time since last checkpoint."
+        },
+        "pulse.autoStartWatcher": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start the watcher when opening a Pulse project."
+        },
+        "pulse.notificationsEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notification reminders for checkpoints."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.27",
+    "@types/vscode": "^1.107.0",
+    "esbuild": "^0.19.12",
+    "typescript": "^5.9.3"
+  }
+}
