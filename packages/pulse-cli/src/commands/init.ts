@@ -304,8 +304,8 @@ Wenn du nach 2-3 Versuchen nicht weiterkommst:
       const mcpConfig = {
         mcpServers: {
           pulse: {
-            command: "npx",
-            args: ["@pulseframework/pulse-mcp"],
+            command: "pulse-mcp",
+            args: [],
             env: {},
           },
         },
