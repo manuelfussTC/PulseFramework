@@ -23,6 +23,7 @@ import { registerCorrectTool, handleCorrectTool } from "./tools/correct.js";
 import { registerLearnTool, handleLearnTool } from "./tools/learn.js";
 import { registerProfileTool, handleProfileTool } from "./tools/profile.js";
 import { registerReviewTool, handleReviewTool } from "./tools/review.js";
+import { registerRunTool, handleRunTool } from "./tools/run.js";
 
 const server = new Server(
   {
@@ -49,6 +50,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       registerLearnTool(),
       registerProfileTool(),
       registerReviewTool(),
+      registerRunTool(),
     ],
   };
 });
@@ -77,6 +79,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await handleProfileTool(args);
       case "pulse_review":
         return await handleReviewTool(args);
+      case "pulse_run":
+        return await handleRunTool(args as { action?: string; template?: string });
       default:
         return {
           content: [
