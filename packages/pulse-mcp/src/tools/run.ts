@@ -66,10 +66,24 @@ export async function handleRunTool(args: {
     }
     
     // 2. Prompt generieren (quick mode)
-    const startResult = await execAsync(
-      `pulse start --template ${template} --action "${action.replace(/"/g, '\\"')}" --quick`,
-      { timeout: 15000 }
-    );
+    // Escape für Shell: ersetze " mit \" und ` mit \`
+    const safeAction = action
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/`/g, '\\`')
+      .replace(/\$/g, '\\$');
+    
+    let startResult;
+    try {
+      startResult = await execAsync(
+        `pulse start --template ${template} --action "${safeAction}" --quick`,
+        { timeout: 15000 }
+      );
+    } catch (startError) {
+      // Wenn pulse start fehlschlägt, trotzdem Workflow-Info zurückgeben
+      const errMsg = startError instanceof Error ? startError.message : String(startError);
+      startResult = { stdout: `⚠️ Prompt konnte nicht automatisch erstellt werden: ${errMsg}\n\nBitte manuell: pulse start --template ${template}` };
+    }
     
     // 3. Response zusammenbauen
     const profile = status.preset 
