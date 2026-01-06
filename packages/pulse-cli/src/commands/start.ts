@@ -1,8 +1,10 @@
 import type { Command } from "commander";
 import { loadState, timestampId, writeArtifact } from "../lib/artifacts.js";
 import { loadConfig } from "../lib/config.js";
-import { promptText, promptSelect } from "../lib/input.js";
+import { promptText, promptSelect, promptConfirm } from "../lib/input.js";
 import { findRepoRoot } from "../lib/paths.js";
+import { copyAndNotify } from "../lib/clipboard.js";
+import { gitCurrentBranch, gitIsMainBranch, gitCreateBranch } from "../lib/git.js";
 import {
   countProvidedElements,
   renderSixElementPrompt,
@@ -29,6 +31,7 @@ export function registerStartCommand(program: Command): void {
     .option("--examples <text>", "BEISPIELE")
     .option("--ist <text>", "IST-Zustand (für IST/SOLL-Prompt)")
     .option("--soll <text>", "SOLL-Zustand (für IST/SOLL-Prompt)")
+    .option("-C, --clipboard", "Prompt in Zwischenablage kopieren")
     .action(async (opts) => {
       const repoRoot = await findRepoRoot(process.cwd());
       if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
@@ -39,6 +42,40 @@ export function registerStartCommand(program: Command): void {
       console.log("\n🎯 PULSE Start\n");
 
       // ══════════════════════════════════════════════════════════════════════
+      // Branch-Check: Warnung bei main/master
+      // ══════════════════════════════════════════════════════════════════════
+      const currentBranch = await gitCurrentBranch(repoRoot);
+      const isMain = await gitIsMainBranch(repoRoot);
+      
+      if (isMain) {
+        // eslint-disable-next-line no-console
+        console.log(`⚠️  Du bist auf '${currentBranch}' – Feature-Branch empfohlen!\n`);
+        
+        const createBranch = await promptConfirm("Feature-Branch erstellen?", true);
+        
+        if (createBranch) {
+          const branchName = await promptText(
+            "Branch-Name (z.B. feature/user-dashboard)",
+            "feature/"
+          );
+          
+          if (branchName && branchName !== "feature/") {
+            const success = await gitCreateBranch(repoRoot, branchName);
+            if (success) {
+              // eslint-disable-next-line no-console
+              console.log(`✅ Branch erstellt: ${branchName}\n`);
+            } else {
+              // eslint-disable-next-line no-console
+              console.log(`❌ Branch konnte nicht erstellt werden\n`);
+            }
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.log(`ℹ️  Arbeite auf '${currentBranch}' (nicht empfohlen)\n`);
+        }
+      }
+
+      // ══════════════════════════════════════════════════════════════════════
       // IST/SOLL Quick-Prompt (für schnelle Bug-Fixes)
       // ══════════════════════════════════════════════════════════════════════
       if (opts.ist || opts.soll) {
@@ -47,7 +84,7 @@ export function registerStartCommand(program: Command): void {
         const error = await promptText("ERROR-Log (optional, Enter zum Überspringen)", "");
 
         const prompt = renderIstSollPrompt({ ist, soll, error, context: opts.context });
-        await saveAndPrint(repoRoot, "istsoll", prompt);
+        await saveAndPrint(repoRoot, "istsoll", prompt, undefined, opts.clipboard);
         return;
       }
 
@@ -140,7 +177,7 @@ export function registerStartCommand(program: Command): void {
         elementCount: countProvidedElements(el),
         actionWarning,
         template: template?.name,
-      });
+      }, opts.clipboard);
 
       if (config.enforcement !== "advisory" && actionWarning) {
         // eslint-disable-next-line no-console
@@ -159,7 +196,8 @@ async function saveAndPrint(
     elementCount?: number;
     actionWarning?: string | null;
     template?: string;
-  }
+  },
+  clipboard?: boolean
 ): Promise<void> {
   const ts = timestampId();
   const filename = `${ts}-${type}.md`;
@@ -191,10 +229,18 @@ async function saveAndPrint(
 
   // eslint-disable-next-line no-console
   console.log(`\n✅ Gespeichert: ${p}`);
+  
+  // Clipboard
+  if (clipboard) {
+    const clipboardMsg = await copyAndNotify(prompt);
+    // eslint-disable-next-line no-console
+    console.log(clipboardMsg);
+  }
+  
   // eslint-disable-next-line no-console
   console.log(`\n${"─".repeat(60)}`);
   // eslint-disable-next-line no-console
-  console.log(`\n📋 PROMPT (kopieren):\n`);
+  console.log(`\n📋 PROMPT${clipboard ? " (kopiert)" : " (kopieren)"}:\n`);
   // eslint-disable-next-line no-console
   console.log(prompt.trimEnd());
   // eslint-disable-next-line no-console

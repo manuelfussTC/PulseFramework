@@ -1,0 +1,25 @@
+{
+  "name": "@pulseframework/pulse-mcp",
+  "version": "0.3.0",
+  "private": true,
+  "description": "PULSE MCP Server - Model Context Protocol integration for Cursor",
+  "bin": {
+    "pulse-mcp": "dist/index.js"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@pulseframework/pulse-cli": ">=0.2.0"
+  }
+}

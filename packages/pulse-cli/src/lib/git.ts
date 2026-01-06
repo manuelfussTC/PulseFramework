@@ -1,5 +1,24 @@
 import { exec } from "./exec.js";
 
+// ════════════════════════════════════════════════════════════════════════════
+// Branch-Utilities
+// ════════════════════════════════════════════════════════════════════════════
+
+export async function gitCurrentBranch(repoRoot: string): Promise<string> {
+  const res = await exec("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: repoRoot });
+  return res.stdout.trim();
+}
+
+export async function gitIsMainBranch(repoRoot: string): Promise<boolean> {
+  const branch = await gitCurrentBranch(repoRoot);
+  return ["main", "master", "develop", "development"].includes(branch.toLowerCase());
+}
+
+export async function gitCreateBranch(repoRoot: string, name: string): Promise<boolean> {
+  const res = await exec("git", ["checkout", "-b", name], { cwd: repoRoot });
+  return res.exitCode === 0;
+}
+
 export async function git(
   repoRoot: string,
   args: string[]

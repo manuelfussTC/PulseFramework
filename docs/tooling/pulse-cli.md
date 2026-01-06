@@ -1,4 +1,4 @@
-# Pulse CLI Reference
+# Pulse CLI Reference (v0.2.0)
 
 > The command-line interface for the Pulse Framework — guardrails, checkpoints, and escalation for AI-assisted development.
 
@@ -16,29 +16,26 @@ npm link -w packages/pulse-cli
 ## Quick Start
 
 ```bash
-# Initialize Pulse in your project
+# Initialize Pulse in your project (with preset selection)
 pulse init
 
-# Set your working layer
-pulse profile set build
+# Check current status (one-liner overview)
+pulse status
 
-# Start a new task with the 6-element framework
-pulse start --role "Senior Backend Engineer" --action "Add user authentication"
+# Start a combined workflow (prompt + watcher)
+pulse run
 
-# Run the background watcher (30-min reminders)
-pulse watch
+# Or create a single prompt
+pulse s --action "Add user authentication" -C  # -C = copy to clipboard
 
 # Create a checkpoint (every 5-10 min)
-pulse checkpoint
+pulse c
 
 # Scan for safeguards and red flags
-pulse doctor
-
-# Create a review checklist
-pulse review
+pulse d --loop
 
 # Stuck? Create an escalation package
-pulse escalate
+pulse e -C
 ```
 
 ---
@@ -47,22 +44,82 @@ pulse escalate
 
 ### `pulse init`
 
-Initialize Pulse in the current git repository.
+Initialize Pulse in the current git repository with interactive preset selection.
 
 ```bash
-pulse init [--path <path>] [--hooks]
+pulse init [options]
 ```
 
 | Option | Description |
 |--------|-------------|
 | `--path <path>` | Target path (defaults to cwd) |
-| `--hooks` | Install git hooks (mixed enforcement) |
+| `--hooks` | Install git hooks (pre-commit, pre-push) |
+| `--preset <name>` | Preset: `frontend`, `backend`, `fullstack`, `monorepo`, `custom` |
+| `--no-interactive` | Skip interactive prompts |
+
+**Presets:**
+
+| Preset | Max Lines | Max Files | Checkpoint |
+|--------|-----------|-----------|------------|
+| `frontend` | 200 | 10 | 20 min |
+| `backend` | 400 | 15 | 30 min |
+| `fullstack` | 500 | 20 | 25 min |
+| `monorepo` | 800 | 30 | 30 min |
+| `custom` | 300 | 15 | 30 min |
 
 **Creates:**
 - `.pulse/` directory structure
-- `pulse.config.json` with defaults
+- `pulse.config.json` with preset defaults
 - `.cursorrules` (if missing)
 - `.pulse/templates/roles/` with role templates
+
+---
+
+### `pulse status`
+
+Quick one-liner overview of current project state.
+
+```bash
+pulse status [--json]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as JSON (for scripting) |
+
+**Example output:**
+```
+🔨 build | 🟢 12m ago | 📝 5 files | ⚠️ 2 warnings
+```
+
+**Components:**
+- Profile emoji (🧠 concept, 🔨 build, 🚨 escalation)
+- Time since last checkpoint (🟢 < 15m, 🟡 < 30m, 🔴 > 30m)
+- Dirty file count
+- Findings summary
+
+---
+
+### `pulse run`
+
+Combined workflow: Start prompt → Watch loop → Checkpoint reminders → Review offer.
+
+```bash
+pulse run [options]
+```
+
+| Option | Description |
+|--------|-------------|
+| `-t, --template <id>` | Template: `feature`, `bugfix`, `refactor`, `concept`, `analyze`, `review` |
+| `--minutes <n>` | Checkpoint reminder interval (default: 30) |
+| `--no-watch` | Don't start the watcher |
+| `--action <text>` | ACTION directly |
+
+**Flow:**
+1. Select template or enter ACTION
+2. Generate prompt (displayed and saved)
+3. Start watch loop with checkpoint reminders
+4. On exit (Ctrl+C): offer checkpoint and review
 
 ---
 
@@ -82,26 +139,38 @@ pulse profile set <layer>    # Set layer: concept | build | escalation
 
 ---
 
-### `pulse start`
+### `pulse start` (Alias: `s`)
 
 Create a Start Pulse artifact with a paste-ready prompt (6-element framework).
 
 ```bash
 pulse start [options]
+pulse s [options]  # Shortcut
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--role <text>` | Role (e.g., "Senior Backend Engineer") |
-| `--context <text>` | Project/task context |
-| `--input <text>` | Specific input/data |
-| `--action <text>` | **One** clear action (required) |
-| `--output <text>` | Expected output format |
-| `--examples <text>` | Examples or references |
+| `-t, --template <id>` | Template: `feature`, `bugfix`, `refactor`, `concept`, `analyze`, `review` |
+| `-q, --quick` | Quick mode: only prompt for ACTION |
+| `--role <text>` | ROLE |
+| `--context <text>` | CONTEXT |
+| `--input <text>` | INPUT |
+| `--action <text>` | ACTION |
+| `--output <text>` | OUTPUT |
+| `--examples <text>` | EXAMPLES |
+| `--ist <text>` | IST state (for IST/SOLL bug-fix prompt) |
+| `--soll <text>` | SOLL state (for IST/SOLL bug-fix prompt) |
+| `-C, --clipboard` | Copy prompt to clipboard |
 
-**Validation:**
-- Warns if fewer than 3 elements provided
-- Warns if action contains multiple actions (split them!)
+**Templates:**
+| Template | Layer | Description |
+|----------|-------|-------------|
+| `feature` | build | New feature implementation |
+| `bugfix` | build | Fix existing bug |
+| `refactor` | build | Code restructuring |
+| `concept` | concept | Architecture planning |
+| `analyze` | concept | Code analysis |
+| `review` | concept | Code review |
 
 **Output:** `.pulse/pulses/{timestamp}-start.md`
 
@@ -112,23 +181,31 @@ pulse start [options]
 Create a Correction Pulse (scoped feedback → narrow fix).
 
 ```bash
-pulse correct [--feedback <text>]
+pulse correct [options]
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--feedback <text>` | User feedback (e.g., "Fix the type error on line 42") |
+| `--feedback <text>` | What's wrong? |
+| `--mode <mode>` | `explain`, `narrow`, `milestone` (default: narrow) |
+| `-C, --clipboard` | Copy prompt to clipboard |
+
+**Modes:**
+- **explain**: Agent explains its understanding (IST/SOLL/Attempts/Theory)
+- **narrow**: Apply minimal change, no refactoring
+- **milestone**: Split into small milestones
 
 **Output:** `.pulse/pulses/{timestamp}-correct.md`
 
 ---
 
-### `pulse review`
+### `pulse review` (Alias: `r`)
 
 Generate a Review Pulse checklist (code quality, security, git, docs).
 
 ```bash
 pulse review [--staged]
+pulse r [--staged]  # Shortcut
 ```
 
 | Option | Description |
@@ -147,57 +224,64 @@ pulse review [--staged]
 
 ---
 
-### `pulse escalate`
+### `pulse escalate` (Alias: `e`)
 
 Create an escalation package for an external model (ChatGPT, Claude, GPT-5, Opus).
 
 ```bash
 pulse escalate [options]
+pulse e [options]  # Shortcut
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--cursor <text>` | Paste Cursor's explanation |
-| `--error <text>` | Primary error message/logs |
-| `--error-file <path>` | Path to a log file to include |
-| `--question <text>` | What should the external model answer? |
+| `--problem <text>` | What is the problem? |
+| `--tried <text>` | What has Cursor already tried? |
+| `--error <text>` | Error message/logs |
+| `--error-file <path>` | Path to log file |
+| `--code <text>` | Relevant code snippet |
+| `--code-file <path>` | Path to code file |
+| `--question <text>` | Your specific question |
+| `--detailed` | Include full diff (not just summary) |
+| `-C, --clipboard` | Copy prompt to clipboard |
+
+**Interactive mode:** If no options provided, prompts for:
+1. Cursor's explanation (what it tried)
+2. Additional attempts
+3. Error text
+4. Your question
 
 **Output:** `.pulse/escalations/{timestamp}-escalate.md`
 
-Contains a complete prompt template with:
-- Role + Context + Input (Cursor explanation, error, git context)
-- Output format (analysis + instructions for Cursor)
-- Your specific question
-
 ---
 
-### `pulse checkpoint`
+### `pulse checkpoint` (Alias: `c`)
 
 Checkpoint helper: show git context, warn on red flags, optionally commit.
 
 ```bash
 pulse checkpoint [options]
+pulse c [options]  # Shortcut
 ```
 
 | Option | Description |
 |--------|-------------|
 | `--staged` | Use staged diff |
-| `--inspect-latest` | Inspect the latest commit (useful if Cursor auto-committed) |
+| `--inspect-latest` | Inspect the latest commit |
 | `--run-tests` | Run configured test command |
 | `-m, --message <msg>` | Create a commit with this message |
 
 **Output:** `.pulse/worklogs/{timestamp}-checkpoint.md`
 
-**Updates:** `lastCheckpointAt` in `.pulse/state.json`
-
 ---
 
-### `pulse doctor`
+### `pulse doctor` (Alias: `d`)
 
-Scan current changes for Pulse Safeguards + Red Flags (mixed enforcement).
+Scan current changes for Pulse Safeguards + Red Flags.
 
 ```bash
 pulse doctor [options]
+pulse d [options]  # Shortcut
 ```
 
 | Option | Description |
@@ -205,55 +289,64 @@ pulse doctor [options]
 | `--staged` | Scan staged diff |
 | `--ci` | CI mode: quieter output + exit codes |
 | `--hook <name>` | Hook mode: `pre-commit` or `pre-push` |
-| `--loop` | Include loop-detection heuristics |
-| `--confirm-delete` | Explicitly confirm deletes for this run |
-| `--allow-push` | Explicitly allow push for this run |
+| `--loop` | Include advanced loop-detection |
+| `--confirm-delete` | Confirm deletes for this run |
+| `--allow-push` | Allow push for this run |
 
 **Exit codes:**
 - `0` — No findings
 - `1` — Warnings only
 - `2` — Critical findings (blocked)
 
-**Critical (blocked):**
-- Secrets in diff
-- File deletions without `--confirm-delete` or `PULSE_CONFIRM_DELETE=1`
-- Push without `--allow-push` or `PULSE_ALLOW_PUSH=1`
+**Loop Detection Signals (`--loop`):**
 
-**Loop heuristics (`--loop`):**
-- Multiple recent "fix" commits → Loop risk
-- Revert commits → A↔B toggling risk
+| Signal | Severity | Description |
+|--------|----------|-------------|
+| Fix-Chain | warn | 3+ "fix" commits in last 15 commits |
+| Revert | critical | Revert commits detected |
+| File-Churn | warn | Same file changed 5+ times |
+| Pendeln | critical | Similar commit messages repeat |
+| Fix-No-Test | warn | Fix commits without test changes |
 
 ---
 
 ### `pulse learn`
 
-Capture a lesson learned and optionally generate a `.cursorrules` suggestion.
+Capture lessons learned with optional auto-promotion to `.cursorrules`.
 
 ```bash
-pulse learn [--problem <text>] [--solution <text>] [--rule]
+pulse learn [options]
 ```
 
 | Option | Description |
 |--------|-------------|
 | `--problem <text>` | What was the problem? |
-| `--solution <text>` | How did you solve it? |
-| `--rule` | Generate a `.cursorrules` suggestion block |
+| `--solution <text>` | What was the solution? |
+| `--rule <text>` | Derived rule |
+| `--reason <text>` | Why this rule? |
+| `--no-promote` | Don't ask to update .cursorrules |
 
-**Output:** `.pulse/memory/{timestamp}-learn.md`
+**Interactive flow:**
+1. Enter problem, solution, rule
+2. Saves to `.pulse/memory.md`
+3. Offers to add rule to `.cursorrules` (auto-promotion)
+
+**Output:** `.pulse/memory.md` (appended)
 
 ---
 
-### `pulse watch`
+### `pulse watch` (Alias: `w`)
 
-Background watcher: 30-min timer + git/fs change observation + reminders.
+Background watcher: timer + git/fs change observation + reminders.
 
 ```bash
-pulse watch [--minutes <n>] [--poll-seconds <n>]
+pulse watch [options]
+pulse w [options]  # Shortcut
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--minutes <n>` | Minutes between checkpoint reminders (default: 30) |
+| `--minutes <n>` | Minutes between reminders (default: 30) |
 | `--poll-seconds <n>` | Polling interval in seconds (default: 30) |
 
 **Notifications:**
@@ -270,23 +363,18 @@ pulse watch [--minutes <n>] [--poll-seconds <n>]
 {
   "version": 1,
   "projectType": "node",
+  "preset": "backend",
   "enforcement": "mixed",
   "notifications": "both",
+  "checkpointReminderMinutes": 30,
   "thresholds": {
     "warnMaxFilesChanged": 15,
-    "warnMaxLinesChanged": 300,
+    "warnMaxLinesChanged": 400,
     "warnMaxDeletions": 50
   },
   "patterns": {
-    "secret": [
-      "AKIA[0-9A-Z]{16}",
-      "ghp_[A-Za-z0-9]{36}",
-      "sk_(live|test)_[A-Za-z0-9]{16,}",
-      "..."
-    ],
-    "prodUrl": [
-      "https?://(?!localhost)(?!127\\.0\\.0\\.1)..."
-    ]
+    "secret": ["AKIA[0-9A-Z]{16}", "ghp_[A-Za-z0-9]{36}", "..."],
+    "prodUrl": ["https?://(?!localhost)..."]
   },
   "commands": {
     "test": "npm test"
@@ -296,13 +384,15 @@ pulse watch [--minutes <n>] [--poll-seconds <n>]
 
 | Field | Values | Description |
 |-------|--------|-------------|
+| `preset` | `frontend`, `backend`, `fullstack`, `monorepo`, `custom` | Project type preset |
 | `projectType` | `node`, `python`, `unknown` | Auto-detected or set manually |
 | `enforcement` | `advisory`, `mixed`, `strict` | How strictly to enforce safeguards |
 | `notifications` | `terminal`, `macos`, `both` | Where to send reminders |
+| `checkpointReminderMinutes` | number | Default checkpoint interval |
 | `thresholds` | object | Warn thresholds for diff size |
 | `patterns.secret` | string[] | Regex patterns for secret detection |
 | `patterns.prodUrl` | string[] | Regex patterns for production URLs |
-| `commands.test` | string | Test command to run with `--run-tests` |
+| `commands.test` | string | Test command for `--run-tests` |
 
 ---
 
@@ -338,22 +428,35 @@ PULSE_ALLOW_PUSH=1 git push
 
 ---
 
+## Command Aliases
+
+| Full Command | Alias |
+|--------------|-------|
+| `pulse start` | `pulse s` |
+| `pulse checkpoint` | `pulse c` |
+| `pulse doctor` | `pulse d` |
+| `pulse review` | `pulse r` |
+| `pulse escalate` | `pulse e` |
+| `pulse watch` | `pulse w` |
+
+---
+
 ## Artifact Directory Structure
 
 ```
 .pulse/
 ├── state.json              # Current profile, lastCheckpointAt
-├── pulses/                 # Start + Correct artifacts
+├── memory.md               # Lessons learned
+├── pulses/                 # Start + Correct + Run artifacts
 │   ├── 20260105-143022-start.md
-│   └── 20260105-144511-correct.md
+│   ├── 20260105-144511-correct.md
+│   └── 20260105-145033-run.md
 ├── reviews/                # Review checklists
 │   └── 20260105-150033-review.md
 ├── worklogs/               # Checkpoint logs
 │   └── 20260105-145522-checkpoint.md
 ├── escalations/            # Escalation packages
 │   └── 20260105-151044-escalate.md
-├── memory/                 # Lessons learned
-│   └── 20260105-152055-learn.md
 └── templates/
     └── roles/              # Role-specific .cursorrules
         ├── architect.cursorrules
@@ -365,60 +468,37 @@ PULSE_ALLOW_PUSH=1 git push
 
 ## Workflow with Cursor Agent Mode
 
-### 1. Start a Session
+### Quick Workflow (Recommended)
 
 ```bash
+# 1. Initialize (once per project)
+pulse init
+
+# 2. Start combined workflow
+pulse run
+
+# 3. Copy prompt to Cursor, work, Ctrl+C when done
+```
+
+### Manual Workflow
+
+```bash
+# 1. Set profile and create prompt
 pulse profile set build
-pulse start --role "Senior Backend Engineer" --action "Implement user registration endpoint"
-```
+pulse s --action "Implement user registration" -C
 
-Copy the generated prompt into Cursor Agent Mode.
+# 2. Start watcher in separate terminal
+pulse w
 
-### 2. During Agent Mode
+# 3. Checkpoint every 5-10 minutes
+pulse c
 
-```bash
-# Run in a separate terminal
-pulse watch
-```
+# 4. When stuck
+pulse d --loop
+pulse e -C  # If escalation needed
 
-Every 5–10 minutes:
-
-```bash
-pulse checkpoint
-```
-
-If Cursor auto-committed:
-
-```bash
-pulse checkpoint --inspect-latest
-```
-
-### 3. When Stuck (Loop/Red Flag)
-
-```bash
-pulse doctor --loop
-```
-
-If STOP recommended:
-
-```bash
-pulse escalate
-```
-
-Paste the escalation package into ChatGPT/Claude/GPT-5 → get instructions → paste back into Cursor.
-
-### 4. Review Before Merge
-
-```bash
-pulse review
-```
-
-Fill the checklist. If Red Flags → Reject or Escalate.
-
-### 5. Capture Learnings
-
-```bash
-pulse learn --problem "Type inference broke after library update" --solution "Pin dependency to ^4.x" --rule
+# 5. Before merge
+pulse r
 ```
 
 ---
@@ -436,18 +516,18 @@ pulse learn --problem "Type inference broke after library update" --solution "Pi
 
 | Cheatsheet | CLI Feature |
 |------------|-------------|
-| 01 Controlled Loops | `pulse start/correct/review/escalate` |
+| 01 Controlled Loops | `pulse run`, `pulse start/correct/review/escalate` |
 | 02 3-Layer Architecture | `pulse profile set` |
-| 03 6-Element Framework | `pulse start` (validates min 3 elements + one action) |
-| 04 30-Min Rule | `pulse watch` + reminders |
+| 03 6-Element Framework | `pulse start` (templates + validation) |
+| 04 30-Min Rule | `pulse watch`, `pulse run`, `pulse status` |
 | 05 5 Critical Safeguards | `pulse doctor` + hooks |
-| 06 Loop Detection | `pulse doctor --loop` |
+| 06 Loop Detection | `pulse doctor --loop` (5 signals) |
 | 07 3-Stage Escalation | `pulse escalate` |
 | 08 Git Safety Net | `pulse checkpoint` |
-| 09 .cursorrules Memory | `pulse learn --rule` |
+| 09 .cursorrules Memory | `pulse learn` (auto-promotion) |
 | 10 Review Checklist | `pulse review` |
 | 11 Red Flags | `pulse doctor` |
-| 12 Beginner Mistakes | `pulse start` coach prompts |
+| 12 Beginner Mistakes | `pulse start` templates + coach prompts |
 
 ---
 

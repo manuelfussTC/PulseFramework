@@ -1,6 +1,52 @@
 import fs from "node:fs/promises";
 import { configFile } from "./paths.js";
-import type { PulseConfig } from "./types.js";
+import type { PulseConfig, PresetName, PresetConfig } from "./types.js";
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEAM PRESETS
+// ════════════════════════════════════════════════════════════════════════════
+
+export const PRESETS: Record<PresetName, PresetConfig> = {
+  frontend: {
+    warnMaxFilesChanged: 10,
+    warnMaxLinesChanged: 200,
+    warnMaxDeletions: 30,
+    checkpointReminderMinutes: 20,
+    extraSecretPatterns: [
+      "NEXT_PUBLIC_",
+      "VITE_",
+    ],
+  },
+  backend: {
+    warnMaxFilesChanged: 15,
+    warnMaxLinesChanged: 400,
+    warnMaxDeletions: 50,
+    checkpointReminderMinutes: 30,
+    extraSecretPatterns: [
+      "DATABASE_URL",
+      "REDIS_URL",
+      "SMTP_",
+    ],
+  },
+  fullstack: {
+    warnMaxFilesChanged: 20,
+    warnMaxLinesChanged: 500,
+    warnMaxDeletions: 60,
+    checkpointReminderMinutes: 25,
+  },
+  monorepo: {
+    warnMaxFilesChanged: 30,
+    warnMaxLinesChanged: 800,
+    warnMaxDeletions: 100,
+    checkpointReminderMinutes: 30,
+  },
+  custom: {
+    warnMaxFilesChanged: 15,
+    warnMaxLinesChanged: 300,
+    warnMaxDeletions: 50,
+    checkpointReminderMinutes: 30,
+  },
+};
 
 export const DEFAULT_CONFIG: PulseConfig = {
   version: 1,
@@ -52,24 +98,48 @@ export async function writeDefaultConfig(repoRoot: string): Promise<void> {
 }
 
 export function normalizeConfig(input: any): PulseConfig {
+  // Apply preset defaults first if preset is set
+  const presetName = input?.preset as PresetName | undefined;
+  const presetDefaults = presetName && PRESETS[presetName] ? PRESETS[presetName] : null;
+
   const merged: PulseConfig = {
     ...DEFAULT_CONFIG,
     ...(typeof input === "object" && input ? input : {}),
     thresholds: {
       ...DEFAULT_CONFIG.thresholds,
+      // Apply preset thresholds
+      ...(presetDefaults ? {
+        warnMaxFilesChanged: presetDefaults.warnMaxFilesChanged,
+        warnMaxLinesChanged: presetDefaults.warnMaxLinesChanged,
+        warnMaxDeletions: presetDefaults.warnMaxDeletions,
+      } : {}),
+      // User overrides take precedence
       ...(input?.thresholds ?? {}),
     },
     patterns: {
       ...DEFAULT_CONFIG.patterns,
       ...(input?.patterns ?? {}),
+      // Merge extra secret patterns from preset
+      secret: [
+        ...DEFAULT_CONFIG.patterns.secret,
+        ...(presetDefaults?.extraSecretPatterns ?? []),
+        ...(input?.patterns?.secret ?? []),
+      ],
     },
     commands: {
       ...DEFAULT_CONFIG.commands,
       ...(input?.commands ?? {}),
     },
+    // Apply preset checkpoint reminder
+    checkpointReminderMinutes: input?.checkpointReminderMinutes 
+      ?? presetDefaults?.checkpointReminderMinutes 
+      ?? 30,
   };
+  
   // Defensive: ensure required shapes
   merged.version = 1;
+  merged.preset = presetName;
+  
   if (!["advisory", "mixed", "strict"].includes(merged.enforcement)) {
     merged.enforcement = DEFAULT_CONFIG.enforcement;
   }
@@ -80,5 +150,19 @@ export function normalizeConfig(input: any): PulseConfig {
     merged.projectType = DEFAULT_CONFIG.projectType;
   }
   return merged;
+}
+
+/**
+ * Get all available preset names
+ */
+export function getPresetNames(): PresetName[] {
+  return Object.keys(PRESETS) as PresetName[];
+}
+
+/**
+ * Get preset configuration by name
+ */
+export function getPreset(name: PresetName): PresetConfig {
+  return PRESETS[name] ?? PRESETS.custom;
 }
 

@@ -1,17 +1,30 @@
 import type { Command } from "commander";
 import { loadConfig } from "../lib/config.js";
+import { loadState } from "../lib/artifacts.js";
 import { exec } from "../lib/exec.js";
 import { findRepoRoot } from "../lib/paths.js";
-import { gitDiffNameStatus, gitDiffNumstat, gitDiffStat, gitDiffText, gitLogOneline } from "../lib/git.js";
-import { scanDiff } from "../lib/scanner.js";
+import {
+  gitDiffNameStatus,
+  gitDiffNumstat,
+  gitDiffStat,
+  gitDiffText,
+  gitLogOneline,
+} from "../lib/git.js";
+import { scanDiff, detectLoopSignals } from "../lib/scanner.js";
+import {
+  calculateScopeCheck,
+  calculateRiskSummary,
+  calculateTimeSummary,
+  generateRecommendation,
+} from "../lib/briefing.js";
 
 type HookName = "pre-commit" | "pre-push" | "none";
 
 export function registerDoctorCommand(program: Command): void {
   program
     .command("doctor")
-    .alias("d") // Kurzform: pulse d
-    .description("Safeguards + Red Flags prüfen (Secrets, Deletes, Loops)")
+    .alias("d")
+    .description("Safeguards + Red Flags prüfen (Secrets, Deletes, Loops, Scope)")
     .option("--staged", "Scan staged diff")
     .option("--ci", "CI mode: quieter output + exit codes")
     .option("--hook <name>", "Hook mode: pre-commit | pre-push", "none")
@@ -28,9 +41,9 @@ export function registerDoctorCommand(program: Command): void {
         allowPush?: boolean;
       }) => {
         const repoRoot = await findRepoRoot(process.cwd());
-        if (!repoRoot) throw new Error("Not inside a git repository.");
+        if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
 
-        const config = await loadConfig(repoRoot);
+        const [config, state] = await Promise.all([loadConfig(repoRoot), loadState(repoRoot)]);
         const hook = (opts.hook ?? "none") as HookName;
 
         // Safeguard: Push gate (hook-only)
@@ -58,8 +71,11 @@ export function registerDoctorCommand(program: Command): void {
         const scan = scanDiff(config, { diffText, diffStat, diffNumstat, diffNameStatus });
 
         // Mixed enforcement: deletes are critical only if not explicitly confirmed
-        const hasDeleteFinding = scan.findings.some((f) => f.code === "MASS_DELETE" && f.message.includes("File deletion"));
-        const deleteConfirmed = Boolean(opts.confirmDelete) || process.env.PULSE_CONFIRM_DELETE === "1";
+        const hasDeleteFinding = scan.findings.some(
+          (f) => f.code === "MASS_DELETE" && f.message.includes("File deletion")
+        );
+        const deleteConfirmed =
+          Boolean(opts.confirmDelete) || process.env.PULSE_CONFIRM_DELETE === "1";
         if (hasDeleteFinding && deleteConfirmed) {
           scan.findings = scan.findings.map((f) =>
             f.code === "MASS_DELETE" && f.message.includes("File deletion")
@@ -68,30 +84,114 @@ export function registerDoctorCommand(program: Command): void {
           );
         }
 
-        // Optional loop heuristics (based on commit messages + diff patterns)
+        // Optional loop heuristics
         if (opts.loop) {
-          const log = await gitLogOneline(repoRoot, 8);
-          const loopHints = loopHeuristics(log);
-          for (const h of loopHints) scan.findings.push(h);
+          const log = await gitLogOneline(repoRoot, 15);
+          const logWithFiles = await exec("git", ["log", "--name-only", "--oneline", "-15"], {
+            cwd: repoRoot,
+          });
+
+          const loopSignals = detectLoopSignals(log, logWithFiles.stdout);
+          for (const signal of loopSignals) {
+            scan.findings.push({
+              severity: signal.severity,
+              code: "LOOP_SIGNAL",
+              message: signal.message,
+              details: signal.details,
+            });
+          }
+        }
+
+        // ════════════════════════════════════════════════════════════════════════
+        // Preset-Verletzungen explizit hinzufügen
+        // ════════════════════════════════════════════════════════════════════════
+        const scope = calculateScopeCheck(config, scan.stats);
+        if (scope.exceeded) {
+          const presetName = config.preset ?? "custom";
+          for (const field of scope.exceededFields) {
+            const current =
+              field === "files"
+                ? scope.files.current
+                : field === "lines"
+                  ? scope.lines.current
+                  : scope.deletes.current;
+            const max =
+              field === "files"
+                ? scope.files.max
+                : field === "lines"
+                  ? scope.lines.max
+                  : scope.deletes.max;
+
+            scan.findings.push({
+              severity: "warn",
+              code: "BIG_CHANGESET",
+              message: `Preset-Limit überschritten (${presetName}): ${field} ${current}/${max}`,
+            });
+          }
         }
 
         // Output
         const critical = scan.findings.filter((f) => f.severity === "critical");
         const warnings = scan.findings.filter((f) => f.severity === "warn");
 
+        // Calculate recommendation
+        const risk = calculateRiskSummary(scan);
+        const time = calculateTimeSummary(
+          state.lastCheckpointAt,
+          config.checkpointReminderMinutes ?? 30
+        );
+        const recommendation = generateRecommendation(scope, risk, time);
+
         if (!opts.ci) {
+          const presetProfile = config.preset
+            ? `${config.preset}/${state.profile}`
+            : state.profile;
+
           // eslint-disable-next-line no-console
-          console.log(`Pulse Doctor (${staged ? "staged" : "working tree"})`);
+          console.log(`\n🔍 Pulse Doctor (${staged ? "staged" : "working tree"})\n`);
           // eslint-disable-next-line no-console
-          console.log(`Files changed: ${scan.stats.filesChanged} | +${scan.stats.linesAdded} -${scan.stats.linesDeleted}`);
+          console.log(`Profil: ${presetProfile}`);
           // eslint-disable-next-line no-console
-          console.log(`Diff stat:\n${diffStat || "(no changes)"}`);
+          console.log(
+            `Scope: ${scan.stats.filesChanged} files | +${scan.stats.linesAdded} -${scan.stats.linesDeleted} lines`
+          );
+
+          // Scope progress
+          if (scan.stats.filesChanged > 0) {
+            // eslint-disable-next-line no-console
+            console.log(
+              `Limits (${config.preset ?? "custom"}): Files ${scope.files.percent}%, Lines ${scope.lines.percent}%`
+            );
+          }
+
+          // eslint-disable-next-line no-console
+          console.log(`\nDiff stat:\n${diffStat || "(no changes)"}`);
           // eslint-disable-next-line no-console
           console.log("");
           printFindings(scan.findings);
           // eslint-disable-next-line no-console
           console.log("");
-          printActions(critical, warnings);
+
+          // ══════════════════════════════════════════════════════════════════════
+          // Empfehlung anzeigen
+          // ══════════════════════════════════════════════════════════════════════
+          const actionEmoji = {
+            approve: "✅",
+            checkpoint: "⏱️",
+            escalate: "🚨",
+            stop: "🛑",
+          }[recommendation.action];
+
+          // eslint-disable-next-line no-console
+          console.log(`${actionEmoji} EMPFEHLUNG: ${recommendation.action.toUpperCase()}`);
+          // eslint-disable-next-line no-console
+          console.log(`   → ${recommendation.reason}`);
+          if (recommendation.command) {
+            // eslint-disable-next-line no-console
+            console.log(`   → ${recommendation.command}`);
+          }
+          // eslint-disable-next-line no-console
+          console.log("");
         } else {
           printFindings(scan.findings);
         }
@@ -117,84 +217,26 @@ function print(ci: boolean | undefined, msg: string, details: string) {
   }
 }
 
-function printFindings(findings: { severity: string; code: string; message: string; details?: string }[]) {
+function printFindings(
+  findings: { severity: string; code: string; message: string; details?: string }[]
+) {
   if (!findings.length) {
     // eslint-disable-next-line no-console
-    console.log("OK: no findings");
+    console.log("✅ Keine Findings");
     return;
   }
   for (const f of findings) {
+    const emoji = f.severity === "critical" ? "🚨" : "⚠️";
     // eslint-disable-next-line no-console
-    console.log(`${f.severity.toUpperCase()}: ${f.code}: ${f.message}`);
+    console.log(`${emoji} ${f.code}: ${f.message}`);
     if (f.details) {
       // eslint-disable-next-line no-console
-      console.log(f.details.split("\n").map((l) => `  ${l}`).join("\n"));
+      console.log(
+        f.details
+          .split("\n")
+          .map((l) => `   ${l}`)
+          .join("\n")
+      );
     }
   }
 }
-
-function printActions(
-  critical: { code: string; message: string }[],
-  warnings: { code: string; message: string }[]
-) {
-  if (!critical.length && !warnings.length) {
-    // eslint-disable-next-line no-console
-    console.log("✅ No action needed.");
-    return;
-  }
-  // eslint-disable-next-line no-console
-  console.log("Recommended actions:");
-  if (critical.length) {
-    // eslint-disable-next-line no-console
-    console.log("- STOP: Critical safeguard hit. Fix or explicitly confirm (if appropriate).");
-    for (const c of critical) {
-      if (c.code === "SECRETS") {
-        // eslint-disable-next-line no-console
-        console.log("  - Remove secret, rotate it, and move to env/secret manager.");
-      }
-      if (c.code === "MASS_DELETE") {
-        // eslint-disable-next-line no-console
-        console.log("  - If delete is intended: re-run with PULSE_CONFIRM_DELETE=1 (or --confirm-delete).");
-      }
-    }
-  }
-  if (warnings.length) {
-    // eslint-disable-next-line no-console
-    console.log("- REVIEW: Warnings suggest risk/over-scope. Consider splitting milestones and checkpointing.");
-  }
-}
-
-function loopHeuristics(logOneline: string) {
-  const hints: { severity: "warn"; code: "LOOP_SIGNAL"; message: string; details?: string }[] = [];
-  const lines = logOneline
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  if (!lines.length) return hints;
-
-  const msgs = lines.map((l) => l.replace(/^[a-f0-9]+\s+/, ""));
-  const fixCount = msgs.filter((m) => /^fix(\(|:)/i.test(m)).length;
-  if (fixCount >= 3) {
-    hints.push({
-      severity: "warn",
-      code: "LOOP_SIGNAL",
-      message:
-        'Loop risk: multiple recent "fix" commits. If issue persists after 2–3 attempts: STOP, reject last commits, escalate with Cursor explanation.',
-      details: msgs.slice(0, 6).join("\n"),
-    });
-  }
-
-  const revertCount = msgs.filter((m) => /\brevert\b/i.test(m)).length;
-  if (revertCount >= 1) {
-    hints.push({
-      severity: "warn",
-      code: "LOOP_SIGNAL",
-      message:
-        "Loop risk: revert detected. If A↔B toggling: reset to last stable commit and choose one approach explicitly.",
-      details: msgs.slice(0, 6).join("\n"),
-    });
-  }
-
-  return hints;
-}
-

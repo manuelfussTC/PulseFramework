@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "pulse": {
+            "command": "npx",
+            "args": [
+                "@pulseframework/pulse-mcp"
+            ],
+            "env": {}
+        }
+    }
+}
