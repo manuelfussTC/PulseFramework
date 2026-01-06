@@ -32,7 +32,21 @@ export function registerStartCommand(program: Command): void {
     .option("--ist <text>", "IST-Zustand (für IST/SOLL-Prompt)")
     .option("--soll <text>", "SOLL-Zustand (für IST/SOLL-Prompt)")
     .option("-C, --clipboard", "Prompt in Zwischenablage kopieren")
-    .action(async (opts) => {
+    .option("--no-branch-check", "Branch-Check überspringen (für MCP/Automation)")
+    .action(async (opts: {
+      template?: string;
+      quick?: boolean;
+      role?: string;
+      context?: string;
+      input?: string;
+      action?: string;
+      output?: string;
+      examples?: string;
+      ist?: string;
+      soll?: string;
+      clipboard?: boolean;
+      branchCheck?: boolean;
+    }) => {
       const repoRoot = await findRepoRoot(process.cwd());
       if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
 
@@ -42,36 +56,40 @@ export function registerStartCommand(program: Command): void {
       console.log("\n🎯 PULSE Start\n");
 
       // ══════════════════════════════════════════════════════════════════════
-      // Branch-Check: Warnung bei main/master
+      // Branch-Check: Warnung bei main/master (nur interaktiv, nicht bei --quick)
       // ══════════════════════════════════════════════════════════════════════
-      const currentBranch = await gitCurrentBranch(repoRoot);
-      const isMain = await gitIsMainBranch(repoRoot);
+      const skipBranchCheck = opts.branchCheck === false || opts.quick;
       
-      if (isMain) {
-        // eslint-disable-next-line no-console
-        console.log(`⚠️  Du bist auf '${currentBranch}' – Feature-Branch empfohlen!\n`);
+      if (!skipBranchCheck) {
+        const currentBranch = await gitCurrentBranch(repoRoot);
+        const isMain = await gitIsMainBranch(repoRoot);
         
-        const createBranch = await promptConfirm("Feature-Branch erstellen?", true);
-        
-        if (createBranch) {
-          const branchName = await promptText(
-            "Branch-Name (z.B. feature/user-dashboard)",
-            "feature/"
-          );
-          
-          if (branchName && branchName !== "feature/") {
-            const success = await gitCreateBranch(repoRoot, branchName);
-            if (success) {
-              // eslint-disable-next-line no-console
-              console.log(`✅ Branch erstellt: ${branchName}\n`);
-            } else {
-              // eslint-disable-next-line no-console
-              console.log(`❌ Branch konnte nicht erstellt werden\n`);
-            }
-          }
-        } else {
+        if (isMain) {
           // eslint-disable-next-line no-console
-          console.log(`ℹ️  Arbeite auf '${currentBranch}' (nicht empfohlen)\n`);
+          console.log(`⚠️  Du bist auf '${currentBranch}' – Feature-Branch empfohlen!\n`);
+          
+          const createBranch = await promptConfirm("Feature-Branch erstellen?", true);
+          
+          if (createBranch) {
+            const branchName = await promptText(
+              "Branch-Name (z.B. feature/user-dashboard)",
+              "feature/"
+            );
+            
+            if (branchName && branchName !== "feature/") {
+              const success = await gitCreateBranch(repoRoot, branchName);
+              if (success) {
+                // eslint-disable-next-line no-console
+                console.log(`✅ Branch erstellt: ${branchName}\n`);
+              } else {
+                // eslint-disable-next-line no-console
+                console.log(`❌ Branch konnte nicht erstellt werden\n`);
+              }
+            }
+          } else {
+            // eslint-disable-next-line no-console
+            console.log(`ℹ️  Arbeite auf '${currentBranch}' (nicht empfohlen)\n`);
+          }
         }
       }
 
