@@ -7,19 +7,20 @@ const execAsync = promisify(exec);
 export function registerRunTool() {
   return {
     name: "pulse_run",
-    description: `Startet einen PULSE Workflow und gibt dir den Arbeitsauftrag.
+    description: `Startet einen PULSE Workflow: Erstellt Branch + gibt Arbeitsauftrag.
 
-WICHTIG: Nach diesem Tool sollst du DIREKT mit der Implementierung beginnen!
-Nicht "Prompt kopieren" - DU bist der Agent, DU arbeitest jetzt.
+WICHTIG: 
+- Erstellt automatisch Feature-Branch (wenn auf main/master)
+- Nach diesem Tool DIREKT mit Implementierung beginnen!
 
 WANN NUTZEN:
 - User sagt "neue Aufgabe", "starte Feature", "beginne mit..."
 - Am Anfang einer Coding-Session
 
 NACH AUFRUF:
+- Feature-Branch wird erstellt
 - Du erhältst den Arbeitsauftrag
-- BEGINNE SOFORT mit der Implementierung
-- Checkpoint alle 5-10 Min`,
+- BEGINNE SOFORT mit der Implementierung`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -32,6 +33,10 @@ NACH AUFRUF:
           enum: ["feature", "bugfix", "refactor", "concept", "analyze"],
           description: "Vorlage (default: feature)",
         },
+        branch: {
+          type: "string",
+          description: "Branch-Name (optional, wird automatisch generiert)",
+        },
       },
       required: ["action"],
     },
@@ -41,6 +46,7 @@ NACH AUFRUF:
 export async function handleRunTool(args: { 
   action?: string; 
   template?: string;
+  branch?: string;
 }): Promise<{ content: Array<{ type: string; text: string }> }> {
   const action = args.action ?? "Neue Aufgabe";
   const template = args.template ?? "feature";
@@ -63,7 +69,37 @@ export async function handleRunTool(args: {
       // Ignore status errors
     }
     
-    // 2. Worklog speichern (im Hintergrund, nicht blockierend)
+    // 2. Branch erstellen wenn auf main/master
+    let branchInfo = "";
+    let currentBranch = "";
+    
+    try {
+      const branchResult = await execAsync("git rev-parse --abbrev-ref HEAD", {
+        timeout: 5000,
+      });
+      currentBranch = branchResult.stdout.trim();
+      
+      const protectedBranches = ["main", "master", "develop", "development"];
+      
+      if (protectedBranches.includes(currentBranch.toLowerCase())) {
+        // Generiere Branch-Namen aus Action oder nutze übergebenen Namen
+        const branchName = args.branch ?? generateBranchName(action, template);
+        
+        try {
+          await execAsync(`git checkout -b ${branchName}`, { timeout: 5000 });
+          branchInfo = `✅ Branch erstellt: \`${branchName}\``;
+          currentBranch = branchName;
+        } catch {
+          branchInfo = `⚠️ Branch konnte nicht erstellt werden (evtl. existiert er bereits)`;
+        }
+      } else {
+        branchInfo = `📍 Auf Branch: \`${currentBranch}\``;
+      }
+    } catch {
+      branchInfo = "⚠️ Git-Status konnte nicht geprüft werden";
+    }
+    
+    // 3. Worklog speichern (im Hintergrund, nicht blockierend)
     const safeAction = action
       .replace(/\\/g, '\\\\')
       .replace(/"/g, '\\"')
@@ -78,7 +114,7 @@ export async function handleRunTool(args: {
       // Ignore errors - worklog ist nice-to-have
     });
     
-    // 3. Response: DIREKTE ARBEITSANWEISUNG
+    // 4. Response: DIREKTE ARBEITSANWEISUNG
     const profile = status.preset 
       ? `${status.preset}/${status.profile ?? "build"}` 
       : (status.profile ?? "build");
@@ -87,6 +123,8 @@ export async function handleRunTool(args: {
     
     const output = `
 # 🚀 ARBEITSAUFTRAG
+
+${branchInfo}
 
 **ACTION:** ${action}
 
@@ -101,6 +139,7 @@ Implementiere: **${action}**
 
 Template: ${template}
 Profil: ${profile}
+Branch: ${currentBranch}
 
 ## Während der Arbeit
 
@@ -137,4 +176,26 @@ Profil: ${profile}
       recommendation: "Starte trotzdem mit der Aufgabe",
     });
   }
+}
+
+/**
+ * Generate a branch name from action text
+ * "User Dashboard implementieren" → "feature/user-dashboard"
+ */
+function generateBranchName(action: string, template: string): string {
+  const prefix = template === "bugfix" ? "fix" : 
+                 template === "refactor" ? "refactor" : "feature";
+  
+  // Normalisiere: lowercase, entferne Sonderzeichen, ersetze Leerzeichen
+  const slug = action
+    .toLowerCase()
+    .replace(/[äöü]/g, (c) => ({ ä: "ae", ö: "oe", ü: "ue" })[c] ?? c)
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .substring(0, 40) // Max 40 Zeichen
+    .replace(/-+$/, ""); // Trailing dashes entfernen
+  
+  return `${prefix}/${slug}`;
 }
