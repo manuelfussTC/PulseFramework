@@ -35,3 +35,8 @@ docs/communications/
 docs/PULSE-Framework-Komplett.md
 docs/CLI-Dokumentation.md
 plan.md
+
+# Large binary files
+PULSE_Framework*.pdf
+PULSE_Framework*.docx
+pulse_text.txt
