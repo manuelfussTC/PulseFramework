@@ -7,20 +7,19 @@ const execAsync = promisify(exec);
 export function registerRunTool() {
   return {
     name: "pulse_run",
-    description: `Startet einen PULSE Workflow: Erstellt Prompt + gibt Empfehlungen.
-    
+    description: `Startet einen PULSE Workflow und gibt dir den Arbeitsauftrag.
+
+WICHTIG: Nach diesem Tool sollst du DIREKT mit der Implementierung beginnen!
+Nicht "Prompt kopieren" - DU bist der Agent, DU arbeitest jetzt.
+
 WANN NUTZEN:
 - User sagt "neue Aufgabe", "starte Feature", "beginne mit..."
 - Am Anfang einer Coding-Session
 
-PARAMETER:
-- action: Was soll gemacht werden (required)
-- template: feature, bugfix, refactor, concept (optional, default: feature)
-
 NACH AUFRUF:
-- Prompt wird generiert
-- Empfehlung für nächsten Schritt
-- Reminder für Checkpoints`,
+- Du erhältst den Arbeitsauftrag
+- BEGINNE SOFORT mit der Implementierung
+- Checkpoint alle 5-10 Min`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -48,10 +47,6 @@ export async function handleRunTool(args: {
   
   try {
     // 1. Status holen
-    const statusResult = await execAsync("pulse status --json", {
-      timeout: 10000,
-    });
-    
     let status: {
       profile?: string;
       preset?: string;
@@ -60,32 +55,30 @@ export async function handleRunTool(args: {
     } = {};
     
     try {
+      const statusResult = await execAsync("pulse status --json", {
+        timeout: 10000,
+      });
       status = JSON.parse(statusResult.stdout);
     } catch {
-      // Ignore parse errors
+      // Ignore status errors
     }
     
-    // 2. Prompt generieren (quick mode)
-    // Escape für Shell: ersetze " mit \" und ` mit \`
+    // 2. Worklog speichern (im Hintergrund, nicht blockierend)
     const safeAction = action
       .replace(/\\/g, '\\\\')
       .replace(/"/g, '\\"')
       .replace(/`/g, '\\`')
       .replace(/\$/g, '\\$');
     
-    let startResult;
-    try {
-      startResult = await execAsync(
-        `pulse start --template ${template} --action "${safeAction}" --quick`,
-        { timeout: 15000 }
-      );
-    } catch (startError) {
-      // Wenn pulse start fehlschlägt, trotzdem Workflow-Info zurückgeben
-      const errMsg = startError instanceof Error ? startError.message : String(startError);
-      startResult = { stdout: `⚠️ Prompt konnte nicht automatisch erstellt werden: ${errMsg}\n\nBitte manuell: pulse start --template ${template}` };
-    }
+    // Speichere Worklog für später, aber warte nicht darauf
+    execAsync(
+      `pulse start --template ${template} --action "${safeAction}" --quick`,
+      { timeout: 15000 }
+    ).catch(() => {
+      // Ignore errors - worklog ist nice-to-have
+    });
     
-    // 3. Response zusammenbauen
+    // 3. Response: DIREKTE ARBEITSANWEISUNG
     const profile = status.preset 
       ? `${status.preset}/${status.profile ?? "build"}` 
       : (status.profile ?? "build");
@@ -93,45 +86,55 @@ export async function handleRunTool(args: {
     const checkpointInterval = status.checkpointReminderMinutes ?? 15;
     
     const output = `
-# 🚀 PULSE Run gestartet
+# 🚀 ARBEITSAUFTRAG
 
-## Workflow
-- **Profil:** ${profile}
-- **Template:** ${template}
-- **ACTION:** ${action}
+**ACTION:** ${action}
 
-## Prompt erstellt
-${startResult.stdout.includes("Gespeichert") ? "✅ Prompt wurde gespeichert" : ""}
+## JETZT SOFORT ANFANGEN
 
-## Nächste Schritte
+Du bist der Agent. Beginne DIREKT mit der Implementierung.
+NICHT "Prompt kopieren" - DU arbeitest jetzt.
 
-1. **Jetzt:** Implementiere die Aufgabe
-2. **Alle ${checkpointInterval} Min:** \`pulse_checkpoint\` aufrufen
-3. **Bei Problemen:** \`pulse_escalate\` aufrufen
-4. **Am Ende:** \`pulse_review\` aufrufen
+## Deine Aufgabe
 
-## Safeguards aktiv
-- ⏱️ Max 30 Min autonom
-- 🗑️ Kein DELETE ohne Bestätigung
-- 📤 Kein PUSH ohne Bestätigung
-- 🔐 Keine Secrets im Code
+Implementiere: **${action}**
+
+Template: ${template}
+Profil: ${profile}
+
+## Während der Arbeit
+
+- ⏱️ **Checkpoint alle ${checkpointInterval} Min:** \`pulse_checkpoint\` aufrufen
+- 🔍 **Nach Code-Änderungen:** \`pulse_doctor\` aufrufen
+- ❌ **Bei Problemen nach 2-3 Versuchen:** \`pulse_escalate\`
+
+## Safeguards (IMMER beachten)
+
+- 🗑️ **KEIN DELETE** ohne User-Bestätigung
+- 📤 **KEIN PUSH** ohne User-Bestätigung
+- 🔐 **Keine Secrets** im Code
+- ⏱️ **Max 30 Min** autonom, dann STOP
+
+---
+
+**BEGINNE JETZT MIT DER IMPLEMENTIERUNG.**
 `;
 
     return chainResponse({
       result: output.trim(),
-      next_action: `Implementiere: "${action}". Checkpoint in ${checkpointInterval} Min.`,
+      next_action: `JETZT IMPLEMENTIEREN: "${action}"`,
       safeguards_active: true,
-      recommendation: `Nach Änderungen: pulse_checkpoint aufrufen`,
+      recommendation: `Beginne sofort. Checkpoint in ${checkpointInterval} Min.`,
     });
     
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     
     return chainResponse({
-      result: `❌ Fehler bei pulse run: ${errMsg}`,
-      next_action: "Prüfe ob pulse-cli installiert ist: pulse --version",
+      result: `❌ Fehler: ${errMsg}\n\nTrotzdem anfangen mit: ${action}`,
+      next_action: `Implementiere: "${action}"`,
       safeguards_active: true,
-      recommendation: "pulse init ausführen falls nicht initialisiert",
+      recommendation: "Starte trotzdem mit der Aufgabe",
     });
   }
 }
