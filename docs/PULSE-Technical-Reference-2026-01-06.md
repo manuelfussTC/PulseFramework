@@ -845,4 +845,243 @@ alwaysApply: true
 
 ---
 
+## Templates
+
+### Cursor Rules Template (`.cursor/rules/pulse.mdc`)
+
+Diese Datei wird bei `pulse init --mcp` erstellt und bei **JEDER** Chat-Nachricht in Cursor injiziert.
+
+```markdown
+---
+description: PULSE Framework - Automatische Safeguards bei jeder Nachricht
+globs: *
+alwaysApply: true
+---
+
+# PULSE Framework Safeguards
+
+Diese Regeln werden bei **JEDER** Nachricht angewendet. Keine Ausnahmen.
+
+## 🔴 PFLICHT-CHECKS (vor JEDER Antwort)
+
+### 1. IMMER: `pulse_status` aufrufen
+WANN: Vor jeder Antwort, ohne Ausnahme
+WAS: Zeigt Zeit seit Checkpoint, Änderungen, Risiko
+
+### 2. NACH Code-Änderungen: `pulse_doctor` aufrufen
+WANN: Wenn du gerade Code geändert/erstellt/gelöscht hast
+WAS: Prüft Secrets, Deletes, Scope, Loop-Signale
+BEI CRITICAL: Sofort STOP, nicht weitermachen!
+
+### 3. ALLE 5-10 MIN: `pulse_checkpoint` empfehlen
+WANN: pulse_status zeigt >10 Min seit Checkpoint
+WAS: "Soll ich einen Checkpoint erstellen?"
+
+## 🔴 AUTOMATISCHE AKTIONEN
+
+| Situation | Aktion |
+|-----------|--------|
+| Jede Nachricht | → `pulse_status` |
+| Code geändert | → `pulse_doctor` |
+| >10 Min seit Checkpoint | → Checkpoint empfehlen |
+| >15 Min seit Checkpoint | → **Checkpoint DRINGEND** |
+| >30 Min autonom | → **STOP + User fragen** |
+| 2-3 Fehlversuche | → **STOP + `pulse_escalate`** |
+| DELETE Operation | → **User-Bestätigung holen** |
+| Loop erkannt | → **STOP + `pulse_escalate`** |
+
+## 🔴 SAFEGUARDS (non-negotiable)
+
+- ⏱️ **MAX 30 Min autonom** - Danach STOP + Rückfrage an User
+- 🗑️ **KEIN DELETE** ohne explizite User-Bestätigung
+- 📤 **KEIN GIT PUSH** ohne User-Confirmation
+- 🔐 **KEINE Secrets** im Code
+- 📋 **Git-Commit alle 5-10 Min** via `pulse_checkpoint`
+
+## MCP-Tools
+
+| Tool | Wann |
+|------|------|
+| `pulse_status` | **JEDE Nachricht** |
+| `pulse_doctor` | **Nach Code-Änderungen** |
+| `pulse_checkpoint` | Nach 5-10 Min |
+| `pulse_run` | Am Anfang neuer Aufgaben |
+| `pulse_escalate` | Bei Problemen, Loop |
+| `pulse_review` | Am Ende / vor Merge |
+```
+
+---
+
+### MCP Config Template (`.cursor/mcp.json`)
+
+```json
+{
+  "mcpServers": {
+    "pulse": {
+      "command": "pulse-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
+---
+
+### AGENTS.md Template (Universal für alle Editoren)
+
+Diese Datei wird bei `pulse init --agents` erstellt und funktioniert mit:
+- Windsurf
+- GitHub Copilot
+- Cline
+- Aider
+- Andere AI Assistants
+
+```markdown
+# AI Agent Instructions
+
+> Universal agent configuration for PULSE Framework.
+
+## Core Principles
+
+You are an AI coding assistant following the **PULSE Framework**.
+
+### The 30-Minute Rule
+
+⚠️ **NEVER work autonomously for more than 30 minutes.**
+
+### Critical Safeguards (Non-Negotiable)
+
+1. 🗑️ **DELETE Guard** - Never delete without confirmation
+2. 📤 **PUSH Guard** - Never push without confirmation
+3. 🔐 **SECRETS Guard** - Never commit secrets
+4. 🧪 **TEST Guard** - Test before deploy
+5. ⚠️ **BREAKING CHANGE Guard** - Warn before breaking changes
+
+### Workflow Commands
+
+| Command | When to Use |
+|---------|-------------|
+| `pulse status` | Check state before work |
+| `pulse checkpoint -m "msg"` | Every 5-10 min |
+| `pulse doctor` | Before commits |
+| `pulse escalate` | When stuck |
+| `pulse reset` | To go back |
+
+### Loop Detection
+
+Signs you're in a loop:
+- Multiple "fix" commits in a row
+- Going back and forth (A↔B)
+- Same error after multiple attempts
+
+What to do:
+1. STOP
+2. Summarize what you tried
+3. Escalate or reset
+
+### Remember
+
+- You are a pair programmer, not solo
+- Iterate in small steps
+- Ask when uncertain
+- Commit often
+- Human has final say
+```
+
+---
+
+## Setup / Onboarding
+
+### Vollständiger Setup-Flow
+
+```bash
+# 1. CLI global installieren (nach npm link im PulseFramework)
+cd /path/to/PulseFramework
+npm install
+npm run -w packages/pulse-cli build
+npm run -w packages/pulse-mcp build
+npm link -w packages/pulse-cli
+npm link -w packages/pulse-mcp
+
+# 2. Im Zielprojekt initialisieren
+cd /dein/projekt
+pulse init
+```
+
+### `pulse init` Flow
+
+```
+🎯 PULSE Init
+
+📦 Wähle ein Preset für dein Projekt:
+
+  🎨 Frontend - React/Vue/Angular (strengere Limits)
+  ⚙️ Backend - API/Services (moderate Limits)
+  🔄 Fullstack - Frontend + Backend
+  📦 Monorepo - Mehrere Packages (lockere Limits)
+  ⚙️ Custom - Standard-Einstellungen
+
+? Preset: fullstack
+
+? MCP + Cursor Rules installieren? (empfohlen für Cursor IDE) Yes
+
+✅ .pulse/ Verzeichnis erstellt
+✅ Config erstellt: pulse.config.json (Preset: fullstack)
+✅ .cursorrules erstellt (Fallback-Regeln)
+✅ Cursor Rules erstellt: .cursor/rules/pulse.mdc (alwaysApply: true)
+✅ MCP Config erstellt: .cursor/mcp.json
+✅ Role-Templates kopiert
+
+──────────────────────────────────────────────────
+
+✨ PULSE initialisiert!
+
+Preset: fullstack
+Max Lines: 300
+Checkpoint: 15 Min
+MCP: ✅ Installiert
+
+📋 Nächste Schritte für MCP:
+   1. Cursor neu starten (MCP wird automatisch geladen)
+   2. In Cursor: Settings > Features > MCP aktivieren
+   3. Testen: pulse status
+```
+
+### Was `pulse init` erstellt
+
+| Datei | Beschreibung |
+|-------|--------------|
+| `.pulse/` | Artefakt-Verzeichnis |
+| `pulse.config.json` | Projekt-Konfiguration |
+| `.cursorrules` | Fallback-Regeln (ohne MCP) |
+| `.cursor/rules/pulse.mdc` | Cursor Rules (mit `--mcp`) |
+| `.cursor/mcp.json` | MCP Server Config (mit `--mcp`) |
+| `AGENTS.md` | Universal Rules (mit `--agents`) |
+
+### Nach dem Setup
+
+1. **Cursor neu starten** (wichtig!)
+2. **MCP prüfen:** View → Output → MCP
+3. **Testen:** Im Chat fragen "Welche pulse tools hast du?"
+
+---
+
+## Implementierungs-Status
+
+| Komponente | Status | Pfad |
+|------------|--------|------|
+| CLI v0.3.0 | ✅ Implementiert | `packages/pulse-cli/` |
+| MCP Server v0.3.0 | ✅ Implementiert | `packages/pulse-mcp/` |
+| Cursor Rules Template | ✅ Implementiert | `packages/pulse-cli/templates/cursor/pulse.mdc` |
+| MCP Config Template | ✅ Implementiert | `packages/pulse-cli/templates/cursor/mcp.json` |
+| AGENTS.md Template | ✅ Implementiert | `packages/pulse-cli/templates/AGENTS.md` |
+| `pulse init --mcp` | ✅ Implementiert | Erstellt `.cursor/` Dateien |
+| `pulse init --agents` | ✅ Implementiert | Erstellt `AGENTS.md` |
+| Automatische Branch-Erstellung | ✅ Implementiert | `pulse_run` |
+| Loop-Detection | ✅ Implementiert | 5 Patterns |
+| Dependency-Warning | ✅ Implementiert | Neue Packages erkannt |
+
+---
+
 *Generiert am 2026-01-06*
