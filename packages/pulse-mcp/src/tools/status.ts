@@ -37,9 +37,21 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
     
     // Format response
     const presetProfile = data.preset ? `${data.preset}/${data.profile}` : data.profile;
-    const cpStatus = data.lastCheckpointMinutesAgo !== null 
-      ? `${data.lastCheckpointMinutesAgo} min ago`
-      : "none yet";
+    
+    // Session detection: If >60 min AND no dirty files, treat as new session
+    const minutesAgo = data.lastCheckpointMinutesAgo;
+    const isNewSession = minutesAgo !== null && minutesAgo > 60 && data.dirtyFiles === 0;
+    const isActiveOverdue = minutesAgo !== null && minutesAgo > 30 && data.dirtyFiles > 0;
+    
+    // Format checkpoint status with session awareness
+    let cpStatus: string;
+    if (minutesAgo === null) {
+      cpStatus = "none yet";
+    } else if (isNewSession) {
+      cpStatus = `new session (last: ${minutesAgo > 1440 ? Math.floor(minutesAgo / 1440) + "d" : Math.floor(minutesAgo / 60) + "h"} ago)`;
+    } else {
+      cpStatus = `${minutesAgo} min ago`;
+    }
     
     let recommendation: string | undefined;
     let nextAction: string | undefined;
@@ -48,15 +60,19 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
     if (data.criticalFindings > 0) {
       recommendation = "🛑 CRITICAL - You MUST stop and fix before continuing";
       nextAction = "Call pulse_doctor to see details. DO NOT proceed with other tasks.";
-    } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 30 && data.dirtyFiles > 0) {
+    } else if (isNewSession) {
+      // New session - don't block, just recommend starting fresh
+      recommendation = "🆕 New session detected";
+      nextAction = "Consider pulse_checkpoint to start fresh timer";
+    } else if (isActiveOverdue) {
       recommendation = "🛑 CHECKPOINT OVERDUE - You MUST checkpoint before continuing";
       nextAction = "Call pulse_checkpoint NOW. DO NOT proceed with other tasks.";
-    } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 15 && data.dirtyFiles > 0) {
-      nextAction = `Call pulse_checkpoint in ~${30 - data.lastCheckpointMinutesAgo} min`;
+    } else if (minutesAgo !== null && minutesAgo > 15 && data.dirtyFiles > 0) {
+      nextAction = `Call pulse_checkpoint in ~${30 - minutesAgo} min`;
     }
     
-    // Check for blocking conditions
-    const isOverdue = data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 30 && data.dirtyFiles > 0;
+    // Check for blocking conditions (only block during ACTIVE work, not new sessions)
+    const isOverdue = isActiveOverdue;
     
     const lines: string[] = [
       `📊 PULSE Status`,
@@ -72,8 +88,11 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
     if (data.criticalFindings > 0) {
       lines.unshift(`🛑 CRITICAL FINDINGS DETECTED - STOP`);
       lines.unshift(``);
+    } else if (isNewSession) {
+      lines.unshift(`🆕 NEW SESSION - Timer reset recommended`);
+      lines.unshift(``);
     } else if (isOverdue) {
-      lines.unshift(`🛑 CHECKPOINT OVERDUE (${data.lastCheckpointMinutesAgo} min) - STOP AND CHECKPOINT`);
+      lines.unshift(`🛑 CHECKPOINT OVERDUE (${minutesAgo} min) - STOP AND CHECKPOINT`);
       lines.unshift(``);
     }
     

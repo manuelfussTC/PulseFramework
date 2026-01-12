@@ -17,10 +17,15 @@ This repository contains multiple packages:
 - **MCP Tool Triggers**: Added explicit guidance in `.cursorrules` for when to call each MCP tool
 - **Changelog Protocol**: Added mandatory changelog documentation rules to `.cursorrules`
 - **Publishing Protocol**: Added documentation for publishing CLI and Extension
+- **Session Detection**: Timer now detects new sessions (>60 min without uncommitted changes)
+  - MCP: Shows "🆕 NEW SESSION" instead of blocking
+  - VS Code: Shows "Pulse: 5h (new session?)" instead of warning
+  - Prevents false "overdue" warnings when opening Cursor after a break
 
 ### Changed
 - Extension now calls `npx pulse-framework-cli` (npm package) instead of local CLI
 - Updated `pulse.mdc` template with MCP tool triggers
+- Checkpoint timer only blocks during active work (with uncommitted changes), not after breaks
 
 ---
 

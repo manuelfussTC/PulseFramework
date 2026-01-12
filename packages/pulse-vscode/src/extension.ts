@@ -247,6 +247,12 @@ function updateStatusBar() {
   } else if (minutesAgo < reminderMinutes) {
     statusBarItem.text = `$(clock) Pulse: ${minutesAgo}m ago`;
     statusBarItem.backgroundColor = undefined;
+  } else if (minutesAgo > 60) {
+    // Session detection: >60 min is likely a new session, show friendly message
+    const hoursAgo = Math.floor(minutesAgo / 60);
+    const display = hoursAgo >= 24 ? `${Math.floor(hoursAgo / 24)}d` : `${hoursAgo}h`;
+    statusBarItem.text = `$(refresh) Pulse: ${display} (new session?)`;
+    statusBarItem.backgroundColor = undefined; // Don't show warning for new session
   } else {
     statusBarItem.text = `$(warning) Pulse: ${minutesAgo}m ago`;
     statusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
