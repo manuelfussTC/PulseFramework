@@ -98,29 +98,24 @@ if [ "$PULSE_ALLOW_PUSH" != "1" ]; then
 fi
 
 # Run doctor check if pulse CLI is available
-run_doctor() {
-  if command -v pulse >/dev/null 2>&1; then
-    pulse doctor --hook pre-push
-  elif command -v pulse-framework >/dev/null 2>&1; then
-    pulse-framework doctor --hook pre-push
-  else
-    # CLI not installed, skip check
-    return 0
-  fi
-}
+if command -v pulse >/dev/null 2>&1; then
+  pulse doctor --hook pre-push
+  EXIT_CODE=$?
+elif command -v pulse-framework >/dev/null 2>&1; then
+  pulse-framework doctor --hook pre-push
+  EXIT_CODE=$?
+else
+  EXIT_CODE=0
+fi
 
-run_doctor
-EXIT_CODE=$?
-
-# Exit code 2 = critical findings (secrets, etc.) - MUST block
+# Only block on CRITICAL (exit 2), allow warnings (exit 1) - consistent with pre-commit
 if [ $EXIT_CODE -eq 2 ]; then
   echo ""
   echo "❌ Push blocked by PULSE (critical findings)"
   echo "   Fix issues or use: PULSE_SKIP_HOOKS=1 git push ..."
-  exit 1
+  exit 2
 fi
 
-# Other exit codes (warnings, etc.) - allow push
 exit 0
 `,
     "utf8"
@@ -130,4 +125,3 @@ exit 0
   // eslint-disable-next-line no-console
   console.log(`Installed git hooks:\n- ${preCommit}\n- ${postCommit}\n- ${prePush}`);
 }
-
