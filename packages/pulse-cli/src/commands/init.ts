@@ -414,10 +414,19 @@ async function installCursorIntegration(repoRoot: string, useGlobal: boolean): P
   if (!useGlobal && workspaceRoot && workspaceRoot !== repoRoot) {
     // Create wrapper script that changes to the correct directory
     const wrapperPath = path.join(repoRoot, ".pulse", "run-mcp.sh");
+    
+    // Determine how to execute pulse-mcp:
+    // - If it's a .js file, use node to run it
+    // - If it's an executable (from npm global bin), run it directly
+    const isJsFile = pulseMcpPath.endsWith(".js");
+    const execCommand = isJsFile 
+      ? `exec "${nodePath}" "${pulseMcpPath}"`
+      : `exec "${pulseMcpPath}"`;
+    
     const wrapperContent = `#!/bin/bash
 # PULSE MCP Wrapper - ensures correct working directory
 cd "${repoRoot}"
-exec "${nodePath}" "${pulseMcpPath}"
+${execCommand}
 `;
     await fs.writeFile(wrapperPath, wrapperContent, "utf8");
     await fs.chmod(wrapperPath, 0o755);

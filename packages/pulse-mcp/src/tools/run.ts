@@ -5,9 +5,6 @@ import { getProjectRoot } from "../lib/cli.js";
 
 const execAsync = promisify(exec);
 
-// Get project root with PULSE_PROJECT_ROOT support
-const cwd = getProjectRoot();
-
 export function registerRunTool() {
   return {
     name: "pulse_run",
