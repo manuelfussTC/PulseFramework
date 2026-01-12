@@ -156,3 +156,4 @@ Agent:
 - Call the tools ACTIVELY, not only when user asks
 - When uncertain: STOP and ASK
 - The safeguards ALWAYS apply, even if user argues against them
+- **ALWAYS update CHANGELOG.md** after significant changes (features, fixes, changes)

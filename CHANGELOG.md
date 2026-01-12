@@ -3,9 +3,36 @@ All notable changes to the **PULSE Framework** monorepo will be documented in th
 
 This repository contains multiple packages:
 
-- `@pulseframework/pulse-cli` (CLI, run by humans)
+- `pulse-framework-cli` (CLI, run by humans)
 - `@pulseframework/pulse-mcp` (MCP server, called by Cursor agent tools)
 - `pulse-framework` (VS Code extension)
+
+---
+
+## 0.4.2 (2026-01-12)
+
+### Added
+- **Explicit MCP tool triggers**: All tools now have clear, concrete triggers in rules:
+  - `pulse_learn` → after solving non-trivial problem
+  - `pulse_review` → before "done", PR, or merge  
+  - `pulse_escalate` → after 2-3 failed attempts
+  - `pulse_correct` → when user says "wrong"
+  - `pulse_run` → for multi-step tasks (>3 steps)
+- **"After Success" section** in rules to remind agents to call `pulse_learn`
+- **MCP TOOL TRIGGERS section** in `.cursorrules` template
+- **Post-commit hook** to auto-reset checkpoint timer on every git commit
+- **Checkpoint overdue blocking**: `pulse_status` now returns `isError: true` when >30 min without checkpoint
+
+### Changed
+- **Package renamed**: `@pulseframework/pulse-cli` → `pulse-framework-cli` (for npm publishing)
+- **VS Code extension** commands now use `npx pulse-framework-cli` 
+- **Pre-commit hook** now only blocks on CRITICAL (exit 2), allows warnings (exit 1)
+- **All MCP tool descriptions** now in English with clear trigger hints
+
+### Fixed
+- **CI workflow**: Updated package name reference after rename
+- **Exit code consistency**: Pre-commit hook now preserves exit code 2 for critical findings
+- **Agent ignoring Critical**: `pulse_status` now sets `isError: true` to force agent to stop
 
 ---
 
