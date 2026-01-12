@@ -39,7 +39,7 @@ if [ $EXIT_CODE -eq 2 ]; then
   echo ""
   echo "❌ Commit blocked by PULSE (critical findings)"
   echo "   Fix issues or use: PULSE_SKIP_HOOKS=1 git commit ..."
-  exit 1
+  exit 2
 fi
 
 exit 0
