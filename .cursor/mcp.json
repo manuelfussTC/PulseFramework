@@ -1,0 +1,9 @@
+{
+    "mcpServers": {
+        "pulse": {
+            "command": "pulse-mcp",
+            "args": [],
+            "env": {}
+        }
+    }
+}

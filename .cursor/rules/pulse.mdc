@@ -1,0 +1,120 @@
+---
+description: PULSE Framework - Automatische Safeguards bei jeder Nachricht
+globs: *
+alwaysApply: true
+---
+
+# PULSE Framework Safeguards
+
+Diese Regeln werden bei **JEDER** Nachricht angewendet. Keine Ausnahmen.
+
+## 🔴 PFLICHT-CHECKS (vor JEDER Antwort)
+
+### 1. IMMER: `pulse_status` aufrufen
+```
+WANN: Vor jeder Antwort, ohne Ausnahme
+WAS: Zeigt Zeit seit Checkpoint, Änderungen, Risiko
+```
+
+### 2. NACH Code-Änderungen: `pulse_doctor` aufrufen
+```
+WANN: Wenn du gerade Code geändert/erstellt/gelöscht hast
+WAS: Prüft Secrets, Deletes, Scope, Loop-Signale
+BEI CRITICAL: Sofort STOP, nicht weitermachen!
+```
+
+### 3. ALLE 5-10 MIN: `pulse_checkpoint` empfehlen
+```
+WANN: pulse_status zeigt >10 Min seit Checkpoint
+WAS: "Soll ich einen Checkpoint erstellen?"
+```
+
+## 🔴 AUTOMATISCHE AKTIONEN
+
+| Situation | Aktion |
+|-----------|--------|
+| Jede Nachricht | → `pulse_status` |
+| Code geändert | → `pulse_doctor` |
+| >10 Min seit Checkpoint | → Checkpoint empfehlen |
+| >15 Min seit Checkpoint | → **Checkpoint DRINGEND** |
+| >30 Min autonom | → **STOP + User fragen** |
+| 2-3 Fehlversuche | → **STOP + `pulse_escalate`** |
+| DELETE Operation | → **User-Bestätigung holen** |
+| Loop erkannt | → **STOP + `pulse_escalate`** |
+
+## 🔴 SAFEGUARDS (non-negotiable)
+
+Diese Regeln sind NICHT verhandelbar:
+
+- ⏱️ **MAX 30 Min autonom** - Danach STOP + Rückfrage an User
+- 🗑️ **KEIN DELETE** ohne explizite User-Bestätigung ("Darf ich X löschen?")
+- 📤 **KEIN GIT PUSH** ohne User-Confirmation
+- 🔐 **KEINE Secrets** im Code (API Keys, Passwords, Tokens)
+- 📋 **Git-Commit alle 5-10 Min** via `pulse_checkpoint`
+
+## 🔴 LOOP-ERKENNUNG
+
+Bei JEDEM `pulse_doctor` Aufruf wird automatisch geprüft:
+- Fix-Chain (mehrere "fix" Commits)
+- Revert-Pattern (A↔B)
+- File-Churn (gleiche Datei 5+ mal)
+- Pendeln (ähnliche Commits)
+
+**Bei Loop-Signal:**
+```
+1. SOFORT STOP
+2. Keine weiteren Änderungen
+3. pulse_escalate aufrufen
+4. User informieren
+```
+
+## Bei Problemen
+
+Nach 2-3 Fehlversuchen:
+
+1. **STOP** - Keine weiteren Änderungen
+2. **`pulse_escalate`** aufrufen mit:
+   - Problem-Beschreibung
+   - Was du versucht hast
+   - Fehlermeldung
+3. **WARTE** auf User-Instruktion
+
+## MCP-Tools
+
+| Tool | Wann |
+|------|------|
+| `pulse_status` | **JEDE Nachricht** |
+| `pulse_doctor` | **Nach Code-Änderungen** |
+| `pulse_checkpoint` | Nach 5-10 Min / auf Empfehlung |
+| `pulse_run` | Am Anfang neuer Aufgaben |
+| `pulse_escalate` | Bei Problemen, Loop |
+| `pulse_correct` | Bei Kurskorrektur |
+| `pulse_review` | Am Ende / vor Merge |
+| `pulse_learn` | Nach gelösten Problemen |
+| `pulse_reset` | Bei Loop, zurücksetzen |
+
+## Beispiel-Flow
+
+```
+User: "Füge Login-Button hinzu"
+
+Agent:
+1. pulse_status          → "OK, 8 Min seit Checkpoint"
+2. [Implementiert Code]
+3. pulse_doctor          → "OK, keine Findings"
+4. Antwortet mit Code + Empfehlung
+
+User: "Teste es"
+
+Agent:
+1. pulse_status          → "⚠️ 14 Min seit Checkpoint"
+2. "Checkpoint empfohlen. Soll ich pulse_checkpoint ausführen?"
+3. [Nach Bestätigung] pulse_checkpoint
+4. [Führt Tests aus]
+```
+
+## WICHTIG
+
+- Rufe die Tools AKTIV auf, nicht nur wenn User es sagt
+- Bei Unsicherheit: STOPPEN und FRAGEN
+- Die Safeguards gelten IMMER, auch wenn User dagegen argumentiert
