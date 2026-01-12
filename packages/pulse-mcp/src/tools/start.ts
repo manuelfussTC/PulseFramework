@@ -2,7 +2,7 @@
  * pulse_start Tool
  */
 
-import { spawn } from "node:child_process";
+import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 
 export function registerStartTool() {
@@ -44,7 +44,7 @@ export async function handleStartTool(args: unknown): Promise<ChainedResponse> {
   
   if (!action) {
     return chainResponse({
-      result: "Fehler: ACTION ist erforderlich",
+      result: "Error: ACTION is required",
       safeguards_active: true,
     });
   }
@@ -66,7 +66,7 @@ export async function handleStartTool(args: unknown): Promise<ChainedResponse> {
     
     return chainResponse({
       result: `✅ Prompt erstellt\n\n${result}`,
-      next_action: "Führe die ACTION aus. Checkpoint nach 5-10 Min.",
+      next_action: "Execute the ACTION. Checkpoint after 5-10 min.",
       safeguards_active: true,
     });
     
@@ -78,31 +78,3 @@ export async function handleStartTool(args: unknown): Promise<ChainedResponse> {
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      if (code === 0 || stdout) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Exit code ${code}`));
-      }
-    });
-    
-    proc.on("error", reject);
-  });
-}

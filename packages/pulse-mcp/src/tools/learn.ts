@@ -2,7 +2,7 @@
  * pulse_learn Tool
  */
 
-import { spawn } from "node:child_process";
+import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 
 export function registerLearnTool() {
@@ -14,15 +14,15 @@ export function registerLearnTool() {
       properties: {
         problem: {
           type: "string",
-          description: "Was war das Problem?",
+          description: "What was the problem?",
         },
         solution: {
           type: "string",
-          description: "Was war die Lösung?",
+          description: "What was the solution?",
         },
         rule: {
           type: "string",
-          description: "Abgeleitete Regel für die Zukunft",
+          description: "Derived rule for the future",
         },
       },
       required: ["problem", "solution"],
@@ -39,7 +39,7 @@ export async function handleLearnTool(args: unknown): Promise<ChainedResponse> {
   
   if (!problem || !solution) {
     return chainResponse({
-      result: "Fehler: Problem und Lösung sind erforderlich",
+      result: "Error: Problem and solution are required",
       safeguards_active: true,
     });
   }
@@ -54,7 +54,7 @@ export async function handleLearnTool(args: unknown): Promise<ChainedResponse> {
     
     return chainResponse({
       result: `📚 Wissen gespeichert\n\n${result}`,
-      next_action: "Weiterarbeiten. Das Wissen ist in .pulse/memory.md gespeichert.",
+      next_action: "Continue working. Knowledge is saved in .pulse/memory.md.",
       safeguards_active: true,
     });
     
@@ -66,31 +66,3 @@ export async function handleLearnTool(args: unknown): Promise<ChainedResponse> {
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      if (code === 0 || stdout) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Exit code ${code}`));
-      }
-    });
-    
-    proc.on("error", reject);
-  });
-}

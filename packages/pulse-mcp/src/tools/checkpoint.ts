@@ -2,13 +2,13 @@
  * pulse_checkpoint Tool
  */
 
-import { spawn } from "node:child_process";
+import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 
 export function registerCheckpointTool() {
   return {
     name: "pulse_checkpoint",
-    description: "Git-Checkpoint erstellen: Status prüfen, Red Flags erkennen, optional Tests ausführen und committen.",
+    description: "Create Git checkpoint: Check status, detect red flags, optionally run tests and commit.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -18,7 +18,7 @@ export function registerCheckpointTool() {
         },
         runTests: {
           type: "boolean",
-          description: "Konfigurierte Tests vor Commit ausführen",
+          description: "Run configured tests before commit",
         },
       },
     },
@@ -40,45 +40,17 @@ export async function handleCheckpointTool(args: unknown): Promise<ChainedRespon
     const result = await runCli(cliArgs);
     
     return chainResponse({
-      result: `✅ Checkpoint erstellt\n\n${result}`,
-      next_action: "Weiterarbeiten. Nächster Checkpoint in 5-10 Min empfohlen.",
+      result: `✅ Checkpoint created\n\n${result}`,
+      next_action: "Continue working. Next checkpoint recommended in 5-10 min.",
       safeguards_active: true,
     });
     
   } catch (error) {
     return chainResponse({
-      result: `Checkpoint fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
-      recommendation: "Prüfe git status und behebe Konflikte",
+      result: `Checkpoint failed: ${error instanceof Error ? error.message : String(error)}`,
+      recommendation: "Check git status and fix conflicts",
       safeguards_active: true,
     });
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      if (code === 0 || stdout) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Exit code ${code}`));
-      }
-    });
-    
-    proc.on("error", reject);
-  });
-}

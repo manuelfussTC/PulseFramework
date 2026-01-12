@@ -2,24 +2,24 @@
  * pulse_profile Tool
  */
 
-import { spawn } from "node:child_process";
+import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 
 export function registerProfileTool() {
   return {
     name: "pulse_profile",
-    description: "Pulse Layer-Profil anzeigen oder wechseln.",
+    description: "Show or switch Pulse layer profile.",
     inputSchema: {
       type: "object" as const,
       properties: {
         action: {
           type: "string",
-          description: "show = aktuelles Profil anzeigen, set = Profil wechseln",
+          description: "show = show current profile, set = change profile",
           enum: ["show", "set"],
         },
         layer: {
           type: "string",
-          description: "Layer für set: concept, build, escalation",
+          description: "Layer for set: concept, build, escalation",
           enum: ["concept", "build", "escalation"],
         },
       },
@@ -36,7 +36,7 @@ export async function handleProfileTool(args: unknown): Promise<ChainedResponse>
   
   if (!action) {
     return chainResponse({
-      result: "Fehler: Action (show/set) ist erforderlich",
+      result: "Error: Action (show/set) is required",
       safeguards_active: true,
     });
   }
@@ -50,7 +50,7 @@ export async function handleProfileTool(args: unknown): Promise<ChainedResponse>
     const result = await runCli(cliArgs);
     
     return chainResponse({
-      result: `📋 Profil\n\n${result}`,
+      result: `📋 Profile\n\n${result}`,
       safeguards_active: true,
     });
     
@@ -62,31 +62,3 @@ export async function handleProfileTool(args: unknown): Promise<ChainedResponse>
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      if (code === 0 || stdout) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Exit code ${code}`));
-      }
-    });
-    
-    proc.on("error", reject);
-  });
-}

@@ -4,19 +4,19 @@
  * Quick overview of current project state.
  */
 
-import { spawn } from "node:child_process";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
+import { runCli } from "../lib/cli.js";
 
 export function registerStatusTool() {
   return {
     name: "pulse_status",
-    description: "Schneller Überblick: Profil, Checkpoint-Zeit, Änderungen, Findings. RUFE DIESES TOOL VOR JEDER ANTWORT AUF.",
+    description: "Quick overview: Profile, checkpoint time, changes, findings. CALL THIS TOOL BEFORE EVERY RESPONSE.",
     inputSchema: {
       type: "object" as const,
       properties: {
         verbose: {
           type: "boolean",
-          description: "Ausführliche Ausgabe mit Scope-Bars und Empfehlung",
+          description: "Verbose output with scope bars and recommendation",
         },
       },
     },
@@ -49,7 +49,7 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       recommendation = "STOP - Critical Findings beheben";
       nextAction = "Rufe pulse_doctor auf um Details zu sehen";
     } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 30 && data.dirtyFiles > 0) {
-      recommendation = "Checkpoint überfällig";
+      recommendation = "Checkpoint overdue";
       nextAction = "Rufe pulse_checkpoint auf";
     } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 15 && data.dirtyFiles > 0) {
       nextAction = "In ~${30 - data.lastCheckpointMinutesAgo} Min pulse_checkpoint aufrufen";
@@ -58,7 +58,7 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
     const lines: string[] = [
       `📊 PULSE Status`,
       ``,
-      `Profil: ${presetProfile}`,
+      `Profile: ${presetProfile}`,
       `Checkpoint: ${cpStatus}`,
       `Dateien: ${data.dirtyFiles}`,
       `Lines: ${data.linesChanged || "n/a"}`,
@@ -74,37 +74,9 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
     
   } catch (error) {
     return chainResponse({
-      result: `Fehler beim Status-Abruf: ${error instanceof Error ? error.message : String(error)}`,
+      result: `Error getting status: ${error instanceof Error ? error.message : String(error)}`,
       safeguards_active: true,
     });
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      if (code === 0 || stdout) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Exit code ${code}`));
-      }
-    });
-    
-    proc.on("error", reject);
-  });
-}

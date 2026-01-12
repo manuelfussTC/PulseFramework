@@ -1,6 +1,18 @@
-# Pulse CLI Reference (v0.2.0)
+# Pulse CLI Reference (v0.3.0)
 
 > The command-line interface for the Pulse Framework — guardrails, checkpoints, and escalation for AI-assisted development.
+
+## CLI vs MCP
+
+| Aspect | CLI (`pulse`) | MCP (`pulse_*`) |
+|--------|---------------|-----------------|
+| Who calls it | **Human** in terminal | **AI agent** in Cursor |
+| How to use | Run commands manually | Agent calls automatically |
+| Output | Terminal output | Returns to agent context |
+| Documentation | This document | [pulse-mcp.md](./pulse-mcp.md) |
+
+**Use CLI when:** You want to manually run commands, create prompts, or check status.  
+**Use MCP when:** You want Cursor's agent to automatically call tools during conversations.
 
 ## Installation
 
@@ -55,6 +67,9 @@ pulse init [options]
 | `--path <path>` | Target path (defaults to cwd) |
 | `--hooks` | Install git hooks (pre-commit, pre-push) |
 | `--preset <name>` | Preset: `frontend`, `backend`, `fullstack`, `monorepo`, `custom` |
+| `--mcp` | Install MCP server config (`.cursor/mcp.json`) + Cursor Rules |
+| `--global` | Install MCP config globally (`~/.cursor/mcp.json`) - works across all projects |
+| `--agents` | Create `AGENTS.md` (universal for other editors) |
 | `--no-interactive` | Skip interactive prompts |
 
 **Presets:**
@@ -67,11 +82,33 @@ pulse init [options]
 | `monorepo` | 800 | 30 | 30 min |
 | `custom` | 300 | 15 | 30 min |
 
+**What happens automatically with `--mcp`:**
+
+1. **Checks for pulse-mcp** - Installs automatically if not found
+2. **Uses absolute paths** - No PATH issues with different Node versions
+3. **Detects workspace mismatch** - If Git root differs from Cursor workspace, installs rules in both
+4. **Creates wrapper script** - If needed to fix working directory issues
+5. **Validates setup** - Shows clear error messages if something is wrong
+
 **Creates:**
 - `.pulse/` directory structure
 - `pulse.config.json` with preset defaults
-- `.cursorrules` (if missing)
-- `.pulse/templates/roles/` with role templates
+- `.cursorrules` (fallback rules)
+- With `--mcp`:
+  - `.cursor/rules/pulse.mdc` (Cursor Rules with `alwaysApply: true`)
+  - `.cursor/mcp.json` (MCP server configuration with absolute paths)
+  - `.pulse/run-mcp.sh` (wrapper script, if workspace mismatch detected)
+- With `--mcp --global`:
+  - `~/.cursor/mcp.json` (global MCP config, works for all projects)
+- With `--agents`:
+  - `AGENTS.md` (universal rules for Windsurf, Copilot, Cline, etc.)
+
+**Local vs Global MCP:**
+
+| Mode | Command | When to use |
+|------|---------|-------------|
+| Local | `pulse init --mcp` | Project-specific, config stays in repo |
+| Global | `pulse init --mcp --global` | One-time setup, works for all projects |
 
 ---
 
@@ -531,8 +568,38 @@ pulse r
 
 ---
 
+### `pulse reset`
+
+Safe Git reset with safeguards (for loop recovery).
+
+```bash
+pulse reset [options]
+```
+
+| Option | Description |
+|--------|-------------|
+| `-n, --commits <n>` | Number of commits to go back (default: 1) |
+| `--mode <mode>` | Reset mode: `soft`, `mixed`, `hard` (default: mixed) |
+| `-y, --yes` | Skip confirmation prompt |
+
+**Safeguards:**
+- Warns on protected branches (main, master, develop)
+- Shows affected commits before reset
+- Requires confirmation for hard reset
+
+**Example:**
+```bash
+pulse reset              # Go back 1 commit (mixed)
+pulse reset -n 3         # Go back 3 commits
+pulse reset --hard       # Hard reset (loses changes!)
+pulse reset -y           # Skip confirmation
+```
+
+---
+
 ## See Also
 
+- [Pulse MCP Reference](./pulse-mcp.md) - MCP tools for Cursor agent
 - [PULSE Cheatsheet](../cheatsheet/PULSE-Cheatsheet.md)
-- [Pulse Spec v1](../../spec/pulse-spec-v1.md)
-- [Source Map](./pulse-toolkit-source-map.md)
+- [Workflow Guide](../workflow.md)
+- [Technical Reference](../PULSE-Technical-Reference-2026-01-06.md) - Combined CLI + MCP reference

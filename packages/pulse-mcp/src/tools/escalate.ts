@@ -2,19 +2,19 @@
  * pulse_escalate Tool
  */
 
-import { spawn } from "node:child_process";
+import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 
 export function registerEscalateTool() {
   return {
     name: "pulse_escalate",
-    description: "Eskalations-Paket für externes Model erstellen. RUFE AUF WENN DU NACH 2-3 VERSUCHEN NICHT WEITERKOMMST.",
+    description: "Create escalation package for external model. CALL THIS IF YOU CAN'T PROGRESS AFTER 2-3 ATTEMPTS.",
     inputSchema: {
       type: "object" as const,
       properties: {
         problem: {
           type: "string",
-          description: "Was ist das Problem?",
+          description: "What is the problem?",
         },
         tried: {
           type: "string",
@@ -44,7 +44,7 @@ export async function handleEscalateTool(args: unknown): Promise<ChainedResponse
   
   if (!problem) {
     return chainResponse({
-      result: "Fehler: Problem-Beschreibung ist erforderlich",
+      result: "Error: Problem description is required",
       safeguards_active: true,
     });
   }
@@ -64,45 +64,17 @@ export async function handleEscalateTool(args: unknown): Promise<ChainedResponse
     const result = await runCli(cliArgs);
     
     return chainResponse({
-      result: `🚨 Eskalation erstellt\n\n${result}`,
+      result: `🚨 Escalation created\n\n${result}`,
       next_action: "STOP - Warte auf Analyse vom externen Model. Führe keine weiteren Änderungen durch.",
-      recommendation: "Kopiere den Prompt in ChatGPT/Claude/GPT-5 und warte auf Anweisungen",
+      recommendation: "Copy the prompt to ChatGPT/Claude/GPT-5 and wait for instructions",
       safeguards_active: true,
     });
     
   } catch (error) {
     return chainResponse({
-      result: `Eskalation fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
+      result: `Escalation failed: ${error instanceof Error ? error.message : String(error)}`,
       safeguards_active: true,
     });
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      if (code === 0 || stdout) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Exit code ${code}`));
-      }
-    });
-    
-    proc.on("error", reject);
-  });
-}

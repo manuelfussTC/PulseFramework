@@ -1,26 +1,30 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { chainResponse } from "../lib/chaining.js";
+import { getProjectRoot } from "../lib/cli.js";
 
 const execAsync = promisify(exec);
+
+// Get project root with PULSE_PROJECT_ROOT support
+const cwd = getProjectRoot();
 
 export function registerRunTool() {
   return {
     name: "pulse_run",
-    description: `Startet einen PULSE Workflow: Erstellt Branch + gibt Arbeitsauftrag.
+    description: `Starts a PULSE workflow: Creates branch + gives work order.
 
 WICHTIG: 
-- Erstellt automatisch Feature-Branch (wenn auf main/master)
-- Nach diesem Tool DIREKT mit Implementierung beginnen!
+- Auto-creates feature branch (if on main/master)
+- After this tool, START implementation IMMEDIATELY!
 
 WANN NUTZEN:
-- User sagt "neue Aufgabe", "starte Feature", "beginne mit..."
+- User says "new task", "start feature", "begin with..."
 - Am Anfang einer Coding-Session
 
 NACH AUFRUF:
 - Feature-Branch wird erstellt
 - Du erhältst den Arbeitsauftrag
-- BEGINNE SOFORT mit der Implementierung`,
+- START IMMEDIATELY with implementation`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -48,7 +52,7 @@ export async function handleRunTool(args: {
   template?: string;
   branch?: string;
 }): Promise<{ content: Array<{ type: string; text: string }> }> {
-  const action = args.action ?? "Neue Aufgabe";
+  const action = args.action ?? "New task";
   const template = args.template ?? "feature";
   
   try {
@@ -63,55 +67,57 @@ export async function handleRunTool(args: {
     try {
       const statusResult = await execAsync("pulse status --json", {
         timeout: 10000,
+        cwd,
       });
       status = JSON.parse(statusResult.stdout);
     } catch {
       // Ignore status errors
     }
     
-    // 2. Branch erstellen wenn auf main/master
+    // 2. Create branch if on main/master
     let branchInfo = "";
     let currentBranch = "";
     
     try {
       const branchResult = await execAsync("git rev-parse --abbrev-ref HEAD", {
         timeout: 5000,
+        cwd,
       });
       currentBranch = branchResult.stdout.trim();
       
       const protectedBranches = ["main", "master", "develop", "development"];
       
       if (protectedBranches.includes(currentBranch.toLowerCase())) {
-        // Generiere Branch-Namen aus Action oder nutze übergebenen Namen
+        // Generate branch name from action or use provided name
         const branchName = args.branch ?? generateBranchName(action, template);
         
         try {
-          await execAsync(`git checkout -b ${branchName}`, { timeout: 5000 });
+          await execAsync(`git checkout -b ${branchName}`, { timeout: 5000, cwd });
           branchInfo = `✅ Branch erstellt: \`${branchName}\``;
           currentBranch = branchName;
         } catch {
-          branchInfo = `⚠️ Branch konnte nicht erstellt werden (evtl. existiert er bereits)`;
+          branchInfo = `⚠️ Branch could not be created (may already exist)`;
         }
       } else {
         branchInfo = `📍 Auf Branch: \`${currentBranch}\``;
       }
     } catch {
-      branchInfo = "⚠️ Git-Status konnte nicht geprüft werden";
+      branchInfo = "⚠️ Git status could not be checked";
     }
     
-    // 3. Worklog speichern (im Hintergrund, nicht blockierend)
+    // 3. Save worklog (in background, non-blocking)
     const safeAction = action
       .replace(/\\/g, '\\\\')
       .replace(/"/g, '\\"')
       .replace(/`/g, '\\`')
       .replace(/\$/g, '\\$');
     
-    // Speichere Worklog für später, aber warte nicht darauf
+    // Save worklog for later, but don't wait for it
     execAsync(
       `pulse start --template ${template} --action "${safeAction}" --quick`,
-      { timeout: 15000 }
+      { timeout: 15000, cwd }
     ).catch(() => {
-      // Ignore errors - worklog ist nice-to-have
+      // Ignore errors - worklog is nice-to-have
     });
     
     // 4. Response: DIREKTE ARBEITSANWEISUNG
@@ -130,7 +136,7 @@ ${branchInfo}
 
 ## JETZT SOFORT ANFANGEN
 
-Du bist der Agent. Beginne DIREKT mit der Implementierung.
+You are the agent. Start DIRECTLY with implementation.
 NICHT "Prompt kopieren" - DU arbeitest jetzt.
 
 ## Deine Aufgabe
@@ -138,12 +144,12 @@ NICHT "Prompt kopieren" - DU arbeitest jetzt.
 Implementiere: **${action}**
 
 Template: ${template}
-Profil: ${profile}
+Profile: ${profile}
 Branch: ${currentBranch}
 
 ## Während der Arbeit
 
-- ⏱️ **Checkpoint alle ${checkpointInterval} Min:** \`pulse_checkpoint\` aufrufen
+- ⏱️ **Checkpoint every ${checkpointInterval} min:** call \`pulse_checkpoint\`
 - 🔍 **Nach Code-Änderungen:** \`pulse_doctor\` aufrufen
 - ❌ **Bei Problemen nach 2-3 Versuchen:** \`pulse_escalate\`
 
@@ -151,7 +157,7 @@ Branch: ${currentBranch}
 
 - 🗑️ **KEIN DELETE** ohne User-Bestätigung
 - 📤 **KEIN PUSH** ohne User-Bestätigung
-- 🔐 **Keine Secrets** im Code
+- 🔐 **No Secrets** in code
 - ⏱️ **Max 30 Min** autonom, dann STOP
 
 ---
@@ -163,17 +169,17 @@ Branch: ${currentBranch}
       result: output.trim(),
       next_action: `JETZT IMPLEMENTIEREN: "${action}"`,
       safeguards_active: true,
-      recommendation: `Beginne sofort. Checkpoint in ${checkpointInterval} Min.`,
+      recommendation: `Start immediately. Checkpoint in ${checkpointInterval} min.`,
     });
     
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     
     return chainResponse({
-      result: `❌ Fehler: ${errMsg}\n\nTrotzdem anfangen mit: ${action}`,
+      result: `❌ Error: ${errMsg}\n\nStart anyway with: ${action}`,
       next_action: `Implementiere: "${action}"`,
       safeguards_active: true,
-      recommendation: "Starte trotzdem mit der Aufgabe",
+      recommendation: "Start with the task anyway",
     });
   }
 }

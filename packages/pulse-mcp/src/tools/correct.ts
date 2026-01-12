@@ -2,13 +2,13 @@
  * pulse_correct Tool
  */
 
-import { spawn } from "node:child_process";
+import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 
 export function registerCorrectTool() {
   return {
     name: "pulse_correct",
-    description: "Korrektur-Prompt erstellen wenn du falsch abgebogen bist.",
+    description: "Create correction prompt when you went off track.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -18,7 +18,7 @@ export function registerCorrectTool() {
         },
         mode: {
           type: "string",
-          description: "Modus: explain (erkläre), narrow (minimale Änderung), milestone (aufteilen)",
+          description: "Mode: explain, narrow (minimal change), milestone (split up)",
           enum: ["explain", "narrow", "milestone"],
         },
       },
@@ -35,7 +35,7 @@ export async function handleCorrectTool(args: unknown): Promise<ChainedResponse>
   
   if (!feedback) {
     return chainResponse({
-      result: "Fehler: Feedback ist erforderlich",
+      result: "Error: Feedback is required",
       safeguards_active: true,
     });
   }
@@ -62,31 +62,3 @@ export async function handleCorrectTool(args: unknown): Promise<ChainedResponse>
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      if (code === 0 || stdout) {
-        resolve(stdout);
-      } else {
-        reject(new Error(stderr || `Exit code ${code}`));
-      }
-    });
-    
-    proc.on("error", reject);
-  });
-}

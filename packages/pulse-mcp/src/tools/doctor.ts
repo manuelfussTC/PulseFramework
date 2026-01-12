@@ -2,13 +2,13 @@
  * pulse_doctor Tool
  */
 
-import { spawn } from "node:child_process";
+import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 
 export function registerDoctorTool() {
   return {
     name: "pulse_doctor",
-    description: "Safeguards + Red Flags prüfen: Secrets, Deletes, Scope, Loop-Signale. RUFE NACH CODE-ÄNDERUNGEN AUF.",
+    description: "Check safeguards + red flags: Secrets, Deletes, Scope, Loop signals. CALL AFTER CODE CHANGES.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -18,7 +18,7 @@ export function registerDoctorTool() {
         },
         staged: {
           type: "boolean",
-          description: "Nur staged Änderungen prüfen",
+          description: "Only check staged changes",
         },
       },
     },
@@ -47,13 +47,13 @@ export async function handleDoctorTool(args: unknown): Promise<ChainedResponse> 
     let nextAction: string | undefined;
     
     if (hasCritical) {
-      recommendation = "STOP - Critical Findings beheben vor Commit";
-      nextAction = "Behebe die Critical Findings und rufe pulse_doctor erneut auf";
+      recommendation = "STOP - Fix critical findings before commit";
+      nextAction = "Fix the critical findings and call pulse_doctor again";
     } else if (hasWarning) {
-      recommendation = "Warnings prüfen, dann pulse_checkpoint";
+      recommendation = "Review warnings, then pulse_checkpoint";
       nextAction = "Entscheide ob Warnings akzeptabel sind";
     } else {
-      nextAction = "Alles OK - weiterarbeiten oder pulse_checkpoint";
+      nextAction = "All OK - continue working or pulse_checkpoint";
     }
     
     return chainResponse({
@@ -71,28 +71,3 @@ export async function handleDoctorTool(args: unknown): Promise<ChainedResponse> 
   }
 }
 
-async function runCli(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn("pulse", args, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    
-    let stdout = "";
-    let stderr = "";
-    
-    proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr?.on("data", (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on("close", (code) => {
-      // Doctor returns exit codes 1/2 for warnings/critical but still outputs useful info
-      resolve(stdout || stderr);
-    });
-    
-    proc.on("error", reject);
-  });
-}
