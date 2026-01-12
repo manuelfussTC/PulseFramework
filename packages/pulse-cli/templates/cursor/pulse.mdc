@@ -4,15 +4,26 @@ globs: *
 alwaysApply: true
 ---
 
-# PULSE Framework Safeguards
+# ⛔ STOP - READ THIS FIRST
 
-These rules guide your workflow. Apply them sensibly.
+**YOUR FIRST ACTION** before ANY response MUST be:
+
+```
+CallMcpTool: pulse_status
+```
+
+Do this NOW. Do not skip. Do not proceed without it.
+Only after seeing the status, continue with user's request.
+
+---
+
+# PULSE Framework Safeguards
 
 ## 🔴 MANDATORY CHECKS (once per response)
 
 ### 1. Call `pulse_status` ONCE at the start
 ```
-WHEN: Once at the beginning of your response (not multiple times!)
+WHEN: FIRST action, before anything else
 WHAT: Shows time since checkpoint, changes, risk
 NOTE: One call is enough - don't repeat it
 ```

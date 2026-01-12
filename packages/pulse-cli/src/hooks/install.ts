@@ -14,24 +14,72 @@ export async function installHooks(repoRoot: string): Promise<void> {
   await fs.mkdir(hooksDir, { recursive: true });
 
   const preCommit = path.join(hooksDir, "pre-commit");
+  const postCommit = path.join(hooksDir, "post-commit");
   const prePush = path.join(hooksDir, "pre-push");
 
   await fs.writeFile(
     preCommit,
     `#!/bin/sh
-set -e
-
 # Pulse mixed enforcement:
-# - blocks critical findings (secrets, deletes) unless explicitly confirmed
+# - blocks CRITICAL findings (secrets, mass deletes) - exit code 2
+# - warns on other findings but allows commit - exit code 1
 #
-# Confirm deletes for this commit by running:
-#   PULSE_CONFIRM_DELETE=1 git commit ...
+# Bypass for this commit:
+#   PULSE_SKIP_HOOKS=1 git commit ...
+
+if [ "$PULSE_SKIP_HOOKS" = "1" ]; then
+  exit 0
+fi
 
 pulse doctor --staged --hook pre-commit
+EXIT_CODE=$?
+
+# Only block on CRITICAL (exit 2), allow warnings (exit 1)
+if [ $EXIT_CODE -eq 2 ]; then
+  echo ""
+  echo "❌ Commit blocked by PULSE (critical findings)"
+  echo "   Fix issues or use: PULSE_SKIP_HOOKS=1 git commit ..."
+  exit 1
+fi
+
+exit 0
 `,
     "utf8"
   );
   await ensureExecutable(preCommit);
+
+  // Post-commit: Update checkpoint timestamp so timer resets on every commit
+  await fs.writeFile(
+    postCommit,
+    `#!/bin/sh
+# Pulse: Track every commit as a checkpoint (reset timer)
+# This updates .pulse/state.json with current timestamp
+
+PULSE_DIR=".pulse"
+STATE_FILE="$PULSE_DIR/state.json"
+
+if [ -d "$PULSE_DIR" ]; then
+  TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+  
+  if [ -f "$STATE_FILE" ]; then
+    # Update existing state.json
+    if command -v node >/dev/null 2>&1; then
+      node -e "
+        const fs = require('fs');
+        const state = JSON.parse(fs.readFileSync('$STATE_FILE', 'utf8'));
+        state.lastCheckpointAt = '$TIMESTAMP';
+        fs.writeFileSync('$STATE_FILE', JSON.stringify(state, null, 2));
+      " 2>/dev/null || true
+    fi
+  else
+    # Create new state.json
+    echo '{"version":1,"profile":"build","lastCheckpointAt":"'$TIMESTAMP'"}' > "$STATE_FILE"
+  fi
+fi
+`,
+    "utf8"
+  );
+  await ensureExecutable(postCommit);
 
   await fs.writeFile(
     prePush,
@@ -49,6 +97,6 @@ pulse doctor --hook pre-push
   await ensureExecutable(prePush);
 
   // eslint-disable-next-line no-console
-  console.log(`Installed git hooks:\n- ${preCommit}\n- ${prePush}`);
+  console.log(`Installed git hooks:\n- ${preCommit}\n- ${postCommit}\n- ${prePush}`);
 }
 

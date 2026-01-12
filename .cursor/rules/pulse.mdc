@@ -4,15 +4,26 @@ globs: *
 alwaysApply: true
 ---
 
-# PULSE Framework Safeguards
+# ⛔ STOP - LIES DAS ZUERST
 
-Diese Regeln leiten deinen Workflow. Wende sie sinnvoll an.
+**DEINE ERSTE AKTION** vor JEDER Antwort MUSS sein:
+
+```
+CallMcpTool: pulse_status
+```
+
+Tu das JETZT. Nicht überspringen. Nicht ohne fortfahren.
+Erst nach dem Status, fahre mit der Anfrage fort.
+
+---
+
+# PULSE Framework Safeguards
 
 ## 🔴 PFLICHT-CHECKS (einmal pro Antwort)
 
 ### 1. `pulse_status` EINMAL am Anfang aufrufen
 ```
-WANN: Einmal am Anfang deiner Antwort (nicht mehrfach!)
+WANN: ERSTE Aktion, vor allem anderen
 WAS: Zeigt Zeit seit Checkpoint, Änderungen, Risiko
 HINWEIS: Ein Aufruf reicht - nicht wiederholen
 ```
