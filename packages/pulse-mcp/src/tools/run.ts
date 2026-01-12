@@ -52,6 +52,9 @@ export async function handleRunTool(args: {
   template?: string;
   branch?: string;
 }): Promise<{ content: Array<{ type: string; text: string }> }> {
+  // Get project root at call time (not module load time)
+  const cwd = getProjectRoot();
+  
   const action = args.action ?? "New task";
   const template = args.template ?? "feature";
   
