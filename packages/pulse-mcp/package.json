@@ -20,6 +20,6 @@
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "peerDependencies": {
-    "@pulseframework/pulse-cli": ">=0.4.1"
+    "pulse-framework-cli": ">=0.4.2"
   }
 }

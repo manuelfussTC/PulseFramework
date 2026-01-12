@@ -32,7 +32,7 @@ jobs:
         run: npm ci
       
       - name: Build Pulse CLI
-        run: npm run build -w @pulseframework/pulse-cli
+        run: npm run build -w pulse-framework-cli
       
       - name: Run Pulse Doctor (CI mode)
         run: |
