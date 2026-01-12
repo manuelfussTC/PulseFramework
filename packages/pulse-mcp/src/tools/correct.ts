@@ -8,13 +8,13 @@ import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 export function registerCorrectTool() {
   return {
     name: "pulse_correct",
-    description: "Create correction prompt when you went off track.",
+    description: "CALL THIS when user says 'wrong', 'not what I meant', 'stop'. Creates correction prompt to get back on track.",
     inputSchema: {
       type: "object" as const,
       properties: {
         feedback: {
           type: "string",
-          description: "Was läuft falsch? Was soll anders sein?",
+          description: "What's wrong? What should be different?",
         },
         mode: {
           type: "string",
@@ -49,14 +49,14 @@ export async function handleCorrectTool(args: unknown): Promise<ChainedResponse>
     const result = await runCli(cliArgs);
     
     return chainResponse({
-      result: `🔄 Korrektur erstellt\n\n${result}`,
-      next_action: "Wende die Korrektur an. Dann pulse_checkpoint.",
+      result: `🔄 Correction created\n\n${result}`,
+      next_action: "Apply the correction. Then pulse_checkpoint.",
       safeguards_active: true,
     });
     
   } catch (error) {
     return chainResponse({
-      result: `Korrektur fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
+      result: `Correction failed: ${error instanceof Error ? error.message : String(error)}`,
       safeguards_active: true,
     });
   }

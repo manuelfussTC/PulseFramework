@@ -8,13 +8,13 @@ import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 export function registerReviewTool() {
   return {
     name: "pulse_review",
-    description: "Create Decision Briefing: Scope, Risk, Recommendation for Approve/Reject/Escalate.",
+    description: "CALL THIS before saying 'done', creating a PR, or merging. Creates Decision Briefing with Scope, Risk, Recommendation.",
     inputSchema: {
       type: "object" as const,
       properties: {
         staged: {
           type: "boolean",
-          description: "Staged diff statt working tree reviewen",
+          description: "Review staged changes instead of working tree",
         },
       },
     },
@@ -35,13 +35,13 @@ export async function handleReviewTool(args: unknown): Promise<ChainedResponse> 
     // Parse recommendation from output
     let recommendation: string | undefined;
     if (result.includes("APPROVE")) {
-      recommendation = "Änderungen können gemerged werden";
+      recommendation = "Changes can be merged";
     } else if (result.includes("ESCALATE")) {
-      recommendation = "Externe Analyse empfohlen - rufe pulse_escalate auf";
+      recommendation = "External analysis recommended - call pulse_escalate";
     } else if (result.includes("CHECKPOINT")) {
       recommendation = "Checkpoint recommended - call pulse_checkpoint";
     } else if (result.includes("STOP")) {
-      recommendation = "STOP - Critical Findings beheben";
+      recommendation = "STOP - Fix critical findings first";
     }
     
     return chainResponse({
@@ -52,7 +52,7 @@ export async function handleReviewTool(args: unknown): Promise<ChainedResponse> 
     
   } catch (error) {
     return chainResponse({
-      result: `Review fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
+      result: `Review failed: ${error instanceof Error ? error.message : String(error)}`,
       safeguards_active: true,
     });
   }

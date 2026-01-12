@@ -8,7 +8,7 @@ import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 export function registerLearnTool() {
   return {
     name: "pulse_learn",
-    description: "Gelerntes Wissen speichern nach einem gelösten Problem.",
+    description: "CALL THIS after successfully solving a non-trivial problem. Documents what worked for future reference.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -53,14 +53,14 @@ export async function handleLearnTool(args: unknown): Promise<ChainedResponse> {
     const result = await runCli(cliArgs);
     
     return chainResponse({
-      result: `📚 Wissen gespeichert\n\n${result}`,
+      result: `📚 Knowledge saved\n\n${result}`,
       next_action: "Continue working. Knowledge is saved in .pulse/memory.md.",
       safeguards_active: true,
     });
     
   } catch (error) {
     return chainResponse({
-      result: `Learn fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
+      result: `Learn failed: ${error instanceof Error ? error.message : String(error)}`,
       safeguards_active: true,
     });
   }

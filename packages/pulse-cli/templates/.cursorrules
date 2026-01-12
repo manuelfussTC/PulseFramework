@@ -155,6 +155,25 @@
 #    "Estimated effort: [X] minutes. Should I start?"
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 🔧 MCP TOOL TRIGGERS (WHEN TO CALL)                                         │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# pulse_status   → FIRST action of every response
+# pulse_doctor   → AFTER any file edit/create/delete
+# pulse_checkpoint → WHEN >10 min since last checkpoint (just do it)
+# pulse_run      → WHEN user gives multi-step task (>3 steps)
+# pulse_escalate → WHEN 2-3 failed attempts OR error you don't understand
+# pulse_correct  → WHEN user says "wrong", "not what I meant", "stop"
+# pulse_review   → BEFORE saying "done", creating PR, or merging
+# pulse_learn    → AFTER solving a non-trivial problem (document what worked!)
+# pulse_reset    → WHEN pulse_doctor shows loop signal
+
+# IMPORTANT: Call these ACTIVELY, not just when user asks!
+# - After success: pulse_learn (build knowledge)
+# - Before "done": pulse_review (final check)
+# - On problems: pulse_escalate (don't keep trying)
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ 📦 PULSE PUBLISHING PROTOCOL                                               │
 # └─────────────────────────────────────────────────────────────────────────────┘
 

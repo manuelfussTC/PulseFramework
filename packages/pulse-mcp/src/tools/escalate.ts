@@ -18,15 +18,15 @@ export function registerEscalateTool() {
         },
         tried: {
           type: "string",
-          description: "Was hast du bereits versucht?",
+          description: "What have you already tried?",
         },
         error: {
           type: "string",
-          description: "Fehlermeldung / Logs",
+          description: "Error message / logs",
         },
         question: {
           type: "string",
-          description: "Konkrete Frage an externes Model",
+          description: "Specific question for external model",
         },
       },
       required: ["problem"],
@@ -65,7 +65,7 @@ export async function handleEscalateTool(args: unknown): Promise<ChainedResponse
     
     return chainResponse({
       result: `🚨 Escalation created\n\n${result}`,
-      next_action: "STOP - Warte auf Analyse vom externen Model. Führe keine weiteren Änderungen durch.",
+      next_action: "STOP - Wait for analysis from external model. DO NOT make further changes.",
       recommendation: "Copy the prompt to ChatGPT/Claude/GPT-5 and wait for instructions",
       safeguards_active: true,
     });

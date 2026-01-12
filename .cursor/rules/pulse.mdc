@@ -47,18 +47,22 @@ WANN: pulse_status zeigt >10 Min seit Checkpoint
 WAS: "Soll ich einen Checkpoint erstellen?"
 ```
 
-## 🔴 AUTOMATISCHE AKTIONEN
+## 🔴 AUTOMATISCHE AKTIONEN (PFLICHT!)
 
-| Situation | Aktion |
-|-----------|--------|
-| Anfang der Antwort | → `pulse_status` (einmal) |
-| Code geändert | → `pulse_doctor` |
-| >10 Min seit Checkpoint | → Checkpoint empfehlen |
-| >15 Min seit Checkpoint | → **Checkpoint DRINGEND** |
-| >30 Min autonom | → **STOP + User fragen** |
-| 2-3 Fehlversuche | → **STOP + `pulse_escalate`** |
-| DELETE Operation | → **User-Bestätigung holen** |
-| Loop erkannt | → **STOP + `pulse_escalate`** |
+| Situation | Aktion | Beispiel |
+|-----------|--------|----------|
+| Anfang der Antwort | → `pulse_status` | Jede Nachricht |
+| Code geändert | → `pulse_doctor` | Nach jedem Edit/Create/Delete |
+| >10 Min seit Checkpoint | → `pulse_checkpoint` | Einfach machen, nicht fragen |
+| >30 Min autonom | → **STOP + User fragen** | "Ich arbeite seit 30 Min, weitermachen?" |
+| 2-3 Fehlversuche | → `pulse_escalate` | Build/Test schlägt 2x fehl |
+| Fehler nicht verstanden | → `pulse_escalate` | Kryptische Fehlermeldung |
+| User sagt "falsch" | → `pulse_correct` | Kurskorrektur |
+| Task erfolgreich gelöst | → `pulse_learn` | "Was habe ich gelernt?" |
+| Vor "fertig" / PR / Merge | → `pulse_review` | Finale Checkliste |
+| Neuer Multi-Step Task | → `pulse_run` | User gibt komplexe Aufgabe |
+| Loop-Signal erkannt | → `pulse_reset` | Doctor zeigt Loop Warning |
+| DELETE Operation | → **User-Bestätigung** | "Darf ich X löschen?" |
 
 ## 🔴 SAFEGUARDS (non-negotiable)
 
@@ -97,19 +101,29 @@ Nach 2-3 Fehlversuchen:
    - Fehlermeldung
 3. **WARTE** auf User-Instruktion
 
-## MCP-Tools
+## Nach Erfolg (WICHTIG!)
 
-| Tool | Wann |
-|------|------|
-| `pulse_status` | **Einmal pro Antwort** (am Anfang) |
-| `pulse_doctor` | **Nach Code-Änderungen** |
-| `pulse_checkpoint` | Nach 5-10 Min / auf Empfehlung |
-| `pulse_run` | Am Anfang neuer Aufgaben |
-| `pulse_escalate` | Bei Problemen, Loop |
-| `pulse_correct` | Bei Kurskorrektur |
-| `pulse_review` | Am Ende / vor Merge |
-| `pulse_learn` | Nach gelösten Problemen |
-| `pulse_reset` | Bei Loop, zurücksetzen |
+Wenn du ein nicht-triviales Problem erfolgreich gelöst hast:
+
+1. **`pulse_learn`** aufrufen um zu dokumentieren:
+   - Was das Problem war
+   - Welche Lösung funktioniert hat
+   - Regel/Pattern zum Merken
+2. Das baut Wissen für zukünftige Sessions auf
+
+## MCP-Tools - WANN AUFRUFEN
+
+| Tool | Trigger (PFLICHT) |
+|------|-------------------|
+| `pulse_status` | **ERSTE Aktion** jeder Antwort |
+| `pulse_doctor` | **NACH** jeder Datei-Änderung |
+| `pulse_checkpoint` | **WENN** >10 Min seit Checkpoint |
+| `pulse_run` | **WENN** User Multi-Step Task gibt (>3 Schritte) |
+| `pulse_escalate` | **WENN** 2-3 Fehlversuche ODER Fehler nicht verstanden |
+| `pulse_correct` | **WENN** User sagt "falsch", "nicht das", "stop" |
+| `pulse_review` | **VOR** "fertig" sagen, PR erstellen, oder Merge |
+| `pulse_learn` | **NACH** nicht-trivialem Problem lösen |
+| `pulse_reset` | **WENN** `pulse_doctor` Loop-Signal zeigt |
 
 ## Beispiel-Flow
 
