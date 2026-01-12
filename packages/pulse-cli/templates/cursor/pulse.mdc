@@ -6,14 +6,15 @@ alwaysApply: true
 
 # PULSE Framework Safeguards
 
-These rules are applied to **EVERY** message. No exceptions.
+These rules guide your workflow. Apply them sensibly.
 
-## 🔴 MANDATORY CHECKS (before EVERY response)
+## 🔴 MANDATORY CHECKS (once per response)
 
-### 1. ALWAYS: Call `pulse_status`
+### 1. Call `pulse_status` ONCE at the start
 ```
-WHEN: Before every response, without exception
+WHEN: Once at the beginning of your response (not multiple times!)
 WHAT: Shows time since checkpoint, changes, risk
+NOTE: One call is enough - don't repeat it
 ```
 
 ### 2. AFTER Code Changes: Call `pulse_doctor`
@@ -33,7 +34,7 @@ WHAT: "Should I create a checkpoint?"
 
 | Situation | Action |
 |-----------|--------|
-| Every message | → `pulse_status` |
+| Start of response | → `pulse_status` (once) |
 | Code changed | → `pulse_doctor` |
 | >10 min since checkpoint | → Recommend checkpoint |
 | >15 min since checkpoint | → **Checkpoint URGENT** |
@@ -83,7 +84,7 @@ After 2-3 failed attempts:
 
 | Tool | When |
 |------|------|
-| `pulse_status` | **EVERY message** |
+| `pulse_status` | **Once per response** (at start) |
 | `pulse_doctor` | **After code changes** |
 | `pulse_checkpoint` | After 5-10 min / on recommendation |
 | `pulse_run` | At start of new tasks |

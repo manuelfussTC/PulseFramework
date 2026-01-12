@@ -6,14 +6,15 @@ alwaysApply: true
 
 # PULSE Framework Safeguards
 
-Diese Regeln werden bei **JEDER** Nachricht angewendet. Keine Ausnahmen.
+Diese Regeln leiten deinen Workflow. Wende sie sinnvoll an.
 
-## 🔴 PFLICHT-CHECKS (vor JEDER Antwort)
+## 🔴 PFLICHT-CHECKS (einmal pro Antwort)
 
-### 1. IMMER: `pulse_status` aufrufen
+### 1. `pulse_status` EINMAL am Anfang aufrufen
 ```
-WANN: Vor jeder Antwort, ohne Ausnahme
+WANN: Einmal am Anfang deiner Antwort (nicht mehrfach!)
 WAS: Zeigt Zeit seit Checkpoint, Änderungen, Risiko
+HINWEIS: Ein Aufruf reicht - nicht wiederholen
 ```
 
 ### 2. NACH Code-Änderungen: `pulse_doctor` aufrufen
@@ -33,7 +34,7 @@ WAS: "Soll ich einen Checkpoint erstellen?"
 
 | Situation | Aktion |
 |-----------|--------|
-| Jede Nachricht | → `pulse_status` |
+| Anfang der Antwort | → `pulse_status` (einmal) |
 | Code geändert | → `pulse_doctor` |
 | >10 Min seit Checkpoint | → Checkpoint empfehlen |
 | >15 Min seit Checkpoint | → **Checkpoint DRINGEND** |
@@ -83,7 +84,7 @@ Nach 2-3 Fehlversuchen:
 
 | Tool | Wann |
 |------|------|
-| `pulse_status` | **JEDE Nachricht** |
+| `pulse_status` | **Einmal pro Antwort** (am Anfang) |
 | `pulse_doctor` | **Nach Code-Änderungen** |
 | `pulse_checkpoint` | Nach 5-10 Min / auf Empfehlung |
 | `pulse_run` | Am Anfang neuer Aufgaben |
