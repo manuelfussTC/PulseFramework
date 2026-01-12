@@ -79,8 +79,8 @@ export async function copyAndNotify(text: string): Promise<string> {
   
   const platform = os.platform();
   if (platform === "linux") {
-    return "⚠️ Clipboard nicht verfügbar (xclip/xsel nicht installiert)";
+    return "⚠️ Clipboard not available (xclip/xsel not installed)";
   }
   
-  return "⚠️ Konnte nicht in Zwischenablage kopieren";
+  return "⚠️ Could not copy to clipboard";
 }

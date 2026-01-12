@@ -10,7 +10,7 @@ export type SixElements = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// TEMPLATE 1: 6-Elemente-Prompt (aus PULSE Framework Dokumentation)
+// TEMPLATE 1: 6-Element Prompt (from PULSE Framework Documentation)
 // ════════════════════════════════════════════════════════════════════════════
 
 /**
@@ -31,60 +31,60 @@ export function renderSixElementPrompt(layer: PulseLayer, el: SixElements): stri
   lines.push("");
 
   // ┌─────────────────────────────────────────────────────────────────────────
-  // │ 6-ELEMENTE (exakt wie im Framework dokumentiert)
+  // │ 6-ELEMENTS (exactly as documented in Framework)
   // └─────────────────────────────────────────────────────────────────────────
 
-  // 1. ROLLE
-  lines.push("**ROLLE:** " + (el.role?.trim() || "[Wer soll die KI sein? Senior Dev, Architekt, Code-Reviewer?]"));
+  // 1. ROLE
+  lines.push("**ROLE:** " + (el.role?.trim() || "[Who should the AI be? Senior Dev, Architect, Code-Reviewer?]"));
   lines.push("");
 
-  // 2. KONTEXT  
-  lines.push("**KONTEXT:** " + (el.context?.trim() || "[Wo bist du? Was ist passiert? Welches Projekt?]"));
+  // 2. CONTEXT  
+  lines.push("**CONTEXT:** " + (el.context?.trim() || "[Where are you? What happened? Which project?]"));
   lines.push("");
 
   // 3. INPUT
-  lines.push("**INPUT:** " + (el.input?.trim() || "[Was liegt vor? Code, Screenshot, Error, Konzept?]"));
+  lines.push("**INPUT:** " + (el.input?.trim() || "[What is given? Code, Screenshot, Error, Concept?]"));
   lines.push("");
 
   // 4. OUTPUT
-  lines.push("**OUTPUT:** " + (el.output?.trim() || "[Was soll rauskommen? Code, Doku, Erklärung, Datei?]"));
+  lines.push("**OUTPUT:** " + (el.output?.trim() || "[What should be the result? Code, Docs, Explanation, File?]"));
   lines.push("");
 
   // 5. ACTION
-  lines.push("**ACTION:** " + (el.action?.trim() || "[Was soll die KI tun? Bauen, analysieren, fixen, erklären?]"));
+  lines.push("**ACTION:** " + (el.action?.trim() || "[What should the AI do? Build, analyze, fix, explain?]"));
   lines.push("");
 
-  // 6. BEISPIELE
+  // 6. EXAMPLES
   if (el.examples?.trim()) {
-    lines.push("**BEISPIELE:**");
-    lines.push("✅ Wie es sein soll: " + el.examples.trim());
-    lines.push("❌ Wie es NICHT sein soll: [Negativ-Beispiel]");
+    lines.push("**EXAMPLES:**");
+    lines.push("✅ How it should be: " + el.examples.trim());
+    lines.push("❌ How it should NOT be: [Negative Example]");
     lines.push("");
   }
 
   // ┌─────────────────────────────────────────────────────────────────────────
-  // │ SAFEGUARDS (aus .cursorrules)
+  // │ SAFEGUARDS (from .cursorrules)
   // └─────────────────────────────────────────────────────────────────────────
   if (layer === "build") {
     lines.push("---");
     lines.push("");
     lines.push("⚠️ **SAFEGUARDS** (non-negotiable):");
-    lines.push("- ⏱️ MAX 30 Min autonom, dann STOP + Rückfrage");
-    lines.push("- 🗑️ KEIN DELETE ohne Nachfrage");
-    lines.push("- 📤 KEIN PUSH ohne Confirmation");
-    lines.push("- 🔐 KEINE Secrets im Code");
-    lines.push("- 📋 Git-Commit alle 5-10 Min");
+    lines.push("- ⏱️ MAX 30 min autonomous, then STOP + ask user");
+    lines.push("- 🗑️ NO DELETE without confirmation");
+    lines.push("- 📤 NO PUSH without confirmation");
+    lines.push("- 🔐 NO Secrets in code");
+    lines.push("- 📋 Git commit every 5-10 min");
     lines.push("");
   }
 
   lines.push("---");
-  lines.push("Hast du das verstanden? Dann lass uns Schritt für Schritt vorgehen.");
+  lines.push("Did you understand? Then let's proceed step by step.");
 
   return lines.join("\n");
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// TEMPLATE 2: IST/SOLL-Prompt (für schnelle Bug-Fixes)
+// TEMPLATE 2: AS-IS/TO-BE Prompt (for quick bug fixes)
 // ════════════════════════════════════════════════════════════════════════════
 
 export function renderIstSollPrompt(options: {
@@ -95,15 +95,15 @@ export function renderIstSollPrompt(options: {
 }): string {
   const lines: string[] = [];
 
-  lines.push("# IST/SOLL Bug-Fix");
+  lines.push("# AS-IS/TO-BE Bug Fix");
   lines.push("");
-  lines.push("**IST:** " + options.ist.trim());
+  lines.push("**AS-IS:** " + options.ist.trim());
   lines.push("");
-  lines.push("**SOLL:** " + options.soll.trim());
+  lines.push("**TO-BE:** " + options.soll.trim());
   lines.push("");
 
   if (options.error?.trim()) {
-    lines.push("**ERROR-Log:**");
+    lines.push("**ERROR Log:**");
     lines.push("```");
     lines.push(options.error.trim());
     lines.push("```");
@@ -111,18 +111,18 @@ export function renderIstSollPrompt(options: {
   }
 
   if (options.context?.trim()) {
-    lines.push("**KONTEXT:** " + options.context.trim());
+    lines.push("**CONTEXT:** " + options.context.trim());
     lines.push("");
   }
 
   lines.push("---");
-  lines.push("⚠️ Safeguards: Kein Delete ohne Nachfrage, Commit nach Fix.");
+  lines.push("⚠️ Safeguards: No delete without confirmation, commit after fix.");
 
   return lines.join("\n");
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// TEMPLATE 3: Eskalations-Prompt (für externe Models wie GPT-5/Opus)
+// TEMPLATE 3: Escalation Prompt (for external models like GPT-5/Opus)
 // ════════════════════════════════════════════════════════════════════════════
 
 export function renderEscalationPrompt(options: {
@@ -136,37 +136,37 @@ export function renderEscalationPrompt(options: {
 }): string {
   const lines: string[] = [];
 
-  lines.push("# Eskalation: Cursor ist stuck");
+  lines.push("# Escalation: Cursor is stuck");
   lines.push("");
-  lines.push("Mein Entwickler (Cursor) hängt bei folgendem Problem:");
+  lines.push("My developer (Cursor) is stuck on the following problem:");
   lines.push("");
-  lines.push("**Problem-Beschreibung:**");
-  lines.push(options.cursorExplanation.trim() || "[Cursor's Erklärung des Problems hier]");
+  lines.push("**Problem Description:**");
+  lines.push(options.cursorExplanation.trim() || "[Cursor's explanation of the problem here]");
   lines.push("");
 
-  // Was Cursor versucht hat
-  lines.push("**Was Cursor versucht hat:**");
+  // What Cursor tried
+  lines.push("**What Cursor tried:**");
   if (options.attempts && options.attempts.length > 0) {
     options.attempts.forEach((attempt, i) => {
       lines.push(`• ${attempt}`);
     });
   } else {
-    lines.push("• (Nicht dokumentiert)");
+    lines.push("• (Not documented)");
   }
   lines.push("");
 
-  // Error-Logs
+  // Error logs
   if (options.errorText?.trim()) {
-    lines.push("**Fehlermeldung:**");
+    lines.push("**Error Message:**");
     lines.push("```");
     lines.push(options.errorText.trim());
     lines.push("```");
     lines.push("");
   }
 
-  // Code-Context
+  // Code Context
   if (options.codeSnippets?.trim()) {
-    lines.push("**Code-Context:**");
+    lines.push("**Code Context:**");
     lines.push("```");
     lines.push(options.codeSnippets.trim());
     lines.push("```");
@@ -175,7 +175,7 @@ export function renderEscalationPrompt(options: {
 
   // Git Context
   if (options.gitLog?.trim()) {
-    lines.push("**Git-Log (letzte Commits):**");
+    lines.push("**Git Log (recent commits):**");
     lines.push("```");
     lines.push(options.gitLog.trim());
     lines.push("```");
@@ -183,7 +183,7 @@ export function renderEscalationPrompt(options: {
   }
 
   if (options.gitDiff?.trim()) {
-    lines.push("**Git-Diff:**");
+    lines.push("**Git Diff:**");
     lines.push("```");
     lines.push(options.gitDiff.trim());
     lines.push("```");
@@ -193,20 +193,20 @@ export function renderEscalationPrompt(options: {
   // Call to action
   lines.push("---");
   lines.push("");
-  lines.push("**Meine Frage:** " + (options.question.trim() || "Was ist die Root Cause und wie löse ich das?"));
+  lines.push("**My Question:** " + (options.question.trim() || "What is the root cause and how do I fix it?"));
   lines.push("");
-  lines.push("**Gib mir eine Lösung, die ich meinem Entwickler (Cursor) als Anweisung geben kann.**");
+  lines.push("**Give me a solution that I can provide to my developer (Cursor) as instructions.**");
   lines.push("");
   lines.push("Format:");
-  lines.push("1. Root Cause (eine Zeile)");
-  lines.push("2. Schritt-für-Schritt Anweisungen für Cursor");
-  lines.push("3. Code-Snippet falls nötig");
+  lines.push("1. Root Cause (one line)");
+  lines.push("2. Step-by-step instructions for Cursor");
+  lines.push("3. Code snippet if needed");
 
   return lines.join("\n");
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// PROMPT VORLAGEN (für interaktive Auswahl)
+// PROMPT TEMPLATES (for interactive selection)
 // ════════════════════════════════════════════════════════════════════════════
 
 export type PromptTemplate = {
@@ -220,62 +220,62 @@ export type PromptTemplate = {
 export const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     id: "feature",
-    name: "🚀 Feature bauen",
-    description: "Neues Feature implementieren",
+    name: "🚀 Build Feature",
+    description: "Implement new feature",
     layer: "build",
     defaults: {
       role: "Senior Full-Stack Developer",
-      output: "Funktionierende Implementierung mit Tests",
+      output: "Working implementation with tests",
     },
   },
   {
     id: "bugfix",
-    name: "🐛 Bug fixen",
-    description: "Fehler analysieren und beheben",
+    name: "🐛 Fix Bug",
+    description: "Analyze and fix error",
     layer: "build",
     defaults: {
-      role: "Erfahrener Debugger und Code-Analyst",
-      output: "1. Root Cause\n2. Fix\n3. Test dass es funktioniert",
+      role: "Experienced Debugger and Code Analyst",
+      output: "1. Root Cause\n2. Fix\n3. Test that it works",
     },
   },
   {
     id: "refactor",
     name: "♻️ Refactoring",
-    description: "Code verbessern ohne Funktionalität zu ändern",
+    description: "Improve code without changing functionality",
     layer: "build",
     defaults: {
-      role: "Code-Quality-Experte",
-      output: "Sauberer, wartbarer Code. Gleiche Funktionalität.",
+      role: "Code Quality Expert",
+      output: "Clean, maintainable code. Same functionality.",
     },
   },
   {
     id: "concept",
-    name: "📋 Konzept erstellen",
-    description: "Erst planen, dann bauen",
+    name: "📋 Create Concept",
+    description: "Plan first, then build",
     layer: "concept",
     defaults: {
-      role: "Software-Architekt",
-      output: "Markdown-Dokument mit Plan, Architektur, Risiken",
+      role: "Software Architect",
+      output: "Markdown document with plan, architecture, risks",
     },
   },
   {
     id: "analyze",
-    name: "🔍 Code analysieren",
-    description: "Projekt verstehen und dokumentieren",
+    name: "🔍 Analyze Code",
+    description: "Understand and document project",
     layer: "concept",
     defaults: {
-      role: "Senior Developer der das Projekt übernimmt",
-      output: "Strukturierte Analyse: Was ist da, wie funktioniert es, was fehlt",
+      role: "Senior Developer onboarding to the project",
+      output: "Structured analysis: What exists, how it works, what is missing",
     },
   },
   {
     id: "review",
     name: "👀 Code Review",
-    description: "Änderungen prüfen",
+    description: "Review changes",
     layer: "concept",
     defaults: {
-      role: "Code-Reviewer mit Security-Fokus",
-      output: "Liste von Findings: Critical, High, Medium, Low",
+      role: "Code Reviewer with Security focus",
+      output: "List of findings: Critical, High, Medium, Low",
     },
   },
 ];
@@ -289,17 +289,17 @@ function getLayerHint(layer: PulseLayer): { title: string; hint: string } {
     case "concept":
       return {
         title: "CONCEPT MODE",
-        hint: "🧠 Du bist im Konzept-Modus. KEIN CODE. Nur Analyse, Planung, Dokumentation.",
+        hint: "🧠 You are in Concept Mode. NO CODE. Only analysis, planning, documentation.",
       };
     case "build":
       return {
         title: "BUILD MODE",
-        hint: "🔨 Du bist im Build-Modus. Implementiere GENAU was gefordert ist. Nicht mehr, nicht weniger.",
+        hint: "🔨 You are in Build Mode. Implement EXACTLY what is requested. No more, no less.",
       };
     case "escalation":
       return {
         title: "ESCALATION MODE",
-        hint: "🚨 Eskalation aktiv. Analysiere das Problem und gib Anweisungen für den Builder.",
+        hint: "🚨 Escalation active. Analyze the problem and provide instructions for the builder.",
       };
   }
 }
@@ -315,12 +315,12 @@ export function validateOneAction(action: string | undefined): string | null {
   // Heuristic: multiple bullet lines = likely multiple actions
   const bulletLines = a.split("\n").filter((l) => /^\s*[-*]\s+/.test(l)).length;
   if (bulletLines >= 3) {
-    return "⚠️ ACTION enthält mehrere Punkte. Besser: Eine Aktion pro Pulse.";
+    return "⚠️ ACTION contains multiple points. Better: One action per Pulse.";
   }
   
   const andCount = (a.match(/\b(und|and)\b/gi) ?? []).length;
   if (andCount >= 2) {
-    return "⚠️ ACTION enthält mehrere 'und'. Besser: In Milestones aufteilen.";
+    return "⚠️ ACTION contains multiple 'and'. Better: Split into milestones.";
   }
   
   return null;

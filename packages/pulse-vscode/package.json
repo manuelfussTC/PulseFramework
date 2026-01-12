@@ -5,16 +5,22 @@
   "version": "0.1.0",
   "publisher": "pulse-framework",
   "license": "MIT",
+  "icon": "icon.png",
+  "homepage": "https://manuel-fuss.de/pulse",
+  "bugs": {
+    "url": "https://github.com/manuelfussTC/PulseFramework/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/manuelfussTC/PulseFramework"
   },
   "engines": {
-    "vscode": "^1.107.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
     "Other",
-    "Linters"
+    "Linters",
+    "Snippets"
   ],
   "keywords": [
     "pulse",
@@ -22,7 +28,10 @@
     "cursor",
     "agent",
     "guardrails",
-    "checkpoint"
+    "checkpoint",
+    "copilot",
+    "ai-safety",
+    "developer-tools"
   ],
   "activationEvents": [
     "workspaceContains:.pulse",
@@ -161,7 +170,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.27",
-    "@types/vscode": "^1.107.0",
+    "@types/vscode": "^1.85.0",
     "esbuild": "^0.19.12",
     "typescript": "^5.9.3"
   }

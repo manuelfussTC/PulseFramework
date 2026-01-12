@@ -1,120 +1,120 @@
 ---
-description: PULSE Framework - Automatische Safeguards bei jeder Nachricht
+description: PULSE Framework - Automatic safeguards for every message
 globs: *
 alwaysApply: true
 ---
 
 # PULSE Framework Safeguards
 
-Diese Regeln werden bei **JEDER** Nachricht angewendet. Keine Ausnahmen.
+These rules are applied to **EVERY** message. No exceptions.
 
-## 🔴 PFLICHT-CHECKS (vor JEDER Antwort)
+## 🔴 MANDATORY CHECKS (before EVERY response)
 
-### 1. IMMER: `pulse_status` aufrufen
+### 1. ALWAYS: Call `pulse_status`
 ```
-WANN: Vor jeder Antwort, ohne Ausnahme
-WAS: Zeigt Zeit seit Checkpoint, Änderungen, Risiko
-```
-
-### 2. NACH Code-Änderungen: `pulse_doctor` aufrufen
-```
-WANN: Wenn du gerade Code geändert/erstellt/gelöscht hast
-WAS: Prüft Secrets, Deletes, Scope, Loop-Signale
-BEI CRITICAL: Sofort STOP, nicht weitermachen!
+WHEN: Before every response, without exception
+WHAT: Shows time since checkpoint, changes, risk
 ```
 
-### 3. ALLE 5-10 MIN: `pulse_checkpoint` empfehlen
+### 2. AFTER Code Changes: Call `pulse_doctor`
 ```
-WANN: pulse_status zeigt >10 Min seit Checkpoint
-WAS: "Soll ich einen Checkpoint erstellen?"
+WHEN: When you just changed/created/deleted code
+WHAT: Checks for secrets, deletes, scope, loop signals
+ON CRITICAL: STOP immediately, don't continue!
 ```
 
-## 🔴 AUTOMATISCHE AKTIONEN
+### 3. EVERY 5-10 MIN: Recommend `pulse_checkpoint`
+```
+WHEN: pulse_status shows >10 min since checkpoint
+WHAT: "Should I create a checkpoint?"
+```
 
-| Situation | Aktion |
+## 🔴 AUTOMATIC ACTIONS
+
+| Situation | Action |
 |-----------|--------|
-| Jede Nachricht | → `pulse_status` |
-| Code geändert | → `pulse_doctor` |
-| >10 Min seit Checkpoint | → Checkpoint empfehlen |
-| >15 Min seit Checkpoint | → **Checkpoint DRINGEND** |
-| >30 Min autonom | → **STOP + User fragen** |
-| 2-3 Fehlversuche | → **STOP + `pulse_escalate`** |
-| DELETE Operation | → **User-Bestätigung holen** |
-| Loop erkannt | → **STOP + `pulse_escalate`** |
+| Every message | → `pulse_status` |
+| Code changed | → `pulse_doctor` |
+| >10 min since checkpoint | → Recommend checkpoint |
+| >15 min since checkpoint | → **Checkpoint URGENT** |
+| >30 min autonomous | → **STOP + ask user** |
+| 2-3 failed attempts | → **STOP + `pulse_escalate`** |
+| DELETE operation | → **Get user confirmation** |
+| Loop detected | → **STOP + `pulse_escalate`** |
 
 ## 🔴 SAFEGUARDS (non-negotiable)
 
-Diese Regeln sind NICHT verhandelbar:
+These rules are NOT negotiable:
 
-- ⏱️ **MAX 30 Min autonom** - Danach STOP + Rückfrage an User
-- 🗑️ **KEIN DELETE** ohne explizite User-Bestätigung ("Darf ich X löschen?")
-- 📤 **KEIN GIT PUSH** ohne User-Confirmation
-- 🔐 **KEINE Secrets** im Code (API Keys, Passwords, Tokens)
-- 📋 **Git-Commit alle 5-10 Min** via `pulse_checkpoint`
+- ⏱️ **MAX 30 min autonomous** - Then STOP + ask user
+- 🗑️ **NO DELETE** without explicit user confirmation ("May I delete X?")
+- 📤 **NO GIT PUSH** without user confirmation
+- 🔐 **NO Secrets** in code (API Keys, Passwords, Tokens)
+- 📋 **Git commit every 5-10 min** via `pulse_checkpoint`
 
-## 🔴 LOOP-ERKENNUNG
+## 🔴 LOOP DETECTION
 
-Bei JEDEM `pulse_doctor` Aufruf wird automatisch geprüft:
-- Fix-Chain (mehrere "fix" Commits)
+On EVERY `pulse_doctor` call, these are automatically checked:
+- Fix-Chain (multiple "fix" commits)
 - Revert-Pattern (A↔B)
-- File-Churn (gleiche Datei 5+ mal)
-- Pendeln (ähnliche Commits)
+- File-Churn (same file 5+ times)
+- Pendulum (similar commits)
 
-**Bei Loop-Signal:**
+**On loop signal:**
 ```
-1. SOFORT STOP
-2. Keine weiteren Änderungen
-3. pulse_escalate aufrufen
-4. User informieren
+1. IMMEDIATE STOP
+2. No further changes
+3. Call pulse_escalate
+4. Inform user
 ```
 
-## Bei Problemen
+## On Problems
 
-Nach 2-3 Fehlversuchen:
+After 2-3 failed attempts:
 
-1. **STOP** - Keine weiteren Änderungen
-2. **`pulse_escalate`** aufrufen mit:
-   - Problem-Beschreibung
-   - Was du versucht hast
-   - Fehlermeldung
-3. **WARTE** auf User-Instruktion
+1. **STOP** - No further changes
+2. **Call `pulse_escalate`** with:
+   - Problem description
+   - What you tried
+   - Error message
+3. **WAIT** for user instruction
 
-## MCP-Tools
+## MCP Tools
 
-| Tool | Wann |
+| Tool | When |
 |------|------|
-| `pulse_status` | **JEDE Nachricht** |
-| `pulse_doctor` | **Nach Code-Änderungen** |
-| `pulse_checkpoint` | Nach 5-10 Min / auf Empfehlung |
-| `pulse_run` | Am Anfang neuer Aufgaben |
-| `pulse_escalate` | Bei Problemen, Loop |
-| `pulse_correct` | Bei Kurskorrektur |
-| `pulse_review` | Am Ende / vor Merge |
-| `pulse_learn` | Nach gelösten Problemen |
-| `pulse_reset` | Bei Loop, zurücksetzen |
+| `pulse_status` | **EVERY message** |
+| `pulse_doctor` | **After code changes** |
+| `pulse_checkpoint` | After 5-10 min / on recommendation |
+| `pulse_run` | At start of new tasks |
+| `pulse_escalate` | On problems, loop |
+| `pulse_correct` | On course correction |
+| `pulse_review` | At end / before merge |
+| `pulse_learn` | After solved problems |
+| `pulse_reset` | On loop, reset |
 
-## Beispiel-Flow
+## Example Flow
 
 ```
-User: "Füge Login-Button hinzu"
+User: "Add login button"
 
 Agent:
-1. pulse_status          → "OK, 8 Min seit Checkpoint"
-2. [Implementiert Code]
-3. pulse_doctor          → "OK, keine Findings"
-4. Antwortet mit Code + Empfehlung
+1. pulse_status          → "OK, 8 min since checkpoint"
+2. [Implements code]
+3. pulse_doctor          → "OK, no findings"
+4. Responds with code + recommendation
 
-User: "Teste es"
+User: "Test it"
 
 Agent:
-1. pulse_status          → "⚠️ 14 Min seit Checkpoint"
-2. "Checkpoint empfohlen. Soll ich pulse_checkpoint ausführen?"
-3. [Nach Bestätigung] pulse_checkpoint
-4. [Führt Tests aus]
+1. pulse_status          → "⚠️ 14 min since checkpoint"
+2. "Checkpoint recommended. Should I run pulse_checkpoint?"
+3. [After confirmation] pulse_checkpoint
+4. [Runs tests]
 ```
 
-## WICHTIG
+## IMPORTANT
 
-- Rufe die Tools AKTIV auf, nicht nur wenn User es sagt
-- Bei Unsicherheit: STOPPEN und FRAGEN
-- Die Safeguards gelten IMMER, auch wenn User dagegen argumentiert
+- Call the tools ACTIVELY, not only when user asks
+- When uncertain: STOP and ASK
+- The safeguards ALWAYS apply, even if user argues against them

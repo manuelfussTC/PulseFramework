@@ -1,28 +1,67 @@
 # PULSE Framework - Technical Reference
 
 **Version:** 0.3.0  
-**Datum:** 2026-01-06  
+**Date:** 2026-01-06  
 **Packages:** `@pulseframework/pulse-cli`, `@pulseframework/pulse-mcp`
 
 ---
 
-## Inhaltsverzeichnis
+## Table of Contents
 
-1. [MCP Tools](#mcp-tools)
-2. [CLI Commands](#cli-commands)
-3. [Konfiguration](#konfiguration)
-4. [Automatisierung (Cursor Rules)](#automatisierung)
-5. [Datenstrukturen](#datenstrukturen)
+1. [CLI vs MCP: Understanding the Difference](#cli-vs-mcp)
+2. [MCP Tools](#mcp-tools)
+3. [CLI Commands](#cli-commands)
+4. [Configuration](#configuration)
+5. [Automation (Cursor Rules)](#automation)
+6. [Data Structures](#data-structures)
+
+---
+
+## CLI vs MCP
+
+PULSE provides two interfaces that serve different purposes:
+
+### Overview
+
+| Aspect | CLI (`pulse`) | MCP (`pulse_*`) |
+|--------|---------------|-----------------|
+| **Who calls it** | Human in terminal | AI agent in Cursor |
+| **When to use** | Manual operations | Automatic during AI conversation |
+| **Output** | Terminal (human-readable) | Agent context (machine-readable) |
+| **Installation** | `npm link` globally | Configure in `.cursor/mcp.json` |
+| **Package** | `@pulseframework/pulse-cli` | `@pulseframework/pulse-mcp` |
+
+### When to Use Which
+
+**Use CLI (`pulse`) when:**
+- Initializing a project (`pulse init`)
+- Manually checking status (`pulse status`)
+- Creating prompts to paste into AI tools (`pulse start -C`)
+- Working with non-Cursor editors
+- Running in CI/CD pipelines
+
+**Use MCP (`pulse_*`) when:**
+- Working in Cursor IDE with MCP enabled
+- You want automatic safeguard checks
+- The agent should call tools during conversation
+- You want tool chaining (recommendations for next action)
+
+### Dedicated Documentation
+
+- **[CLI Reference](./tooling/pulse-cli.md)** - Complete CLI command reference
+- **[MCP Reference](./tooling/pulse-mcp.md)** - Complete MCP tool reference
 
 ---
 
 ## MCP Tools
 
-MCP (Model Context Protocol) Tools werden von Cursor automatisch aufgerufen. Der MCP Server läuft als Hintergrundprozess.
+MCP (Model Context Protocol) Tools are automatically called by Cursor. The MCP server runs as a background process.
+
+> **See also:** [Detailed MCP Reference](./tooling/pulse-mcp.md)
 
 ### `pulse_status`
 
-**Zweck:** Projekt-Status abrufen (PFLICHT vor jeder Agent-Antwort)
+**Purpose:** Get project status (MANDATORY before every agent response)
 
 **Input Schema:**
 ```json
@@ -31,24 +70,24 @@ MCP (Model Context Protocol) Tools werden von Cursor automatisch aufgerufen. Der
   "properties": {
     "json": {
       "type": "boolean",
-      "description": "JSON-Output statt formatiert"
+      "description": "JSON output instead of formatted"
     }
   }
 }
 ```
 
-**Beispiel-Aufruf:**
+**Example Call:**
 ```
 pulse_status
 ```
 
-**Beispiel-Output:**
+**Example Output:**
 ```
 📊 PULSE Status
 
-🔨 Profil: build
-🔴 Checkpoint: vor 18 Min
-📝 Dateien: 5
+🔨 Profile: build
+🔴 Checkpoint: 18 min ago
+📝 Files: 5
 📏 Lines: 234
 
 📊 Scope (frontend Preset):
@@ -58,14 +97,14 @@ pulse_status
 🔍 Findings:
    ⚠️ 2 Warnings
 
-🟢 Loop-Risiko: LOW
+🟢 Loop Risk: LOW
 
-💡 Empfehlung: CHECKPOINT
-   → 18 Min seit Checkpoint
+💡 Recommendation: CHECKPOINT
+   → 18 min since checkpoint
    → pulse checkpoint -m 'wip: progress'
 ```
 
-**JSON-Output:**
+**JSON Output:**
 ```json
 {
   "profile": "build",
@@ -84,7 +123,7 @@ pulse_status
 
 ### `pulse_run`
 
-**Zweck:** Neuen Workflow starten (Branch erstellen + Arbeitsauftrag)
+**Purpose:** Start new workflow (create branch + work order)
 
 **Input Schema:**
 ```json
@@ -93,7 +132,7 @@ pulse_status
   "properties": {
     "action": {
       "type": "string",
-      "description": "Was soll gemacht werden?"
+      "description": "What should be done?"
     },
     "template": {
       "type": "string",
@@ -101,60 +140,60 @@ pulse_status
     },
     "branch": {
       "type": "string",
-      "description": "Branch-Name (optional, wird automatisch generiert)"
+      "description": "Branch name (optional, auto-generated)"
     }
   },
   "required": ["action"]
 }
 ```
 
-**Beispiel-Aufruf:**
+**Example Call:**
 ```
-pulse_run action="User Dashboard implementieren" template="feature"
+pulse_run action="Implement user dashboard" template="feature"
 ```
 
-**Automatische Aktionen:**
-1. Prüft aktuellen Branch
-2. Erstellt Feature-Branch wenn auf main/master: `feature/user-dashboard-implementieren`
-3. Speichert Worklog in `.pulse/pulses/`
-4. Gibt Arbeitsauftrag zurück
+**Automatic Actions:**
+1. Check current branch
+2. Create feature branch if on main/master: `feature/implement-user-dashboard`
+3. Save worklog in `.pulse/pulses/`
+4. Return work order
 
-**Beispiel-Output:**
+**Example Output:**
 ```
-# 🚀 ARBEITSAUFTRAG
+# 🚀 WORK ORDER
 
-✅ Branch erstellt: `feature/user-dashboard-implementieren`
+✅ Branch created: `feature/implement-user-dashboard`
 
-**ACTION:** User Dashboard implementieren
+**ACTION:** Implement user dashboard
 
-## JETZT SOFORT ANFANGEN
+## START IMMEDIATELY
 
-Du bist der Agent. Beginne DIREKT mit der Implementierung.
+You are the agent. Start DIRECTLY with implementation.
 
-## Deine Aufgabe
+## Your Task
 
-Implementiere: **User Dashboard implementieren**
+Implement: **Implement user dashboard**
 
 Template: feature
-Profil: frontend/build
-Branch: feature/user-dashboard-implementieren
+Profile: frontend/build
+Branch: feature/implement-user-dashboard
 
-## Während der Arbeit
+## During Work
 
-- ⏱️ **Checkpoint alle 15 Min:** `pulse_checkpoint` aufrufen
-- 🔍 **Nach Code-Änderungen:** `pulse_doctor` aufrufen
-- ❌ **Bei Problemen nach 2-3 Versuchen:** `pulse_escalate`
+- ⏱️ **Checkpoint every 15 min:** call `pulse_checkpoint`
+- 🔍 **After code changes:** call `pulse_doctor`
+- ❌ **On problems after 2-3 attempts:** `pulse_escalate`
 
 ---
 
-**BEGINNE JETZT MIT DER IMPLEMENTIERUNG.**
+**START IMPLEMENTATION NOW.**
 ```
 
 ---
 
 ### `pulse_checkpoint`
 
-**Zweck:** Git-Commit mit Validierung erstellen
+**Purpose:** Create Git commit with validation
 
 **Input Schema:**
 ```json
@@ -163,55 +202,55 @@ Branch: feature/user-dashboard-implementieren
   "properties": {
     "message": {
       "type": "string",
-      "description": "Commit-Message"
+      "description": "Commit message"
     },
     "runTests": {
       "type": "boolean",
-      "description": "Tests vor Commit ausführen"
+      "description": "Run tests before commit"
     }
   }
 }
 ```
 
-**Beispiel-Aufruf:**
+**Example Call:**
 ```
 pulse_checkpoint message="feat: add login form"
 ```
 
-**Automatische Aktionen:**
-1. `pulse doctor` ausführen (Safeguards prüfen)
-2. Bei Critical Findings: Abbruch
+**Automatic Actions:**
+1. Run `pulse doctor` (check safeguards)
+2. On critical findings: Abort
 3. `git add -A`
 4. `git commit -m "<message>"`
-5. State aktualisieren (lastCheckpointAt)
+5. Update state (lastCheckpointAt)
 
-**Beispiel-Output:**
+**Example Output:**
 ```
-✅ Checkpoint erstellt
+✅ Checkpoint created
 
 Commit: abc1234
 Message: feat: add login form
 Files: 3 files changed
 Lines: +45 -12
 
-⏱️ Nächster Checkpoint in ~15 Min empfohlen
+⏱️ Next checkpoint recommended in ~15 min
 ```
 
-**Bei Fehler (Safeguard Violation):**
+**On Error (Safeguard Violation):**
 ```
-❌ Checkpoint abgebrochen
+❌ Checkpoint aborted
 
 🚨 Critical Finding: SECRETS
-   API Key gefunden in src/config.ts
+   API key found in src/config.ts
 
-Behebe das Problem und versuche erneut.
+Fix the problem and try again.
 ```
 
 ---
 
 ### `pulse_doctor`
 
-**Zweck:** Safeguards und Red Flags prüfen
+**Purpose:** Check safeguards and red flags
 
 **Input Schema:**
 ```json
@@ -220,63 +259,63 @@ Behebe das Problem und versuche erneut.
   "properties": {
     "staged": {
       "type": "boolean",
-      "description": "Nur staged Changes prüfen"
+      "description": "Only check staged changes"
     },
     "loop": {
       "type": "boolean",
-      "description": "Loop-Detection aktivieren"
+      "description": "Enable loop detection"
     }
   }
 }
 ```
 
-**Beispiel-Aufruf:**
+**Example Call:**
 ```
 pulse_doctor loop=true
 ```
 
-**Geprüfte Patterns:**
+**Checked Patterns:**
 
-| Code | Severity | Beschreibung |
-|------|----------|--------------|
+| Code | Severity | Description |
+|------|----------|-------------|
 | `SECRETS` | critical | API Keys, Passwords, Tokens |
-| `PROD_URL` | warn/critical | Production URLs im Code |
-| `MASS_DELETE` | critical | Datei-Löschungen |
-| `BIG_CHANGESET` | warn | Zu viele Änderungen |
-| `UNKNOWN_DEPS` | warn | Neue Dependencies |
-| `CONSOLE_LOG` | warn | Debug-Output |
-| `LOOP_SIGNAL` | warn/critical | Loop-Patterns erkannt |
+| `PROD_URL` | warn/critical | Production URLs in code |
+| `MASS_DELETE` | critical | File deletions |
+| `BIG_CHANGESET` | warn | Too many changes |
+| `UNKNOWN_DEPS` | warn | New dependencies |
+| `CONSOLE_LOG` | warn | Debug output |
+| `LOOP_SIGNAL` | warn/critical | Loop patterns detected |
 
-**Loop-Detection Patterns:**
+**Loop Detection Patterns:**
 
-| Pattern | Erkennung |
+| Pattern | Detection |
 |---------|-----------|
-| `fix_chain` | 3+ "fix" Commits hintereinander |
-| `revert` | Revert-Commits im Log |
-| `churn` | Gleiche Datei 5+ mal geändert |
-| `pendeln` | Ähnliche Commit-Messages |
-| `fix_no_test` | Fix ohne Test-Änderung |
+| `fix_chain` | 3+ "fix" commits in a row |
+| `revert` | Revert commits in log |
+| `churn` | Same file changed 5+ times |
+| `pendulum` | Similar commit messages |
+| `fix_no_test` | Fix without test change |
 
-**Beispiel-Output:**
+**Example Output:**
 ```
 🔍 Pulse Doctor (working tree)
 
-Profil: frontend/build
+Profile: frontend/build
 Scope: 5 files | +234 -45 lines
 Limits (frontend): Files 50%, Lines 93%
 
-⚠️ UNKNOWN_DEPS: Neue Dependencies erkannt (3): Kennst du diese?
+⚠️ UNKNOWN_DEPS: New dependencies detected (3): Do you know these?
      + axios @ ^1.6.0
      + lodash @ ^4.17.21
      + dayjs @ ^1.11.10
 
-⚠️ LOOP_SIGNAL: 3x "fix" Commits in den letzten 15 Commits.
-   Möglicher Fix-Loop.
+⚠️ LOOP_SIGNAL: 3x "fix" commits in last 15 commits.
+   Possible fix-loop.
 
-🔴 Loop-Risiko: HIGH
+🔴 Loop Risk: HIGH
 
-🚨 EMPFEHLUNG: ESCALATE
-   → Hohes Loop-Risiko erkannt
+🚨 RECOMMENDATION: ESCALATE
+   → High loop risk detected
    → pulse escalate
 ```
 
@@ -284,7 +323,7 @@ Limits (frontend): Files 50%, Lines 93%
 
 ### `pulse_escalate`
 
-**Zweck:** Problem an externes Model eskalieren
+**Purpose:** Escalate problem to external model
 
 **Input Schema:**
 ```json
@@ -293,62 +332,62 @@ Limits (frontend): Files 50%, Lines 93%
   "properties": {
     "problem": {
       "type": "string",
-      "description": "Problem-Beschreibung"
+      "description": "Problem description"
     },
     "tried": {
       "type": "string",
-      "description": "Was wurde bereits versucht?"
+      "description": "What was already tried?"
     },
     "error": {
       "type": "string",
-      "description": "Fehlermeldung"
+      "description": "Error message"
     },
     "stage": {
       "type": "number",
       "enum": [1, 2, 3],
-      "description": "Eskalationsstufe"
+      "description": "Escalation stage"
     },
     "autoInclude": {
       "type": "boolean",
-      "description": "Relevante Dateien automatisch inkludieren"
+      "description": "Auto-include relevant files"
     }
   },
   "required": ["problem"]
 }
 ```
 
-**Beispiel-Aufruf:**
+**Example Call:**
 ```
 pulse_escalate 
-  problem="Auth Token wird nicht refreshed"
-  tried="useEffect mit Dependency Array, axios interceptor"
-  error="401 Unauthorized nach 1h"
+  problem="Auth token not refreshing"
+  tried="useEffect with dependency array, axios interceptor"
+  error="401 Unauthorized after 1h"
   stage=2
   autoInclude=true
 ```
 
-**Beispiel-Output:**
+**Example Output:**
 ```
-# 🚨 ESKALATION (Stufe 2)
+# 🚨 ESCALATION (Stage 2)
 
 ## Problem
-Auth Token wird nicht refreshed
+Auth token not refreshing
 
-## Kontext
-- Projekt: MyApp (React/TypeScript)
+## Context
+- Project: MyApp (React/TypeScript)
 - Branch: feature/auth-improvements
-- Letzte Änderungen: 5 Dateien
+- Recent changes: 5 files
 
-## Was wurde versucht
-- useEffect mit Dependency Array
+## What was tried
+- useEffect with dependency array
 - axios interceptor
 
-## Fehlermeldung
+## Error Message
 ```
-401 Unauthorized nach 1h
+401 Unauthorized after 1h
 ```
 
-## Relevante Dateien
+## Relevant Files
 
 <file path="src/hooks/useAuth.ts">
 // ... Code ...
@@ -358,20 +397,20 @@ Auth Token wird nicht refreshed
 // ... Code ...
 </file>
 
-## Frage an externes Model
-Analysiere das Problem und schlage eine Lösung vor.
-Beachte: Der Agent hat bereits 2-3 Versuche gemacht.
+## Question for External Model
+Analyze the problem and suggest a solution.
+Note: The agent has already made 2-3 attempts.
 
 ---
 
-📋 Prompt für ChatGPT/Claude kopieren oder MCP-Tool in anderem Fenster nutzen.
+📋 Copy prompt to ChatGPT/Claude or use MCP tool in another window.
 ```
 
 ---
 
 ### `pulse_correct`
 
-**Zweck:** Kurskorrektur bei laufender Arbeit
+**Purpose:** Course correction during work
 
 **Input Schema:**
 ```json
@@ -380,12 +419,12 @@ Beachte: Der Agent hat bereits 2-3 Versuche gemacht.
   "properties": {
     "feedback": {
       "type": "string",
-      "description": "Was soll anders gemacht werden?"
+      "description": "What should be done differently?"
     },
     "mode": {
       "type": "string",
       "enum": ["narrow", "expand", "pivot", "explain", "milestone"],
-      "description": "Art der Korrektur"
+      "description": "Type of correction"
     }
   },
   "required": ["feedback"]
@@ -394,24 +433,24 @@ Beachte: Der Agent hat bereits 2-3 Versuche gemacht.
 
 **Modes:**
 
-| Mode | Beschreibung |
-|------|--------------|
-| `narrow` | Fokussieren, weniger machen |
-| `expand` | Scope erweitern |
-| `pivot` | Komplett andere Richtung |
-| `explain` | Agent soll erklären was er versteht |
-| `milestone` | Kleinere Zwischenziele setzen |
+| Mode | Description |
+|------|-------------|
+| `narrow` | Focus, do less |
+| `expand` | Extend scope |
+| `pivot` | Completely different direction |
+| `explain` | Agent should explain what they understand |
+| `milestone` | Set smaller intermediate goals |
 
-**Beispiel-Aufruf:**
+**Example Call:**
 ```
-pulse_correct feedback="Zu komplex, mach es einfacher" mode="narrow"
+pulse_correct feedback="Too complex, make it simpler" mode="narrow"
 ```
 
 ---
 
 ### `pulse_review`
 
-**Zweck:** Decision Briefing vor Merge/Ende
+**Purpose:** Decision Briefing before merge/end
 
 **Input Schema:**
 ```json
@@ -420,36 +459,36 @@ pulse_correct feedback="Zu komplex, mach es einfacher" mode="narrow"
   "properties": {
     "full": {
       "type": "boolean",
-      "description": "Ausführliche Checklist"
+      "description": "Detailed checklist"
     },
     "json": {
       "type": "boolean",
-      "description": "JSON-Output"
+      "description": "JSON output"
     }
   }
 }
 ```
 
-**Beispiel-Output:**
+**Example Output:**
 ```
 ┌───────────────────────────────────────────────────────┐
 │ PULSE Review – Decision Briefing                      │
 ├───────────────────────────────────────────────────────┤
-│ Profil: frontend/build                                │
+│ Profile: frontend/build                               │
 ├───────────────────────────────────────────────────────┤
 │ SCOPE-CHECK                                           │
 │  Files: 8/10 (80%)  ████████████░░░                   │
 │  Lines: 180/250 (72%)  ███████████░░░░                │
 │  Deletes: 12/30 (40%)  ██████░░░░░░░░░                │
 ├───────────────────────────────────────────────────────┤
-│ RISIKO-SUMMARY                                        │
+│ RISK-SUMMARY                                          │
 │  ✅ 0 Critical, ⚠️ 2 Warnings                         │
-│  ⏱️ Checkpoint vor 8 Min                              │
-│  🟢 Loop-Risiko: LOW                                  │
+│  ⏱️ Checkpoint 8 min ago                              │
+│  🟢 Loop Risk: LOW                                    │
 ├───────────────────────────────────────────────────────┤
-│ ✅ EMPFEHLUNG: APPROVE                                │
-│  → Scope OK, keine kritischen Findings               │
-│  → Bereit für PR                                      │
+│ ✅ RECOMMENDATION: APPROVE                            │
+│  → Scope OK, no critical findings                    │
+│  → Ready for PR                                       │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -457,7 +496,7 @@ pulse_correct feedback="Zu komplex, mach es einfacher" mode="narrow"
 
 ### `pulse_learn`
 
-**Zweck:** Wissen aus gelösten Problemen speichern
+**Purpose:** Save knowledge from solved problems
 
 **Input Schema:**
 ```json
@@ -466,44 +505,44 @@ pulse_correct feedback="Zu komplex, mach es einfacher" mode="narrow"
   "properties": {
     "problem": {
       "type": "string",
-      "description": "Was war das Problem?"
+      "description": "What was the problem?"
     },
     "solution": {
       "type": "string",
-      "description": "Wie wurde es gelöst?"
+      "description": "How was it solved?"
     },
     "rule": {
       "type": "string",
-      "description": "Welche Regel ergibt sich daraus?"
+      "description": "What rule results from this?"
     }
   },
   "required": ["problem", "solution"]
 }
 ```
 
-**Beispiel-Aufruf:**
+**Example Call:**
 ```
 pulse_learn 
-  problem="Race Condition bei Token Refresh"
-  solution="useRef statt useState für Token"
-  rule="Auth-State immer mit useRef, nicht useState"
+  problem="Race condition on token refresh"
+  solution="useRef instead of useState for token"
+  rule="Always use useRef for auth state, not useState"
 ```
 
-**Beispiel-Output:**
+**Example Output:**
 ```
-✅ Wissen gespeichert
+✅ Knowledge saved
 
-📁 Datei: .pulse/memory/2026-01-06T12-00-00.000Z-learning.md
+📁 File: .pulse/memory/2026-01-06T12-00-00.000Z-learning.md
 
-Soll die Regel zu .cursorrules hinzugefügt werden?
-→ "Auth-State immer mit useRef, nicht useState"
+Should the rule be added to .cursorrules?
+→ "Always use useRef for auth state, not useState"
 ```
 
 ---
 
 ### `pulse_profile`
 
-**Zweck:** Arbeits-Layer wechseln
+**Purpose:** Switch work layer
 
 **Input Schema:**
 ```json
@@ -522,19 +561,19 @@ Soll die Regel zu .cursorrules hinzugefügt werden?
 }
 ```
 
-**Layer:**
+**Layers:**
 
-| Layer | Beschreibung | Typisches Tool |
-|-------|--------------|----------------|
-| `concept` | Planung, Architektur | ChatGPT/Claude |
-| `build` | Implementierung | Cursor |
-| `escalation` | Komplexe Probleme | GPT-4/Opus |
+| Layer | Description | Typical Tool |
+|-------|-------------|--------------|
+| `concept` | Planning, architecture | ChatGPT/Claude |
+| `build` | Implementation | Cursor |
+| `escalation` | Complex problems | GPT-4/Opus |
 
 ---
 
 ### `pulse_reset`
 
-**Zweck:** Git-Reset mit Safeguards
+**Purpose:** Git reset with safeguards
 
 **Input Schema:**
 ```json
@@ -543,7 +582,7 @@ Soll die Regel zu .cursorrules hinzugefügt werden?
   "properties": {
     "commits": {
       "type": "number",
-      "description": "Anzahl Commits zurück (default: 1)"
+      "description": "Number of commits back (default: 1)"
     },
     "mode": {
       "type": "string",
@@ -553,66 +592,68 @@ Soll die Regel zu .cursorrules hinzugefügt werden?
 }
 ```
 
-**Beispiel-Output:**
+**Example Output:**
 ```
 🔄 PULSE Reset
 
 📍 Branch: feature/user-dashboard
-📋 Betroffene Commits (1):
+📋 Affected commits (1):
    🗑️ abc1234 fix: button color
 
-   ✅ Neuer HEAD: def5678 feat: add login form
+   ✅ New HEAD: def5678 feat: add login form
 
-🔧 Führe aus: git reset --mixed HEAD~1
+🔧 Executing: git reset --mixed HEAD~1
 
-✅ Reset erfolgreich!
-📍 Neuer HEAD: def5678 feat: add login form
+✅ Reset successful!
+📍 New HEAD: def5678 feat: add login form
 ```
 
 ---
 
 ## CLI Commands
 
+> **See also:** [Detailed CLI Reference](./tooling/pulse-cli.md)
+
 ### Installation
 
 ```bash
-# Global (nach npm link)
+# Global (after npm link)
 pulse <command>
 
-# Oder via npx (wenn veröffentlicht)
+# Or via npx (if published)
 npx @pulseframework/pulse-cli <command>
 ```
 
 ### `pulse init`
 
 ```bash
-# Interaktiv
+# Interactive
 pulse init
 
-# Mit Optionen
+# With options
 pulse init --preset frontend --mcp --hooks
 
-# Für andere Editoren
+# For other editors
 pulse init --agents
 ```
 
-**Erstellt:**
-- `.pulse/` - Artefakt-Verzeichnis
-- `pulse.config.json` - Konfiguration
-- `.cursorrules` - Fallback-Regeln
-- `.cursor/rules/pulse.mdc` - Cursor Rules (mit --mcp)
-- `.cursor/mcp.json` - MCP Config (mit --mcp)
-- `AGENTS.md` - Universal Rules (mit --agents)
+**Creates:**
+- `.pulse/` - Artifact directory
+- `pulse.config.json` - Configuration
+- `.cursorrules` - Fallback rules
+- `.cursor/rules/pulse.mdc` - Cursor Rules (with --mcp)
+- `.cursor/mcp.json` - MCP Config (with --mcp)
+- `AGENTS.md` - Universal Rules (with --agents)
 
 ---
 
 ### `pulse status`
 
 ```bash
-pulse status              # Kurzform
-pulse status --verbose    # Ausführlich
-pulse status --json       # JSON-Output
-pulse status --share      # Markdown für Slack/Discord
+pulse status              # Short form
+pulse status --verbose    # Detailed
+pulse status --json       # JSON output
+pulse status --share      # Markdown for Slack/Discord
 ```
 
 ---
@@ -620,18 +661,18 @@ pulse status --share      # Markdown für Slack/Discord
 ### `pulse start`
 
 ```bash
-# Interaktiv
+# Interactive
 pulse start
 
-# Quick Mode (für MCP)
+# Quick mode (for MCP)
 pulse start --template feature --action "Dashboard" --quick
 
-# Mit allen Elementen
+# With all elements
 pulse start \
   --role "Senior React Developer" \
   --context "E-Commerce App" \
-  --action "User Dashboard implementieren" \
-  --output "Funktionierendes Dashboard mit Tests"
+  --action "Implement user dashboard" \
+  --output "Working dashboard with tests"
 ```
 
 ---
@@ -649,15 +690,15 @@ pulse checkpoint -m "wip: progress" --test
 
 ```bash
 pulse doctor              # Working tree
-pulse doctor --staged     # Nur staged
-pulse doctor --loop       # Mit Loop-Detection
+pulse doctor --staged     # Only staged
+pulse doctor --loop       # With loop detection
 pulse doctor --ci         # CI Mode (Exit Codes)
 ```
 
 **Exit Codes:**
-- `0` - Keine Findings
+- `0` - No findings
 - `1` - Warnings
-- `2` - Critical Findings
+- `2` - Critical findings
 
 ---
 
@@ -665,8 +706,8 @@ pulse doctor --ci         # CI Mode (Exit Codes)
 
 ```bash
 pulse review              # Decision Briefing
-pulse review --full       # Mit Checklist
-pulse review --json       # JSON-Output
+pulse review --full       # With checklist
+pulse review --json       # JSON output
 ```
 
 ---
@@ -674,10 +715,10 @@ pulse review --json       # JSON-Output
 ### `pulse escalate`
 
 ```bash
-# Interaktiv
+# Interactive
 pulse escalate
 
-# Mit Optionen
+# With options
 pulse escalate \
   --problem "Auth Token Bug" \
   --tried "useEffect, interceptor" \
@@ -691,10 +732,10 @@ pulse escalate \
 ### `pulse reset`
 
 ```bash
-pulse reset               # 1 Commit zurück, interaktiv
-pulse reset -n 3          # 3 Commits zurück
-pulse reset --hard        # Hard Reset
-pulse reset -y            # Ohne Bestätigung
+pulse reset               # 1 commit back, interactive
+pulse reset -n 3          # 3 commits back
+pulse reset --hard        # Hard reset
+pulse reset -y            # Without confirmation
 ```
 
 ---
@@ -702,7 +743,7 @@ pulse reset -y            # Ohne Bestätigung
 ### `pulse run`
 
 ```bash
-pulse run                 # Interaktiver Workflow
+pulse run                 # Interactive workflow
 ```
 
 ---
@@ -710,8 +751,8 @@ pulse run                 # Interaktiver Workflow
 ### `pulse watch`
 
 ```bash
-pulse watch               # Startet Watcher
-pulse watch --interval 10 # Custom Intervall (Minuten)
+pulse watch               # Start watcher
+pulse watch --interval 10 # Custom interval (minutes)
 ```
 
 ---
@@ -721,8 +762,8 @@ pulse watch --interval 10 # Custom Intervall (Minuten)
 ```bash
 pulse learn \
   --problem "Race Condition" \
-  --solution "useRef statt useState" \
-  --rule "Auth-State mit useRef"
+  --solution "useRef instead of useState" \
+  --rule "Auth state with useRef"
 ```
 
 ---
@@ -730,15 +771,15 @@ pulse learn \
 ### `pulse profile`
 
 ```bash
-pulse profile             # Aktuelles Profil anzeigen
-pulse profile set build   # Profil setzen
+pulse profile             # Show current profile
+pulse profile set build   # Set profile
 pulse profile set concept
 pulse profile set escalation
 ```
 
 ---
 
-## Konfiguration
+## Configuration
 
 ### `pulse.config.json`
 
@@ -769,58 +810,58 @@ pulse profile set escalation
 
 | Preset | Max Files | Max Lines | Checkpoint |
 |--------|-----------|-----------|------------|
-| `frontend` | 10 | 250 | 15 Min |
-| `backend` | 15 | 400 | 20 Min |
-| `fullstack` | 15 | 300 | 15 Min |
-| `monorepo` | 25 | 600 | 25 Min |
-| `custom` | 15 | 300 | 30 Min |
+| `frontend` | 10 | 250 | 15 min |
+| `backend` | 15 | 400 | 20 min |
+| `fullstack` | 15 | 300 | 15 min |
+| `monorepo` | 25 | 600 | 25 min |
+| `custom` | 15 | 300 | 30 min |
 
 ---
 
-## Automatisierung
+## Automation
 
 ### `.cursor/rules/pulse.mdc`
 
 ```yaml
 ---
-description: PULSE Framework - Automatische Safeguards
+description: PULSE Framework - Automatic Safeguards
 globs: *
 alwaysApply: true
 ---
 ```
 
-**Wird bei JEDER Chat-Nachricht injiziert.**
+**Injected with EVERY chat message.**
 
-### Automatische Trigger
+### Automatic Triggers
 
 | Trigger | Tool |
 |---------|------|
-| Jede Nachricht | `pulse_status` |
-| Nach Code-Änderung | `pulse_doctor` |
-| >10 Min seit Checkpoint | Empfehlung |
-| >30 Min autonom | STOP |
-| Loop erkannt | `pulse_escalate` |
-| DELETE Operation | User-Bestätigung |
+| Every message | `pulse_status` |
+| After code change | `pulse_doctor` |
+| >10 min since checkpoint | Recommendation |
+| >30 min autonomous | STOP |
+| Loop detected | `pulse_escalate` |
+| DELETE operation | User confirmation |
 
 ---
 
-## Datenstrukturen
+## Data Structures
 
-### `.pulse/` Verzeichnis
+### `.pulse/` Directory
 
 ```
 .pulse/
-├── pulses/           # Start-Prompts
+├── pulses/           # Start prompts
 │   └── 2026-01-06T12-00-00.000Z-start.md
-├── reviews/          # Review-Dokumente
+├── reviews/          # Review documents
 │   └── 2026-01-06T12-30-00.000Z-review.md
-├── escalations/      # Eskalations-Prompts
+├── escalations/      # Escalation prompts
 │   └── 2026-01-06T13-00-00.000Z-escalation.md
-├── worklogs/         # Arbeits-Protokolle
+├── worklogs/         # Work logs
 │   └── 2026-01-06.json
-├── memory/           # Gelerntes Wissen
+├── memory/           # Learned knowledge
 │   └── 2026-01-06T14-00-00.000Z-learning.md
-└── state.json        # Aktueller Status
+└── state.json        # Current status
 ```
 
 ### `state.json`
@@ -829,14 +870,14 @@ alwaysApply: true
 {
   "profile": "build",
   "lastCheckpointAt": "2026-01-06T12:00:00.000Z",
-  "currentAction": "User Dashboard implementieren",
+  "currentAction": "Implement user dashboard",
   "sessionStartedAt": "2026-01-06T10:00:00.000Z"
 }
 ```
 
 ---
 
-## Versionen
+## Versions
 
 - **CLI:** 0.3.0
 - **MCP:** 0.3.0
@@ -849,65 +890,65 @@ alwaysApply: true
 
 ### Cursor Rules Template (`.cursor/rules/pulse.mdc`)
 
-Diese Datei wird bei `pulse init --mcp` erstellt und bei **JEDER** Chat-Nachricht in Cursor injiziert.
+This file is created with `pulse init --mcp` and injected with **EVERY** chat message in Cursor.
 
 ```markdown
 ---
-description: PULSE Framework - Automatische Safeguards bei jeder Nachricht
+description: PULSE Framework - Automatic safeguards for every message
 globs: *
 alwaysApply: true
 ---
 
 # PULSE Framework Safeguards
 
-Diese Regeln werden bei **JEDER** Nachricht angewendet. Keine Ausnahmen.
+These rules are applied to **EVERY** message. No exceptions.
 
-## 🔴 PFLICHT-CHECKS (vor JEDER Antwort)
+## 🔴 MANDATORY CHECKS (before EVERY response)
 
-### 1. IMMER: `pulse_status` aufrufen
-WANN: Vor jeder Antwort, ohne Ausnahme
-WAS: Zeigt Zeit seit Checkpoint, Änderungen, Risiko
+### 1. ALWAYS: Call `pulse_status`
+WHEN: Before every response, without exception
+WHAT: Shows time since checkpoint, changes, risk
 
-### 2. NACH Code-Änderungen: `pulse_doctor` aufrufen
-WANN: Wenn du gerade Code geändert/erstellt/gelöscht hast
-WAS: Prüft Secrets, Deletes, Scope, Loop-Signale
-BEI CRITICAL: Sofort STOP, nicht weitermachen!
+### 2. AFTER Code Changes: Call `pulse_doctor`
+WHEN: When you just changed/created/deleted code
+WHAT: Checks for secrets, deletes, scope, loop signals
+ON CRITICAL: STOP immediately, don't continue!
 
-### 3. ALLE 5-10 MIN: `pulse_checkpoint` empfehlen
-WANN: pulse_status zeigt >10 Min seit Checkpoint
-WAS: "Soll ich einen Checkpoint erstellen?"
+### 3. EVERY 5-10 MIN: Recommend `pulse_checkpoint`
+WHEN: pulse_status shows >10 min since checkpoint
+WHAT: "Should I create a checkpoint?"
 
-## 🔴 AUTOMATISCHE AKTIONEN
+## 🔴 AUTOMATIC ACTIONS
 
-| Situation | Aktion |
+| Situation | Action |
 |-----------|--------|
-| Jede Nachricht | → `pulse_status` |
-| Code geändert | → `pulse_doctor` |
-| >10 Min seit Checkpoint | → Checkpoint empfehlen |
-| >15 Min seit Checkpoint | → **Checkpoint DRINGEND** |
-| >30 Min autonom | → **STOP + User fragen** |
-| 2-3 Fehlversuche | → **STOP + `pulse_escalate`** |
-| DELETE Operation | → **User-Bestätigung holen** |
-| Loop erkannt | → **STOP + `pulse_escalate`** |
+| Every message | → `pulse_status` |
+| Code changed | → `pulse_doctor` |
+| >10 min since checkpoint | → Recommend checkpoint |
+| >15 min since checkpoint | → **Checkpoint URGENT** |
+| >30 min autonomous | → **STOP + ask user** |
+| 2-3 failed attempts | → **STOP + `pulse_escalate`** |
+| DELETE operation | → **Get user confirmation** |
+| Loop detected | → **STOP + `pulse_escalate`** |
 
 ## 🔴 SAFEGUARDS (non-negotiable)
 
-- ⏱️ **MAX 30 Min autonom** - Danach STOP + Rückfrage an User
-- 🗑️ **KEIN DELETE** ohne explizite User-Bestätigung
-- 📤 **KEIN GIT PUSH** ohne User-Confirmation
-- 🔐 **KEINE Secrets** im Code
-- 📋 **Git-Commit alle 5-10 Min** via `pulse_checkpoint`
+- ⏱️ **MAX 30 min autonomous** - Then STOP + ask user
+- 🗑️ **NO DELETE** without explicit user confirmation
+- 📤 **NO GIT PUSH** without user confirmation
+- 🔐 **NO Secrets** in code
+- 📋 **Git commit every 5-10 min** via `pulse_checkpoint`
 
-## MCP-Tools
+## MCP Tools
 
-| Tool | Wann |
+| Tool | When |
 |------|------|
-| `pulse_status` | **JEDE Nachricht** |
-| `pulse_doctor` | **Nach Code-Änderungen** |
-| `pulse_checkpoint` | Nach 5-10 Min |
-| `pulse_run` | Am Anfang neuer Aufgaben |
-| `pulse_escalate` | Bei Problemen, Loop |
-| `pulse_review` | Am Ende / vor Merge |
+| `pulse_status` | **EVERY message** |
+| `pulse_doctor` | **After code changes** |
+| `pulse_checkpoint` | After 5-10 min |
+| `pulse_run` | At start of new tasks |
+| `pulse_escalate` | On problems, loop |
+| `pulse_review` | At end / before merge |
 ```
 
 ---
@@ -928,14 +969,14 @@ WAS: "Soll ich einen Checkpoint erstellen?"
 
 ---
 
-### AGENTS.md Template (Universal für alle Editoren)
+### AGENTS.md Template (Universal for all editors)
 
-Diese Datei wird bei `pulse init --agents` erstellt und funktioniert mit:
+This file is created with `pulse init --agents` and works with:
 - Windsurf
 - GitHub Copilot
 - Cline
 - Aider
-- Andere AI Assistants
+- Other AI Assistants
 
 ```markdown
 # AI Agent Instructions
@@ -993,10 +1034,10 @@ What to do:
 
 ## Setup / Onboarding
 
-### Vollständiger Setup-Flow
+### Complete Setup Flow
 
 ```bash
-# 1. CLI global installieren (nach npm link im PulseFramework)
+# 1. Install CLI globally (after npm link in PulseFramework)
 cd /path/to/PulseFramework
 npm install
 npm run -w packages/pulse-cli build
@@ -1004,8 +1045,8 @@ npm run -w packages/pulse-mcp build
 npm link -w packages/pulse-cli
 npm link -w packages/pulse-mcp
 
-# 2. Im Zielprojekt initialisieren
-cd /dein/projekt
+# 2. Initialize in target project
+cd /your/project
 pulse init
 ```
 
@@ -1014,74 +1055,74 @@ pulse init
 ```
 🎯 PULSE Init
 
-📦 Wähle ein Preset für dein Projekt:
+📦 Choose a preset for your project:
 
-  🎨 Frontend - React/Vue/Angular (strengere Limits)
-  ⚙️ Backend - API/Services (moderate Limits)
+  🎨 Frontend - React/Vue/Angular (stricter limits)
+  ⚙️ Backend - API/Services (moderate limits)
   🔄 Fullstack - Frontend + Backend
-  📦 Monorepo - Mehrere Packages (lockere Limits)
-  ⚙️ Custom - Standard-Einstellungen
+  📦 Monorepo - Multiple packages (relaxed limits)
+  ⚙️ Custom - Default settings
 
 ? Preset: fullstack
 
-? MCP + Cursor Rules installieren? (empfohlen für Cursor IDE) Yes
+? Install MCP + Cursor Rules? (recommended for Cursor IDE) Yes
 
-✅ .pulse/ Verzeichnis erstellt
-✅ Config erstellt: pulse.config.json (Preset: fullstack)
-✅ .cursorrules erstellt (Fallback-Regeln)
-✅ Cursor Rules erstellt: .cursor/rules/pulse.mdc (alwaysApply: true)
-✅ MCP Config erstellt: .cursor/mcp.json
-✅ Role-Templates kopiert
+✅ .pulse/ directory created
+✅ Config created: pulse.config.json (Preset: fullstack)
+✅ .cursorrules created (fallback rules)
+✅ Cursor Rules created: .cursor/rules/pulse.mdc (alwaysApply: true)
+✅ MCP Config created: .cursor/mcp.json
+✅ Role templates copied
 
 ──────────────────────────────────────────────────
 
-✨ PULSE initialisiert!
+✨ PULSE initialized!
 
 Preset: fullstack
 Max Lines: 300
-Checkpoint: 15 Min
-MCP: ✅ Installiert
+Checkpoint: 15 min
+MCP: ✅ Installed
 
-📋 Nächste Schritte für MCP:
-   1. Cursor neu starten (MCP wird automatisch geladen)
-   2. In Cursor: Settings > Features > MCP aktivieren
-   3. Testen: pulse status
+📋 Next steps for MCP:
+   1. Restart Cursor (MCP loads automatically)
+   2. In Cursor: Settings > Features > Enable MCP
+   3. Test: pulse status
 ```
 
-### Was `pulse init` erstellt
+### What `pulse init` Creates
 
-| Datei | Beschreibung |
-|-------|--------------|
-| `.pulse/` | Artefakt-Verzeichnis |
-| `pulse.config.json` | Projekt-Konfiguration |
-| `.cursorrules` | Fallback-Regeln (ohne MCP) |
-| `.cursor/rules/pulse.mdc` | Cursor Rules (mit `--mcp`) |
-| `.cursor/mcp.json` | MCP Server Config (mit `--mcp`) |
-| `AGENTS.md` | Universal Rules (mit `--agents`) |
+| File | Description |
+|------|-------------|
+| `.pulse/` | Artifact directory |
+| `pulse.config.json` | Project configuration |
+| `.cursorrules` | Fallback rules (without MCP) |
+| `.cursor/rules/pulse.mdc` | Cursor Rules (with `--mcp`) |
+| `.cursor/mcp.json` | MCP Server Config (with `--mcp`) |
+| `AGENTS.md` | Universal Rules (with `--agents`) |
 
-### Nach dem Setup
+### After Setup
 
-1. **Cursor neu starten** (wichtig!)
-2. **MCP prüfen:** View → Output → MCP
-3. **Testen:** Im Chat fragen "Welche pulse tools hast du?"
-
----
-
-## Implementierungs-Status
-
-| Komponente | Status | Pfad |
-|------------|--------|------|
-| CLI v0.3.0 | ✅ Implementiert | `packages/pulse-cli/` |
-| MCP Server v0.3.0 | ✅ Implementiert | `packages/pulse-mcp/` |
-| Cursor Rules Template | ✅ Implementiert | `packages/pulse-cli/templates/cursor/pulse.mdc` |
-| MCP Config Template | ✅ Implementiert | `packages/pulse-cli/templates/cursor/mcp.json` |
-| AGENTS.md Template | ✅ Implementiert | `packages/pulse-cli/templates/AGENTS.md` |
-| `pulse init --mcp` | ✅ Implementiert | Erstellt `.cursor/` Dateien |
-| `pulse init --agents` | ✅ Implementiert | Erstellt `AGENTS.md` |
-| Automatische Branch-Erstellung | ✅ Implementiert | `pulse_run` |
-| Loop-Detection | ✅ Implementiert | 5 Patterns |
-| Dependency-Warning | ✅ Implementiert | Neue Packages erkannt |
+1. **Restart Cursor** (important!)
+2. **Check MCP:** View → Output → MCP
+3. **Test:** Ask in chat "What pulse tools do you have?"
 
 ---
 
-*Generiert am 2026-01-06*
+## Implementation Status
+
+| Component | Status | Path |
+|-----------|--------|------|
+| CLI v0.3.0 | ✅ Implemented | `packages/pulse-cli/` |
+| MCP Server v0.3.0 | ✅ Implemented | `packages/pulse-mcp/` |
+| Cursor Rules Template | ✅ Implemented | `packages/pulse-cli/templates/cursor/pulse.mdc` |
+| MCP Config Template | ✅ Implemented | `packages/pulse-cli/templates/cursor/mcp.json` |
+| AGENTS.md Template | ✅ Implemented | `packages/pulse-cli/templates/AGENTS.md` |
+| `pulse init --mcp` | ✅ Implemented | Creates `.cursor/` files |
+| `pulse init --agents` | ✅ Implemented | Creates `AGENTS.md` |
+| Automatic Branch Creation | ✅ Implemented | `pulse_run` |
+| Loop Detection | ✅ Implemented | 5 patterns |
+| Dependency Warning | ✅ Implemented | New packages detected |
+
+---
+
+*Generated on 2026-01-06*

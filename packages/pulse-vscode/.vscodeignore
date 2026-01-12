@@ -9,3 +9,5 @@ tsconfig.json
 .eslintrc*
 ../**
 ../../**
+PUBLISHING.md
+icon.svg

@@ -1,215 +1,215 @@
-# So arbeiten wir mit PULSE + Cursor
+# How We Work with PULSE + Cursor
 
-> Der empfohlene Workflow für kontrolliertes AI-gestütztes Entwickeln.
+> The recommended workflow for controlled AI-assisted development.
 
 ---
 
-## Überblick
+## Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. SESSION STARTEN                                              │
-│     pulse run                                                    │
-│     → Template wählen                                           │
-│     → ACTION definieren                                         │
-│     → Prompt in Cursor einfügen                                 │
+│  1. START SESSION                                               │
+│     pulse run                                                   │
+│     → Choose template                                          │
+│     → Define ACTION                                            │
+│     → Paste prompt into Cursor                                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  2. WÄHREND DER ARBEIT                                          │
-│     → Alle 5-10 Min: pulse checkpoint                           │
-│     → Bei Unsicherheit: pulse status                            │
-│     → Bei Problemen: pulse doctor --loop                        │
+│  2. DURING WORK                                                 │
+│     → Every 5-10 min: pulse checkpoint                         │
+│     → When uncertain: pulse status                             │
+│     → On problems: pulse doctor --loop                         │
 ├─────────────────────────────────────────────────────────────────┤
-│  3. BEI PROBLEMEN                                               │
-│     pulse escalate                                               │
-│     → Problem beschreiben                                       │
-│     → Prompt in externes Model (GPT-5/Claude)                   │
-│     → Anweisungen zurück an Cursor                              │
+│  3. ON PROBLEMS                                                 │
+│     pulse escalate                                              │
+│     → Describe problem                                         │
+│     → Prompt to external model (GPT-5/Claude)                  │
+│     → Instructions back to Cursor                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  4. ABSCHLUSS                                                   │
-│     pulse review                                                 │
-│     → Decision Briefing prüfen                                  │
-│     → Approve / Reject / Escalate                               │
+│  4. CONCLUSION                                                  │
+│     pulse review                                                │
+│     → Check Decision Briefing                                  │
+│     → Approve / Reject / Escalate                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  5. WISSEN SPEICHERN                                            │
-│     pulse learn                                                  │
-│     → Problem dokumentieren                                     │
-│     → Lösung festhalten                                         │
-│     → Regel ableiten                                            │
+│  5. SAVE KNOWLEDGE                                              │
+│     pulse learn                                                 │
+│     → Document problem                                         │
+│     → Record solution                                          │
+│     → Derive rule                                              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 1. Session starten
+## 1. Start Session
 
-### Option A: Kombinierter Workflow (empfohlen)
+### Option A: Combined Workflow (recommended)
 
 ```bash
 pulse run
 ```
 
-Dieser Befehl:
-1. Fragt nach Template (feature, bugfix, refactor, etc.)
-2. Sammelt ACTION und KONTEXT
-3. Generiert strukturierten Prompt
-4. Startet Checkpoint-Watcher
-5. Bietet am Ende Review an
+This command:
+1. Asks for template (feature, bugfix, refactor, etc.)
+2. Collects ACTION and CONTEXT
+3. Generates structured prompt
+4. Starts checkpoint watcher
+5. Offers review at the end
 
-### Option B: Einzelner Prompt
+### Option B: Single Prompt
 
 ```bash
-pulse s --action "User-Dashboard implementieren" -C
+pulse s --action "Implement user dashboard" -C
 ```
 
-Die `-C` Flag kopiert den Prompt direkt in die Zwischenablage.
+The `-C` flag copies the prompt directly to clipboard.
 
 ### Option C: Quick Bug-Fix
 
 ```bash
-pulse s --ist "Button funktioniert nicht" --soll "Button soll klickbar sein"
+pulse s --ist "Button doesn't work" --soll "Button should be clickable"
 ```
 
 ---
 
-## 2. Während der Arbeit
+## 2. During Work
 
-### Regelmäßig prüfen
+### Check Regularly
 
 ```bash
-# Schneller Status
+# Quick status
 pulse status
 
-# Beispiel-Output:
+# Example output:
 # 🔨 backend/build | 🟢 8m | 📝 5 files | ✅ ok
 ```
 
-### Checkpoints setzen (alle 5-10 Min)
+### Set Checkpoints (every 5-10 min)
 
 ```bash
-pulse checkpoint -m "feat: Dashboard UI implementiert"
+pulse checkpoint -m "feat: Dashboard UI implemented"
 
-# Oder kurz:
+# Or short:
 pulse c -m "wip: progress"
 ```
 
-### Bei Unsicherheit: Doctor
+### When Uncertain: Doctor
 
 ```bash
 pulse doctor --loop
 
-# Prüft:
-# - Secrets im Code?
-# - Zu viele Änderungen?
-# - Loop-Signale (fix-chain, reverts)?
+# Checks:
+# - Secrets in code?
+# - Too many changes?
+# - Loop signals (fix-chain, reverts)?
 ```
 
 ---
 
-## 3. Bei Problemen
+## 3. On Problems
 
-### Wann eskalieren?
+### When to Escalate?
 
-- Nach 2-3 erfolglosen Fix-Versuchen
-- Wenn Cursor im Kreis läuft
-- Bei unklarer Root Cause
-- Wenn du eine zweite Meinung brauchst
+- After 2-3 unsuccessful fix attempts
+- When Cursor runs in circles
+- On unclear root cause
+- When you need a second opinion
 
-### Eskalation erstellen
+### Create Escalation
 
 ```bash
 pulse escalate --auto-include -C
 ```
 
 **Flow:**
-1. Problem beschreiben
-2. Was hat Cursor versucht?
-3. Fehlermeldung eingeben
-4. Relevante Dateien werden automatisch inkludiert
-5. Prompt wird generiert und kopiert
+1. Describe problem
+2. What did Cursor try?
+3. Enter error message
+4. Relevant files are auto-included
+5. Prompt is generated and copied
 
-**Dann:**
-1. Prompt in ChatGPT / Claude / GPT-5 einfügen
-2. Analyse und Schritt-für-Schritt Anweisungen lesen
-3. Anweisungen an Cursor geben (NICHT blind Code kopieren!)
+**Then:**
+1. Paste prompt into ChatGPT / Claude / GPT-5
+2. Read analysis and step-by-step instructions
+3. Give instructions to Cursor (DON'T blindly copy code!)
 
 ---
 
-## 4. Abschluss
+## 4. Conclusion
 
-### Review erstellen
+### Create Review
 
 ```bash
 pulse review
 ```
 
-**Decision Briefing zeigt:**
+**Decision Briefing shows:**
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ PULSE Review – Decision Briefing                                 │
+│ PULSE Review – Decision Briefing                                │
 ├─────────────────────────────────────────────────────────────────┤
-│ SCOPE-CHECK (backend preset)                                     │
-│   Files: 8/15 (53%)  ████████░░░░░░░                            │
-│   Lines: 280/400 (70%)  ██████████████░░                        │
+│ SCOPE-CHECK (backend preset)                                    │
+│   Files: 8/15 (53%)  ████████░░░░░░░                           │
+│   Lines: 280/400 (70%)  ██████████████░░                       │
 ├─────────────────────────────────────────────────────────────────┤
-│ RISIKO-SUMMARY                                                   │
-│   ⚠️ 2 Warnings                                                  │
-│   ⏱️ Checkpoint vor 12 Min                                       │
-│   🟢 Loop-Risiko: LOW                                            │
+│ RISK-SUMMARY                                                    │
+│   ⚠️ 2 Warnings                                                 │
+│   ⏱️ Checkpoint 12 min ago                                      │
+│   🟢 Loop-Risk: LOW                                             │
 ├─────────────────────────────────────────────────────────────────┤
-│ ✅ EMPFEHLUNG: APPROVE                                           │
-│   → Keine Critical Findings, Scope OK                           │
+│ ✅ RECOMMENDATION: APPROVE                                      │
+│   → No critical findings, scope OK                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Entscheidung:**
-- **Approve**: Alles gut, kann gemerged werden
-- **Reject**: Probleme gefunden, zurück an Cursor
-- **Escalate**: Unklar, braucht externe Analyse
+**Decision:**
+- **Approve**: All good, can be merged
+- **Reject**: Problems found, back to Cursor
+- **Escalate**: Unclear, needs external analysis
 
 ---
 
-## 5. Wissen speichern
+## 5. Save Knowledge
 
-### Nach gelösten Problemen
+### After Solved Problems
 
 ```bash
 pulse learn
 ```
 
-**Eingabe:**
-- Was war das Problem?
-- Was war die Lösung?
-- Welche Regel leitest du ab?
+**Input:**
+- What was the problem?
+- What was the solution?
+- What rule do you derive?
 
-**Beispiel:**
+**Example:**
 ```
-Problem: Prisma 5 breaking change bei findUnique
-Lösung: { rejectOnNotFound: true } durch orThrow() ersetzen
-Regel: Bei Prisma-Updates immer Migration Guide prüfen
+Problem: Prisma 5 breaking change in findUnique
+Solution: Replace { rejectOnNotFound: true } with orThrow()
+Rule: Always check Migration Guide on Prisma updates
 ```
 
-**Auto-Promotion:** Die Regel kann automatisch in `.cursorrules` übernommen werden.
+**Auto-Promotion:** The rule can be automatically added to `.cursorrules`.
 
 ---
 
 ## Safeguards (non-negotiable)
 
-Diese Regeln gelten IMMER:
+These rules ALWAYS apply:
 
-| Safeguard | Beschreibung |
-|-----------|--------------|
-| ⏱️ 30-Min-Limit | Nach 30 Min autonom → STOP + Rückfrage |
-| 🗑️ Delete Guard | KEINE Dateien löschen ohne Bestätigung |
-| 📤 Push Guard | KEIN Git Push ohne Bestätigung |
-| 🔐 Secrets Guard | KEINE API Keys, Passwörter im Code |
-| 📋 Checkpoint | Git-Commit alle 5-10 Min |
+| Safeguard | Description |
+|-----------|-------------|
+| ⏱️ 30-Min-Limit | After 30 min autonomous → STOP + ask |
+| 🗑️ Delete Guard | NO file deletion without confirmation |
+| 📤 Push Guard | NO git push without confirmation |
+| 🔐 Secrets Guard | NO API keys, passwords in code |
+| 📋 Checkpoint | Git commit every 5-10 min |
 
 ---
 
 ## Presets
 
-Bei `pulse init` wählst du ein Preset, das die Limits setzt:
+When running `pulse init` you choose a preset that sets the limits:
 
 | Preset | Max Lines | Max Files | Checkpoint |
 |--------|-----------|-----------|------------|
@@ -218,65 +218,65 @@ Bei `pulse init` wählst du ein Preset, das die Limits setzt:
 | fullstack | 500 | 20 | 25 min |
 | monorepo | 800 | 30 | 30 min |
 
-Bei Überschreitung warnt `pulse doctor`.
+On exceeding, `pulse doctor` warns.
 
 ---
 
-## Befehls-Referenz (Quick)
+## Command Reference (Quick)
 
-| Was | Befehl |
-|-----|--------|
-| Status prüfen | `pulse status` |
-| Session starten | `pulse run` |
-| Einzelner Prompt | `pulse s --action "..." -C` |
+| What | Command |
+|------|---------|
+| Check status | `pulse status` |
+| Start session | `pulse run` |
+| Single prompt | `pulse s --action "..." -C` |
 | Checkpoint | `pulse c -m "message"` |
-| Safeguards prüfen | `pulse d --loop` |
-| Eskalieren | `pulse e --auto-include -C` |
+| Check safeguards | `pulse d --loop` |
+| Escalate | `pulse e --auto-include -C` |
 | Review | `pulse r` |
-| Wissen speichern | `pulse learn` |
+| Save knowledge | `pulse learn` |
 
 ---
 
 ## Troubleshooting
 
-### "Cursor läuft im Kreis"
+### "Cursor runs in circles"
 
 ```bash
 pulse doctor --loop
-# Zeigt Loop-Signale
+# Shows loop signals
 
 pulse escalate
-# Problem extern analysieren lassen
+# Have problem analyzed externally
 ```
 
-### "Zu viele Änderungen"
+### "Too many changes"
 
 ```bash
 pulse status --verbose
-# Zeigt Scope-Auslastung
+# Shows scope utilization
 
 pulse checkpoint -m "wip: split"
-# Zwischenstand sichern
+# Save intermediate state
 ```
 
-### "Bin mir unsicher"
+### "I'm uncertain"
 
 ```bash
 pulse review
-# Decision Briefing gibt Empfehlung
+# Decision Briefing gives recommendation
 ```
 
 ---
 
-## Checkliste: Vor dem Merge
+## Checklist: Before Merge
 
-- [ ] `pulse review` ausgeführt
-- [ ] Keine Critical Findings
-- [ ] Scope im Limit (oder bewusst überschritten)
-- [ ] Loop-Risiko LOW
-- [ ] Code verstanden (nicht blind übernommen)
-- [ ] Lokal getestet
+- [ ] `pulse review` executed
+- [ ] No critical findings
+- [ ] Scope within limit (or consciously exceeded)
+- [ ] Loop risk LOW
+- [ ] Code understood (not blindly adopted)
+- [ ] Tested locally
 
 ---
 
-*Workflow-Dokumentation für PULSE Framework v0.3*
+*Workflow documentation for PULSE Framework v0.3*

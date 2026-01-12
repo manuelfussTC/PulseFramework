@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.vsix
 .vscode-test/
+KI-Spuren-vermeiden_RSLT.pdf

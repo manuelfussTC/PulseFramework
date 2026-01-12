@@ -1,5 +1,5 @@
 /**
- * Briefing Library - Aggregiert Daten für Decision Briefings
+ * Briefing Library - Aggregates data for Decision Briefings
  */
 
 import type { PulseConfig } from "./types.js";
@@ -158,7 +158,7 @@ export function generateRecommendation(
   if (risk.loopRisk === "HIGH") {
     return {
       action: "escalate",
-      reason: "Hohes Loop-Risiko erkannt",
+      reason: "High loop risk detected",
       command: "pulse escalate",
     };
   }
@@ -167,7 +167,7 @@ export function generateRecommendation(
   if (scope.exceeded && scope.lines.percent > 150) {
     return {
       action: "checkpoint",
-      reason: `Scope überschritten (${scope.lines.current}/${scope.lines.max} Lines)`,
+      reason: `Scope exceeded (${scope.lines.current}/${scope.lines.max} Lines)`,
       command: "pulse checkpoint -m 'wip: progress'",
     };
   }
@@ -176,7 +176,7 @@ export function generateRecommendation(
   if (time.checkpointOverdue) {
     return {
       action: "checkpoint",
-      reason: `${time.minutesSinceCheckpoint} Min seit letztem Checkpoint`,
+      reason: `${time.minutesSinceCheckpoint} min since last checkpoint`,
       command: "pulse checkpoint -m 'wip: progress'",
     };
   }
@@ -185,7 +185,7 @@ export function generateRecommendation(
   if (risk.loopRisk === "MEDIUM") {
     return {
       action: "checkpoint",
-      reason: "Loop-Signale erkannt - Checkpoint empfohlen",
+      reason: "Loop signals detected - checkpoint recommended",
       command: "pulse checkpoint -m 'wip: checkpoint before continuing'",
     };
   }
@@ -194,14 +194,14 @@ export function generateRecommendation(
   if (risk.warningCount > 0) {
     return {
       action: "approve",
-      reason: `${risk.warningCount} Warning(s) - Approve mit Vorbehalt`,
+      reason: `${risk.warningCount} Warning(s) - Approve with reservations`,
     };
   }
 
   // All good
   return {
     action: "approve",
-    reason: "Keine Findings, Scope OK",
+    reason: "No findings, scope OK",
   };
 }
 
@@ -232,7 +232,7 @@ export function renderBriefing(briefing: DecisionBriefing): string {
   const presetProfile = briefing.preset 
     ? `${briefing.preset}/${briefing.profile}`
     : briefing.profile;
-  lines.push(`│ Profil: ${presetProfile}${" ".repeat(boxWidth - 10 - presetProfile.length)}│`);
+  lines.push(`│ Profile: ${presetProfile}${" ".repeat(boxWidth - 11 - presetProfile.length)}│`);
   lines.push(`├${hr}┤`);
   
   // Scope Check
@@ -252,14 +252,14 @@ export function renderBriefing(briefing: DecisionBriefing): string {
   lines.push(`│${deletesLine}${" ".repeat(Math.max(0, boxWidth - deletesLine.length))}│`);
   
   if (scope.exceeded) {
-    const warn = `  ⚠️ Überschritten: ${scope.exceededFields.join(", ")}`;
+    const warn = `  ⚠️ Exceeded: ${scope.exceededFields.join(", ")}`;
     lines.push(`│${warn}${" ".repeat(Math.max(0, boxWidth - warn.length))}│`);
   }
   
   lines.push(`├${hr}┤`);
   
   // Risk Summary
-  lines.push(`│ RISIKO-SUMMARY${" ".repeat(boxWidth - 15)}│`);
+  lines.push(`│ RISK-SUMMARY${" ".repeat(boxWidth - 13)}│`);
   
   const { risk, time } = briefing;
   
@@ -272,17 +272,17 @@ export function renderBriefing(briefing: DecisionBriefing): string {
     lines.push(`│${warn}${" ".repeat(Math.max(0, boxWidth - warn.length))}│`);
   }
   if (risk.criticalCount === 0 && risk.warningCount === 0) {
-    const ok = `  ✅ Keine Findings`;
+    const ok = `  ✅ No findings`;
     lines.push(`│${ok}${" ".repeat(Math.max(0, boxWidth - ok.length))}│`);
   }
   
   const timeStr = time.minutesSinceCheckpoint !== null
-    ? `  ⏱️ Checkpoint vor ${time.minutesSinceCheckpoint} Min`
-    : `  ⏱️ Kein Checkpoint`;
+    ? `  ⏱️ Checkpoint ${time.minutesSinceCheckpoint} min ago`
+    : `  ⏱️ No checkpoint`;
   lines.push(`│${timeStr}${" ".repeat(Math.max(0, boxWidth - timeStr.length))}│`);
   
   const loopEmoji = risk.loopRisk === "HIGH" ? "🔴" : risk.loopRisk === "MEDIUM" ? "🟡" : "🟢";
-  const loopStr = `  ${loopEmoji} Loop-Risiko: ${risk.loopRisk}`;
+  const loopStr = `  ${loopEmoji} Loop Risk: ${risk.loopRisk}`;
   lines.push(`│${loopStr}${" ".repeat(Math.max(0, boxWidth - loopStr.length))}│`);
   
   lines.push(`├${hr}┤`);
@@ -296,7 +296,7 @@ export function renderBriefing(briefing: DecisionBriefing): string {
     stop: "🛑",
   }[recommendation.action];
   
-  const recLine = `${actionEmoji} EMPFEHLUNG: ${recommendation.action.toUpperCase()}`;
+  const recLine = `${actionEmoji} RECOMMENDATION: ${recommendation.action.toUpperCase()}`;
   lines.push(`│ ${recLine}${" ".repeat(Math.max(0, boxWidth - recLine.length - 1))}│`);
   
   const reasonLine = `  → ${recommendation.reason}`;

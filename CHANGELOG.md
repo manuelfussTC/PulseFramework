@@ -9,6 +9,37 @@ This repository contains multiple packages:
 
 ---
 
+## 0.4.0 (2026-01-12)
+
+### Added
+- **One-Shot MCP Setup** (`pulse init --global`):
+  - Auto-install `pulse-mcp` if not found
+  - Workspace detection with dual-location rule installation
+  - Wrapper script generation for cwd issues
+  - `PULSE_PROJECT_ROOT` env support in MCP server
+  - Post-init validation with clear error messages
+- **Cursor MCP config template** for easy project integration
+- **Centralized `runCli()`** in `lib/cli.ts` for all MCP tools
+
+### Changed
+- **Full Internationalization: German → English**
+  - All CLI commands, prompts, and messages now in English
+  - All templates (`.cursorrules`, `pulse.mdc`) now in English
+  - MCP chaining responses now in English
+  - Documentation examples updated to English
+- **Spec document** now clearly distinguishes Specification version (v1.0) from Toolkit version (v0.4.0)
+
+### Fixed
+- **MCP cwd bug**: Moved `cwd` assignment inside `handleRunTool` to avoid stale values
+- **Executable detection**: Properly detect `pulse-mcp` executable vs JS entry point
+
+### Documentation
+- Updated `README.md` with detailed MCP installation guide
+- Updated `docs/tooling/pulse-cli.md` with new `--global` flag docs
+- Added comprehensive `docs/tooling/pulse-mcp.md`
+
+---
+
 ## 0.3.0 (2026-01-06)
 
 ### Added

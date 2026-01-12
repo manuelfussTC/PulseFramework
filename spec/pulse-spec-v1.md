@@ -1,5 +1,12 @@
 # Pulse Framework Specification v1.0
 
+> **Versioning note (important):**
+>
+> - **Specification (this document):** v1.0 — the methodology/standard.
+> - **Toolkit releases (code in this repo):** currently **v0.4.0** for `@pulseframework/pulse-cli` and `@pulseframework/pulse-mcp`.
+>
+> See `CHANGELOG.md` (repo root) for toolkit release notes.
+
 ## 1. Introduction
 Pulse is a methodology for controlled agentic development with Large Language Models (LLMs). It addresses the fundamental challenge of integrating autonomous coding agents into rigorous engineering workflows. Pulse is not a tool, but a standard—a set of protocols, architectural layers, and interaction patterns designed to ensure that human intent remains the governing force in AI-assisted software development.
 
@@ -151,7 +158,9 @@ Success with Pulse is measured by:
 -   **Task Velocity:** Time from Concept to Commit.
 
 ## 7. Versioning & Future Work
-**Current Version:** 1.0
+**Specification Version:** 1.0
+
+**Toolkit Version (reference):** 0.4.0 (CLI + MCP)
 
 Future iterations of this specification will address:
 -   Formal notation for defining Pulse Loops.

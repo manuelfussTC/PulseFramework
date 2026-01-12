@@ -17,10 +17,10 @@ import {
 export function registerStatusCommand(program: Command): void {
   program
     .command("status")
-    .description("Schneller Überblick: Preset/Profil, Checkpoint-Zeit, Änderungen, Findings")
-    .option("--json", "Output als JSON")
-    .option("-v, --verbose", "Ausführliche Ausgabe")
-    .option("--share", "Markdown-Format für Slack/Discord")
+    .description("Quick overview: Preset/Profile, checkpoint time, changes, findings")
+    .option("--json", "Output as JSON")
+    .option("-v, --verbose", "Verbose output")
+    .option("--share", "Markdown format for Slack/Discord")
     .action(async (opts: { json?: boolean; verbose?: boolean; share?: boolean }) => {
       const repoRoot = await findRepoRoot(process.cwd());
       if (!repoRoot) {
@@ -29,7 +29,7 @@ export function registerStatusCommand(program: Command): void {
           console.log(JSON.stringify({ error: "Not in a git repository" }));
         } else {
           // eslint-disable-next-line no-console
-          console.log("❌ Nicht in einem Git-Repository");
+          console.log("❌ Not in a git repository");
         }
         process.exit(1);
       }
@@ -136,17 +136,17 @@ export function registerStatusCommand(program: Command): void {
         const lines: string[] = [];
         lines.push(`**PULSE Status**`);
         lines.push(``);
-        lines.push(`- Profil: \`${presetProfile}\``);
+        lines.push(`- Profile: \`${presetProfile}\``);
         lines.push(
-          `- Checkpoint: ${minutesSinceCheckpoint !== null ? `${minutesSinceCheckpoint} Min` : "n/a"}`
+          `- Checkpoint: ${minutesSinceCheckpoint !== null ? `${minutesSinceCheckpoint} min` : "n/a"}`
         );
-        lines.push(`- Dateien: ${dirtyFiles}`);
+        lines.push(`- Files: ${dirtyFiles}`);
         lines.push(`- Lines: ${linesChanged}`);
         lines.push(`- Findings: ${criticalCount} Critical, ${warningCount} Warnings`);
-        lines.push(`- Loop-Risiko: ${loopRisk}`);
+        lines.push(`- Loop risk: ${loopRisk}`);
         if (recommendation) {
           lines.push(``);
-          lines.push(`**Empfehlung:** ${recommendation.action.toUpperCase()}`);
+          lines.push(`**Recommendation:** ${recommendation.action.toUpperCase()}`);
           lines.push(`> ${recommendation.reason}`);
         }
         // eslint-disable-next-line no-console
@@ -165,22 +165,22 @@ export function registerStatusCommand(program: Command): void {
         const profileEmoji =
           state.profile === "concept" ? "🧠" : state.profile === "build" ? "🔨" : "🚨";
         // eslint-disable-next-line no-console
-        console.log(`${profileEmoji} Profil: ${presetProfile}`);
+        console.log(`${profileEmoji} Profile: ${presetProfile}`);
 
         // Checkpoint
         if (minutesSinceCheckpoint !== null) {
           const cpColor =
             minutesSinceCheckpoint > 30 ? "🔴" : minutesSinceCheckpoint > 15 ? "🟡" : "🟢";
           // eslint-disable-next-line no-console
-          console.log(`${cpColor} Checkpoint: vor ${minutesSinceCheckpoint} Min`);
+          console.log(`${cpColor} Checkpoint: ${minutesSinceCheckpoint} min ago`);
         } else {
           // eslint-disable-next-line no-console
-          console.log(`⚪ Checkpoint: noch keiner`);
+          console.log(`⚪ Checkpoint: none yet`);
         }
 
         // Files & Lines
         // eslint-disable-next-line no-console
-        console.log(`📝 Dateien: ${dirtyFiles}`);
+        console.log(`📝 Files: ${dirtyFiles}`);
         // eslint-disable-next-line no-console
         console.log(`📏 Lines: ${linesChanged}`);
 
@@ -217,18 +217,18 @@ export function registerStatusCommand(program: Command): void {
         }
         if (findingsCount === 0) {
           // eslint-disable-next-line no-console
-          console.log(`   ✅ Keine Findings`);
+          console.log(`   ✅ No findings`);
         }
 
         // Loop Risk
         const loopEmoji = loopRisk === "HIGH" ? "🔴" : loopRisk === "MEDIUM" ? "🟡" : "🟢";
         // eslint-disable-next-line no-console
-        console.log(`\n${loopEmoji} Loop-Risiko: ${loopRisk}`);
+        console.log(`\n${loopEmoji} Loop risk: ${loopRisk}`);
 
         // Recommendation
         if (recommendation) {
           // eslint-disable-next-line no-console
-          console.log(`\n💡 Empfehlung: ${recommendation.action.toUpperCase()}`);
+          console.log(`\n💡 Recommendation: ${recommendation.action.toUpperCase()}`);
           // eslint-disable-next-line no-console
           console.log(`   → ${recommendation.reason}`);
           if (recommendation.command) {
@@ -283,7 +283,7 @@ export function registerStatusCommand(program: Command): void {
       // Hint if overdue
       if (minutesSinceCheckpoint !== null && minutesSinceCheckpoint > 30 && dirtyFiles > 0) {
         // eslint-disable-next-line no-console
-        console.log("\n💡 Tipp: `pulse checkpoint` für Git-Commit");
+        console.log("\n💡 Tip: `pulse checkpoint` to commit");
       }
     });
 }

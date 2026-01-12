@@ -7,7 +7,8 @@ This document outlines the development trajectory for the Pulse Framework. Pulse
 - [x] **v1.0 Specification:** Initial release of the Core Concepts, 3-Layer Architecture, and Safeguards.
 - [x] **TypeScript Examples:** Reference implementations for Simple Loops and Debug Loops.
 - [ ] **Python Examples:** Adding `examples/python-loop` for data science and backend workflows.
-- [ ] **CLI Tool Prototype:** A simple CLI to scaffold Pulse projects or enforce Pulse structure in existing repos.
+- [x] **CLI Toolkit:** `@pulseframework/pulse-cli` to initialize projects, create prompts, checkpoints, doctor scans, etc.
+- [x] **MCP Server:** `@pulseframework/pulse-mcp` for Cursor Agent tool integration.
 
 ## Mid-Term (v1.x)
 

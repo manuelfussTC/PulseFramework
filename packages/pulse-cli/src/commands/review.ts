@@ -25,13 +25,13 @@ export function registerReviewCommand(program: Command): void {
   program
     .command("review")
     .alias("r")
-    .description("Review v2: Decision Briefing mit automatischer Aggregation")
-    .option("--staged", "Staged diff statt working tree")
-    .option("--full", "Volle Checkliste zusätzlich zum Briefing")
-    .option("--json", "Output als JSON")
+    .description("Review v2: Decision Briefing with automatic aggregation")
+    .option("--staged", "Staged diff instead of working tree")
+    .option("--full", "Full checklist in addition to briefing")
+    .option("--json", "Output as JSON")
     .action(async (opts: { staged?: boolean; full?: boolean; json?: boolean }) => {
       const repoRoot = await findRepoRoot(process.cwd());
-      if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
+      if (!repoRoot) throw new Error("Not in a git repository.");
 
       const [state, config] = await Promise.all([
         loadState(repoRoot),
@@ -105,25 +105,25 @@ export function registerReviewCommand(program: Command): void {
         `## Decision Briefing`,
         ``,
         `- Preset: **${config.preset ?? "custom"}**`,
-        `- Profil: **${state.profile}**`,
+        `- Profile: **${state.profile}**`,
         `- Scope: **${opts.staged ? "staged" : "working tree"}**`,
         ``,
         `### Scope-Check`,
         ``,
-        `| Metrik | Aktuell | Limit | Status |`,
+        `| Metric | Current | Limit | Status |`,
         `|--------|---------|-------|--------|`,
         `| Files | ${scope.files.current} | ${scope.files.max} | ${scope.files.percent}% |`,
         `| Lines | ${scope.lines.current} | ${scope.lines.max} | ${scope.lines.percent}% |`,
         `| Deletes | ${scope.deletes.current} | ${scope.deletes.max} | ${scope.deletes.percent}% |`,
         ``,
-        `### Risiko-Summary`,
+        `### Risk Summary`,
         ``,
         `- Critical: ${risk.criticalCount}`,
         `- Warnings: ${risk.warningCount}`,
-        `- Loop-Risiko: ${risk.loopRisk}`,
-        `- Checkpoint: ${time.minutesSinceCheckpoint ?? "n/a"} Min`,
+        `- Loop Risk: ${risk.loopRisk}`,
+        `- Checkpoint: ${time.minutesSinceCheckpoint ?? "n/a"} min`,
         ``,
-        `### Empfehlung`,
+        `### Recommendation`,
         ``,
         `**${recommendation.action.toUpperCase()}**: ${recommendation.reason}`,
         recommendation.command ? `\n→ \`${recommendation.command}\`` : "",
@@ -145,7 +145,7 @@ export function registerReviewCommand(program: Command): void {
         artifactLines.push(
           `---`,
           ``,
-          `## Volle Checkliste`,
+          `## Full Checklist`,
           ``,
           `### Git Context`,
           ``,
@@ -165,30 +165,30 @@ export function registerReviewCommand(program: Command): void {
           "```",
           ``,
           `### Code Quality`,
-          `- [ ] Verstehe ich den Code? (Wenn nein: STOP)`,
+          `- [ ] Do I understand the code? (If no: STOP)`,
           `- [ ] Naming OK?`,
-          `- [ ] Error Handling vorhanden?`,
-          `- [ ] Edge Cases berücksichtigt?`,
+          `- [ ] Error handling present?`,
+          `- [ ] Edge cases considered?`,
           ``,
-          `### Funktionalität`,
-          `- [ ] Funktioniert wie gefordert?`,
-          `- [ ] Lokal getestet?`,
-          `- [ ] Invalid Input Handling OK?`,
+          `### Functionality`,
+          `- [ ] Works as required?`,
+          `- [ ] Tested locally?`,
+          `- [ ] Invalid input handling OK?`,
           ``,
           `### Security`,
-          `- [ ] Keine Secrets hardcoded?`,
-          `- [ ] Input Validation?`,
-          `- [ ] AuthZ/AuthN Impact verstanden?`,
+          `- [ ] No hardcoded secrets?`,
+          `- [ ] Input validation?`,
+          `- [ ] AuthZ/AuthN impact understood?`,
           ``,
           `### Git History`,
-          `- [ ] Commit Messages klar?`,
-          `- [ ] Änderungen traceable?`,
+          `- [ ] Commit messages clear?`,
+          `- [ ] Changes traceable?`,
           ``,
           `### Red Flags`,
-          `- [ ] Code den ich nicht verstehe`,
-          `- [ ] Hunderte Lines in einem Commit`,
-          `- [ ] Unbekannte Dependencies`,
-          `- [ ] Gelöschte Dateien ohne Bestätigung`,
+          `- [ ] Code I don't understand`,
+          `- [ ] Hundreds of lines in one commit`,
+          `- [ ] Unknown dependencies`,
+          `- [ ] Deleted files without confirmation`,
           ``,
           `## Decision`,
           ``,
@@ -205,12 +205,12 @@ export function registerReviewCommand(program: Command): void {
       const p = await writeArtifact(repoRoot, "reviews", filename, content);
 
       // eslint-disable-next-line no-console
-      console.log(`✅ Gespeichert: ${p}`);
+      console.log(`✅ Saved: ${p}`);
 
       // Show recommendation action
       if (recommendation.command) {
         // eslint-disable-next-line no-console
-        console.log(`\n💡 Empfohlener nächster Schritt:`);
+        console.log(`\n💡 Recommended next step:`);
         // eslint-disable-next-line no-console
         console.log(`   → ${recommendation.command}\n`);
       }

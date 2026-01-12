@@ -7,11 +7,11 @@ import { gitLogOneline, gitCurrentBranch } from "../lib/git.js";
 export function registerResetCommand(program: Command): void {
   program
     .command("reset")
-    .description("Sicherer Git-Reset mit Safeguards (für Loop-Recovery)")
-    .option("-n, --commits <n>", "Anzahl Commits zurücksetzen (default: 1)", "1")
-    .option("--soft", "Soft reset (Änderungen bleiben staged)")
-    .option("--hard", "Hard reset (Änderungen werden verworfen)")
-    .option("-y, --yes", "Keine Bestätigung abfragen")
+    .description("Safe Git reset with safeguards (for loop recovery)")
+    .option("-n, --commits <n>", "Number of commits to reset (default: 1)", "1")
+    .option("--soft", "Soft reset (changes remain staged)")
+    .option("--hard", "Hard reset (changes are DISCARDED)")
+    .option("-y, --yes", "Do not ask for confirmation")
     .action(async (opts: {
       commits?: string;
       soft?: boolean;
@@ -19,7 +19,7 @@ export function registerResetCommand(program: Command): void {
       yes?: boolean;
     }) => {
       const repoRoot = await findRepoRoot(process.cwd());
-      if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
+      if (!repoRoot) throw new Error("Not in a git repository.");
 
       const numCommits = Math.max(1, Math.min(10, parseInt(opts.commits ?? "1", 10)));
       const branch = await gitCurrentBranch(repoRoot);
@@ -28,21 +28,21 @@ export function registerResetCommand(program: Command): void {
       console.log("\n🔄 PULSE Reset\n");
 
       // ══════════════════════════════════════════════════════════════════════
-      // Safeguard: Nicht auf main/master ohne explizite Bestätigung
+      // Safeguard: Not on main/master without explicit confirmation
       // ══════════════════════════════════════════════════════════════════════
       const protectedBranches = ["main", "master", "develop", "production"];
       if (protectedBranches.includes(branch.toLowerCase())) {
         // eslint-disable-next-line no-console
-        console.log(`⚠️  WARNUNG: Du bist auf '${branch}' (geschützter Branch)!\n`);
+        console.log(`⚠️  WARNING: You are on '${branch}' (protected branch)!\n`);
         
         if (!opts.yes) {
           const confirm = await promptConfirm(
-            `Wirklich auf '${branch}' resetten? (nicht empfohlen)`,
+            `Really reset on '${branch}'? (not recommended)`,
             false
           );
           if (!confirm) {
             // eslint-disable-next-line no-console
-            console.log("❌ Abgebrochen.\n");
+            console.log("❌ Aborted.\n");
             return;
           }
         }
@@ -57,7 +57,7 @@ export function registerResetCommand(program: Command): void {
       // eslint-disable-next-line no-console
       console.log(`📍 Branch: ${branch}`);
       // eslint-disable-next-line no-console
-      console.log(`📋 Betroffene Commits (${numCommits}):\n`);
+      console.log(`📋 Affected commits (${numCommits}):\n`);
       
       for (let i = 0; i < Math.min(numCommits, logLines.length); i++) {
         // eslint-disable-next-line no-console
@@ -66,7 +66,7 @@ export function registerResetCommand(program: Command): void {
       
       if (logLines.length > numCommits) {
         // eslint-disable-next-line no-console
-        console.log(`\n   ✅ Neuer HEAD: ${logLines[numCommits]}`);
+        console.log(`\n   ✅ New HEAD: ${logLines[numCommits]}`);
       }
       // eslint-disable-next-line no-console
       console.log("");
@@ -82,11 +82,11 @@ export function registerResetCommand(program: Command): void {
         mode = "hard";
       } else if (!opts.yes) {
         const choices = [
-          { value: "mixed", label: "🔄 Mixed (default) - Änderungen bleiben unstaged" },
-          { value: "soft", label: "📝 Soft - Änderungen bleiben staged" },
-          { value: "hard", label: "🗑️ Hard - Änderungen werden VERWORFEN" },
+          { value: "mixed", label: "🔄 Mixed (default) - changes remain unstaged" },
+          { value: "soft", label: "📝 Soft - changes remain staged" },
+          { value: "hard", label: "🗑️ Hard - changes are DISCARDED" },
         ];
-        mode = await promptSelect("Reset-Modus", choices, "mixed") as "soft" | "mixed" | "hard";
+        mode = await promptSelect("Reset mode", choices, "mixed") as "soft" | "mixed" | "hard";
       }
 
       // ══════════════════════════════════════════════════════════════════════
@@ -94,12 +94,12 @@ export function registerResetCommand(program: Command): void {
       // ══════════════════════════════════════════════════════════════════════
       if (mode === "hard" && !opts.yes) {
         // eslint-disable-next-line no-console
-        console.log("\n⚠️  HARD RESET: Alle nicht-committeten Änderungen gehen verloren!\n");
+        console.log("\n⚠️  HARD RESET: All uncommitted changes will be lost!\n");
         
-        const confirm = await promptConfirm("Wirklich fortfahren?", false);
+        const confirm = await promptConfirm("Really continue?", false);
         if (!confirm) {
           // eslint-disable-next-line no-console
-          console.log("❌ Abgebrochen.\n");
+          console.log("❌ Aborted.\n");
           return;
         }
       }
@@ -113,13 +113,13 @@ export function registerResetCommand(program: Command): void {
       const args = ["reset", modeArg, resetArg].filter(Boolean);
       
       // eslint-disable-next-line no-console
-      console.log(`\n🔧 Führe aus: git ${args.join(" ")}\n`);
+      console.log(`\n🔧 Running: git ${args.join(" ")}\n`);
       
       const result = await exec("git", args, { cwd: repoRoot });
       
       if (result.exitCode !== 0) {
         // eslint-disable-next-line no-console
-        console.error(`❌ Git reset fehlgeschlagen:\n${result.stderr}`);
+        console.error(`❌ Git reset failed:\n${result.stderr}`);
         process.exit(1);
       }
 
@@ -129,27 +129,27 @@ export function registerResetCommand(program: Command): void {
       const newLog = await gitLogOneline(repoRoot, 1);
       
       // eslint-disable-next-line no-console
-      console.log(`✅ Reset erfolgreich!`);
+      console.log(`✅ Reset successful!`);
       // eslint-disable-next-line no-console
-      console.log(`📍 Neuer HEAD: ${newLog}\n`);
+      console.log(`📍 New HEAD: ${newLog}\n`);
 
       // Hinweise
       if (mode === "soft" || mode === "mixed") {
         // eslint-disable-next-line no-console
-        console.log(`💡 Tipp: Die Änderungen sind noch da.`);
+        console.log(`💡 Tip: Changes are still there.`);
         // eslint-disable-next-line no-console
-        console.log(`   → git status       - Änderungen anzeigen`);
+        console.log(`   → git status       - Show changes`);
         // eslint-disable-next-line no-console
-        console.log(`   → git stash        - Temporär speichern`);
+        console.log(`   → git stash        - Stash temporarily`);
         // eslint-disable-next-line no-console
-        console.log(`   → git checkout .   - Verwerfen\n`);
+        console.log(`   → git checkout .   - Discard\n`);
       }
 
       // eslint-disable-next-line no-console
-      console.log(`💡 Nächster Schritt:`);
+      console.log(`💡 Next step:`);
       // eslint-disable-next-line no-console
-      console.log(`   → pulse start      - Neuen Ansatz starten`);
+      console.log(`   → pulse start      - Start new approach`);
       // eslint-disable-next-line no-console
-      console.log(`   → pulse escalate   - Problem eskalieren\n`);
+      console.log(`   → pulse escalate   - Escalate problem\n`);
     });
 }

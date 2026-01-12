@@ -117,7 +117,7 @@ export function scanDiff(config: PulseConfig, input: ScanInput): ScanResult {
       findings.push({
         severity: "warn",
         code: "UNKNOWN_DEPS",
-        message: `Neue Dependencies erkannt (${newDeps.length}): Kennst du diese?`,
+        message: `New dependencies detected (${newDeps.length}): Do you know these?`,
         details: newDeps.slice(0, 10).map((d) => `  + ${d.name}${d.version ? ` @ ${d.version}` : ""}`).join("\n"),
       });
     } else {
@@ -125,7 +125,7 @@ export function scanDiff(config: PulseConfig, input: ScanInput): ScanResult {
         severity: "warn",
         code: "UNKNOWN_DEPS",
         message:
-          "Dependency/lockfile Änderung erkannt. Prüfe ob die Änderungen gewollt sind.",
+          "Dependency/lockfile change detected. Check if changes are intended.",
       });
     }
   }
@@ -351,14 +351,14 @@ export function detectLoopSignals(
   const messages = lines.map((l) => l.replace(/^[a-f0-9]+\s+/, "").toLowerCase());
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Signal 1: Fix-Chain (mehrere "fix" Commits hintereinander)
+  // Signal 1: Fix-Chain (multiple "fix" commits in a row)
   // ────────────────────────────────────────────────────────────────────────────
   const fixCount = messages.filter((m) => /^fix(\(|:|\s)/i.test(m)).length;
   if (fixCount >= 3) {
     signals.push({
       type: "fix_chain",
       severity: "warn",
-      message: `Loop-Signal: ${fixCount}x "fix" Commits in den letzten 15 Commits. Möglicher Fix-Loop.`,
+      message: `Loop signal: ${fixCount}x "fix" commits in last 15 commits. Possible fix-loop.`,
       details: messages.slice(0, 6).join("\n"),
     });
   }
@@ -371,13 +371,13 @@ export function detectLoopSignals(
     signals.push({
       type: "revert",
       severity: revertCount >= 2 ? "critical" : "warn",
-      message: `Loop-Signal: ${revertCount}x "revert" gefunden. A↔B Toggling möglich.`,
+      message: `Loop signal: ${revertCount}x "revert" found. A↔B toggling possible.`,
       details: messages.filter((m) => /\brevert\b/i.test(m)).join("\n"),
     });
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Signal 3: File-Churn (gleiche Datei mehrfach in kurzer Zeit geändert)
+  // Signal 3: File-Churn (same file changed multiple times in short time)
   // ────────────────────────────────────────────────────────────────────────────
   if (gitLogWithFiles) {
     const fileChanges = parseFileChangesFromLog(gitLogWithFiles);
@@ -389,14 +389,14 @@ export function detectLoopSignals(
       signals.push({
         type: "churn",
         severity: "warn",
-        message: `Loop-Signal: File-Churn - ${churnFiles.length} Datei(en) wurden 5+ mal geändert.`,
+        message: `Loop signal: File-Churn - ${churnFiles.length} file(s) changed 5+ times.`,
         details: churnFiles.slice(0, 5).join("\n"),
       });
     }
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Signal 4: Fix ohne Test-Änderung
+  // Signal 4: Fix without test changes
   // ────────────────────────────────────────────────────────────────────────────
   if (gitLogWithFiles) {
     const fixWithoutTest = detectFixWithoutTest(gitLogWithFiles);
@@ -404,21 +404,21 @@ export function detectLoopSignals(
       signals.push({
         type: "fix_no_test",
         severity: "warn",
-        message: `Loop-Signal: ${fixWithoutTest.length}x "fix" Commits ohne Test-Änderungen.`,
+        message: `Loop signal: ${fixWithoutTest.length}x "fix" commits without test changes.`,
         details: fixWithoutTest.slice(0, 3).join("\n"),
       });
     }
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Signal 5: Pendeln (ähnliche Commit-Messages wiederholen sich)
+  // Signal 5: Pendulum (similar commit messages repeating)
   // ────────────────────────────────────────────────────────────────────────────
   const similarMessages = findSimilarMessages(messages);
   if (similarMessages.length > 0) {
     signals.push({
       type: "pendeln",
       severity: "critical",
-      message: `Loop-Signal: Ähnliche Commits wiederholen sich. Mögliches Diff-Pendeln.`,
+      message: `Loop signal: Similar commits repeating. Possible diff pendulum.`,
       details: similarMessages.join("\n"),
     });
   }

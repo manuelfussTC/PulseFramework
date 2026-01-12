@@ -25,36 +25,36 @@ export function registerEscalateCommand(program: Command): void {
   program
     .command("escalate")
     .alias("e")
-    .description("Eskalation erstellen: Problem für externes Model (GPT-5/Claude/Opus) aufbereiten")
-    .option("--problem <text>", "Was ist das Problem?")
-    .option("--tried <text>", "Was hat Cursor bereits versucht?")
-    .option("--error <text>", "Fehlermeldung / Logs")
-    .option("--error-file <path>", "Pfad zu Log-Datei")
-    .option("--code <text>", "Relevanter Code")
-    .option("--code-file <path>", "Pfad zu Code-Datei")
-    .option("--question <text>", "Deine konkrete Frage")
-    .option("--detailed", "Vollständiges Diff inkludieren (nicht nur Summary)")
-    .option("-C, --clipboard", "Prompt in Zwischenablage kopieren")
-    .option("--include <patterns...>", "Dateien inkludieren (glob patterns)")
-    .option("--auto-include", "Relevante Dateien automatisch aus Git-Diff inkludieren")
+    .description("Create escalation: Prepare problem for external model (GPT-5/Claude/Opus)")
+    .option("--problem <text>", "What is the problem?")
+    .option("--tried <text>", "What has Cursor tried already?")
+    .option("--error <text>", "Error message / logs")
+    .option("--error-file <path>", "Path to log file")
+    .option("--code <text>", "Relevant code")
+    .option("--code-file <path>", "Path to code file")
+    .option("--question <text>", "Your specific question")
+    .option("--detailed", "Include full diff (not just summary)")
+    .option("-C, --clipboard", "Copy prompt to clipboard")
+    .option("--include <patterns...>", "Include files (glob patterns)")
+    .option("--auto-include", "Automatically include relevant files from git diff")
     .action(async (opts) => {
       const repoRoot = await findRepoRoot(process.cwd());
-      if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
+      if (!repoRoot) throw new Error("Not in a git repository.");
 
       // eslint-disable-next-line no-console
-      console.log("\n🚨 PULSE Eskalation\n");
+      console.log("\n🚨 PULSE Escalation\n");
       // eslint-disable-next-line no-console
-      console.log("Erstelle Eskalations-Paket für externes Reasoning Model (GPT-5/Claude/Opus)\n");
+      console.log("Creating escalation package for external reasoning model (GPT-5/Claude/Opus)\n");
 
       // ══════════════════════════════════════════════════════════════════════
-      // Informationen sammeln (interaktiv wenn nicht per Flag)
+      // Collect information (interactive if not via flag)
       // ══════════════════════════════════════════════════════════════════════
 
       const cursorExplanation =
         opts.problem ??
         opts.tried ??
         (await promptText(
-          "Was ist das Problem? (Was hat Cursor versucht, wo hängt er?)",
+          "What is the problem? (What did Cursor try, where is it stuck?)",
           ""
         ));
 
@@ -64,10 +64,10 @@ export function registerEscalateCommand(program: Command): void {
         attempts.push(opts.tried);
       } else {
         // eslint-disable-next-line no-console
-        console.log("\nWas hat Cursor bereits versucht? (Enter wenn fertig)\n");
+        console.log("\nWhat has Cursor tried already? (Enter to finish)\n");
 
         for (let i = 1; i <= 5; i++) {
-          const attempt = await promptText(`  Versuch ${i}`, "");
+          const attempt = await promptText(`  Attempt ${i}`, "");
           if (!attempt.trim()) break;
           attempts.push(attempt);
         }
@@ -78,7 +78,7 @@ export function registerEscalateCommand(program: Command): void {
         opts.error ??
         (opts.errorFile
           ? await readOptionalFile(opts.errorFile)
-          : await promptText("Fehlermeldung / Logs (optional)", ""));
+          : await promptText("Error message / logs (optional)", ""));
 
       // Code (legacy option)
       let codeSnippets =
@@ -89,15 +89,15 @@ export function registerEscalateCommand(program: Command): void {
       const question =
         opts.question ??
         (await promptText(
-          "Deine konkrete Frage",
-          "Was ist die Root Cause und wie löse ich das Problem?"
+          "Your specific question",
+          "What is the root cause and how do I solve it?"
         ));
 
       // ══════════════════════════════════════════════════════════════════════
       // Git-Kontext sammeln
       // ══════════════════════════════════════════════════════════════════════
       // eslint-disable-next-line no-console
-      console.log("\n📊 Sammle Git-Kontext...");
+      console.log("\n📊 Collecting Git context...");
 
       const [log, stat, diff, nameStatus] = await Promise.all([
         gitLogOneline(repoRoot, 10),
@@ -113,43 +113,43 @@ export function registerEscalateCommand(program: Command): void {
 
       if (opts.include && opts.include.length > 0) {
         // eslint-disable-next-line no-console
-        console.log(`📁 Exportiere Dateien: ${opts.include.join(", ")}`);
+        console.log(`📁 Exporting files: ${opts.include.join(", ")}`);
         
         const ctx = await exportFiles(repoRoot, opts.include);
         contextExportXml = renderContextExportXml(ctx);
         
         // eslint-disable-next-line no-console
-        console.log(`   → ${ctx.totalFiles} Dateien, ~${ctx.totalLines} Zeilen`);
+        console.log(`   → ${ctx.totalFiles} files, ~${ctx.totalLines} lines`);
         if (ctx.truncated) {
           // eslint-disable-next-line no-console
-          console.log(`   ⚠️ Truncated (Limit erreicht)`);
+          console.log(`   ⚠️ Truncated (limit reached)`);
         }
       } else if (opts.autoInclude) {
         // eslint-disable-next-line no-console
-        console.log("📁 Auto-Detect relevante Dateien...");
+        console.log("📁 Auto-detecting relevant files...");
         
         const files = await autoDetectFiles(repoRoot, nameStatus);
         
         if (files.length > 0) {
           // eslint-disable-next-line no-console
-          console.log(`   Gefunden: ${files.join(", ")}`);
+          console.log(`   Found: ${files.join(", ")}`);
           
-          const doInclude = await promptConfirm(`Diese ${files.length} Dateien inkludieren?`, true);
+          const doInclude = await promptConfirm(`Include these ${files.length} files?`, true);
           
           if (doInclude) {
             const ctx = await exportFiles(repoRoot, files);
             contextExportXml = renderContextExportXml(ctx);
             
             // eslint-disable-next-line no-console
-            console.log(`   → ${ctx.totalFiles} Dateien, ~${ctx.totalLines} Zeilen`);
+            console.log(`   → ${ctx.totalFiles} files, ~${ctx.totalLines} lines`);
           }
         } else {
           // eslint-disable-next-line no-console
-          console.log("   Keine relevanten Dateien gefunden.");
+          console.log("   No relevant files found.");
         }
       } else if (!codeSnippets && !opts.code && !opts.codeFile) {
         // Ask if user wants to include files
-        const wantInclude = await promptConfirm("Möchtest du Dateien inkludieren?", false);
+        const wantInclude = await promptConfirm("Do you want to include files?", false);
         
         if (wantInclude) {
           const files = await autoDetectFiles(repoRoot, nameStatus);
@@ -158,20 +158,20 @@ export function registerEscalateCommand(program: Command): void {
             // eslint-disable-next-line no-console
             console.log(`   Auto-detected: ${files.join(", ")}`);
             
-            const useAuto = await promptConfirm("Diese Dateien verwenden?", true);
+            const useAuto = await promptConfirm("Use these files?", true);
             
             if (useAuto) {
               const ctx = await exportFiles(repoRoot, files);
               contextExportXml = renderContextExportXml(ctx);
               // eslint-disable-next-line no-console
-              console.log(`   → ${ctx.totalFiles} Dateien, ~${ctx.totalLines} Zeilen`);
+              console.log(`   → ${ctx.totalFiles} files, ~${ctx.totalLines} lines`);
             } else {
-              const pattern = await promptText("Glob-Pattern eingeben (z.B. src/**/*.ts)", "");
+              const pattern = await promptText("Enter glob pattern (e.g. src/**/*.ts)", "");
               if (pattern) {
                 const ctx = await exportFiles(repoRoot, [pattern]);
                 contextExportXml = renderContextExportXml(ctx);
                 // eslint-disable-next-line no-console
-                console.log(`   → ${ctx.totalFiles} Dateien, ~${ctx.totalLines} Zeilen`);
+                console.log(`   → ${ctx.totalFiles} files, ~${ctx.totalLines} lines`);
               }
             }
           }
@@ -197,19 +197,19 @@ export function registerEscalateCommand(program: Command): void {
       });
 
       // ══════════════════════════════════════════════════════════════════════
-      // Speichern
+      // Save
       // ══════════════════════════════════════════════════════════════════════
       const ts = timestampId();
       const filename = `${ts}-escalate.md`;
       const content = [
-        `# Eskalation (${ts})`,
+        `# Escalation (${ts})`,
         ``,
-        `## Anleitung`,
+        `## Instructions`,
         ``,
-        `1. **Kopiere** den Prompt unten`,
-        `2. **Füge ein** in ChatGPT, Claude, GPT-5 oder Opus`,
-        `3. **Lies** die Analyse und Schritt-für-Schritt Anweisungen`,
-        `4. **Gib** die Anweisungen an Cursor weiter (NICHT blind Code kopieren!)`,
+        `1. **Copy** the prompt below`,
+        `2. **Paste** into ChatGPT, Claude, GPT-5 or Opus`,
+        `3. **Read** the analysis and step-by-step instructions`,
+        `4. **Pass** instructions to Cursor (DO NOT blindly copy code!)`,
         ``,
         `---`,
         ``,
@@ -221,21 +221,21 @@ export function registerEscalateCommand(program: Command): void {
         ``,
         `---`,
         ``,
-        `## Metadaten`,
-        `- Erstellt: ${new Date().toISOString()}`,
-        `- Versuche dokumentiert: ${attempts.length}`,
-        `- Git-Context: ${log ? "✅" : "❌"}`,
-        `- Dateien inkludiert: ${contextExportXml ? "✅" : "❌"}`,
+        `## Metadata`,
+        `- Created: ${new Date().toISOString()}`,
+        `- Attempts documented: ${attempts.length}`,
+        `- Git context: ${log ? "✅" : "❌"}`,
+        `- Files included: ${contextExportXml ? "✅" : "❌"}`,
         ``,
       ].join("\n");
 
       const p = await writeArtifact(repoRoot, "escalations", filename, content);
 
       // ══════════════════════════════════════════════════════════════════════
-      // Ausgabe
+      // Output
       // ══════════════════════════════════════════════════════════════════════
       // eslint-disable-next-line no-console
-      console.log(`\n✅ Gespeichert: ${p}`);
+      console.log(`\n✅ Saved: ${p}`);
 
       // Clipboard
       if (opts.clipboard) {
@@ -247,12 +247,12 @@ export function registerEscalateCommand(program: Command): void {
       // eslint-disable-next-line no-console
       console.log(`\n${"═".repeat(60)}`);
       // eslint-disable-next-line no-console
-      console.log(`\n📋 ESKALATIONS-PROMPT${opts.clipboard ? " (kopiert)" : ""}:\n`);
+      console.log(`\n📋 ESCALATION PROMPT${opts.clipboard ? " (copied)" : ""}:\n`);
       // eslint-disable-next-line no-console
       console.log(prompt);
       // eslint-disable-next-line no-console
       console.log(`\n${"═".repeat(60)}`);
       // eslint-disable-next-line no-console
-      console.log(`\n💡 Tipp: Die Antwort enthält Schritt-für-Schritt Anweisungen für Cursor.\n`);
+      console.log(`\n💡 Tip: The answer contains step-by-step instructions for Cursor.\n`);
     });
 }

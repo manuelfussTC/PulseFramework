@@ -1,5 +1,5 @@
 /**
- * Context Export - Selektiver Datei-Export für Eskalation
+ * Context Export - Selective file export for escalation
  */
 
 import fs from "node:fs/promises";

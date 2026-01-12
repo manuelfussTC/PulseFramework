@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="pulse" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22d3ee"/>
+      <stop offset="50%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#22d3ee"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  
+  <!-- Pulse wave -->
+  <path d="M 16 64 
+           L 32 64 
+           L 40 40 
+           L 52 88 
+           L 64 32 
+           L 76 96 
+           L 88 48 
+           L 96 64 
+           L 112 64" 
+        fill="none" 
+        stroke="url(#pulse)" 
+        stroke-width="6" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+  
+  <!-- Glow effect -->
+  <path d="M 16 64 
+           L 32 64 
+           L 40 40 
+           L 52 88 
+           L 64 32 
+           L 76 96 
+           L 88 48 
+           L 96 64 
+           L 112 64" 
+        fill="none" 
+        stroke="#ffffff" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        opacity="0.6"/>
+</svg>

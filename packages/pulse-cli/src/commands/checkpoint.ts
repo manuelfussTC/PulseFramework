@@ -10,7 +10,7 @@ export function registerCheckpointCommand(program: Command): void {
   program
     .command("checkpoint")
     .alias("c") // Kurzform: pulse c
-    .description("Git-Checkpoint: Status prüfen, Red Flags erkennen, optional Tests/Commit")
+    .description("Git Checkpoint: Check status, detect red flags, optional tests/commit")
     .option("--staged", "Use staged diff")
     .option("--inspect-latest", "Inspect the latest commit diff (useful if Cursor auto-committed)")
     .option("--run-tests", "Run configured test command")
@@ -80,7 +80,7 @@ export function registerCheckpointCommand(program: Command): void {
 
         const p = await writeArtifact(repoRoot, "worklogs", `${ts}-checkpoint.md`, artifact);
         // eslint-disable-next-line no-console
-        console.log(`Wrote ${p}`);
+        console.log(`✅ Wrote ${p}`);
 
         if (scan.findings.length) {
           // eslint-disable-next-line no-console

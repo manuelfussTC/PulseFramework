@@ -17,10 +17,10 @@ import type { PulseLayer } from "../lib/types.js";
 export function registerRunCommand(program: Command): void {
   program
     .command("run")
-    .description("Kombinierter Workflow: Start → Watch → Checkpoints → Review")
+    .description("Combined workflow: Start → Watch → Checkpoints → Review")
     .option("-t, --template <id>", "Vorlage: feature, bugfix, refactor, concept, analyze, review")
-    .option("--minutes <n>", "Minuten zwischen Checkpoint-Erinnerungen")
-    .option("--no-watch", "Watcher nicht starten")
+    .option("--minutes <n>", "Minutes between checkpoint reminders")
+    .option("--no-watch", "Don't start watcher")
     .option("--action <text>", "ACTION direkt angeben")
     .option("-C, --clipboard", "Prompt in Zwischenablage kopieren")
     .action(
@@ -50,12 +50,12 @@ export function registerRunCommand(program: Command): void {
         console.log(`
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃  🚀 PULSE Run                                                 ┃
-┃  Profil: ${presetProfile.padEnd(50)}┃
+┃  Profile: ${presetProfile.padEnd(49)}┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 `);
 
         // ════════════════════════════════════════════════════════════════════════
-        // PHASE 1: Prompt erstellen
+        // PHASE 1: Create prompt
         // ════════════════════════════════════════════════════════════════════════
         // eslint-disable-next-line no-console
         console.log(`━━━ PHASE 1: Prompt ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
@@ -100,10 +100,10 @@ export function registerRunCommand(program: Command): void {
         const content = [
           `# Pulse Run (${ts})`,
           ``,
-          `- Profil: **${presetProfile}**`,
+          `- Profile: **${presetProfile}**`,
           `- Layer: **${layer}**`,
           template ? `- Vorlage: **${template.name}**` : "",
-          `- Checkpoint-Intervall: **${minutes} Min**`,
+          `- Checkpoint interval: **${minutes} min**`,
           ``,
           `## Prompt`,
           ``,
@@ -132,7 +132,7 @@ export function registerRunCommand(program: Command): void {
         // eslint-disable-next-line no-console
         console.log(`\n┌${"─".repeat(58)}┐`);
         // eslint-disable-next-line no-console
-        console.log(`│ PROMPT ${opts.clipboard ? "(kopiert)" : "(kopieren und in Cursor einfügen)"}${" ".repeat(opts.clipboard ? 33 : 16)}│`);
+        console.log(`│ PROMPT ${opts.clipboard ? "(copied)" : "(copy and paste into Cursor)"}${" ".repeat(opts.clipboard ? 35 : 19)}│`);
         // eslint-disable-next-line no-console
         console.log(`└${"─".repeat(58)}┘\n`);
         // eslint-disable-next-line no-console
@@ -148,9 +148,9 @@ export function registerRunCommand(program: Command): void {
           // eslint-disable-next-line no-console
           console.log(`━━━ PHASE 2: Übersprungen ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
           // eslint-disable-next-line no-console
-          console.log("Watcher nicht gestartet (--no-watch).\n");
+          console.log("Watcher not started (--no-watch).\n");
           // eslint-disable-next-line no-console
-          console.log("💡 Nächste Schritte:");
+          console.log("💡 Next steps:");
           // eslint-disable-next-line no-console
           console.log("   1. Prompt in Cursor einfügen");
           // eslint-disable-next-line no-console
@@ -165,9 +165,9 @@ export function registerRunCommand(program: Command): void {
         // eslint-disable-next-line no-console
         console.log(`━━━ PHASE 2: Watcher ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
         // eslint-disable-next-line no-console
-        console.log(`⏱️  Checkpoint-Intervall: ${minutes} Min (${config.preset ?? "custom"} Preset)`);
+        console.log(`⏱️  Checkpoint interval: ${minutes} min (${config.preset ?? "custom"} preset)`);
         // eslint-disable-next-line no-console
-        console.log(`📍 Watcher läuft... (Ctrl+C zum Beenden)\n`);
+        console.log(`📍 Watcher running... (Ctrl+C to stop)\n`);
         // eslint-disable-next-line no-console
         console.log(`   1. Kopiere den Prompt oben in Cursor`);
         // eslint-disable-next-line no-console
@@ -178,7 +178,7 @@ export function registerRunCommand(program: Command): void {
         await notify(
           config.notifications,
           "Pulse Run gestartet",
-          `Checkpoint-Erinnerung alle ${minutes} Min. Ctrl+C zum Beenden.`
+          `Checkpoint reminder every ${minutes} min. Ctrl+C to exit.`
         );
 
         // Update state
@@ -204,7 +204,7 @@ export function registerRunCommand(program: Command): void {
             await notify(
               config.notifications,
               `⏱️ Checkpoint #${checkpointCount}`,
-              `${minutes} Min vergangen. Zeit für: pulse checkpoint`
+              `${minutes} min passed. Time for: pulse checkpoint`
             );
 
             // eslint-disable-next-line no-console
@@ -224,7 +224,7 @@ export function registerRunCommand(program: Command): void {
           } else {
             // eslint-disable-next-line no-console
             console.log(
-              `\n✨ [${new Date().toLocaleTimeString()}] Repo ist clean - kein Checkpoint nötig\n`
+              `\n✨ [${new Date().toLocaleTimeString()}] Repo is clean - no checkpoint needed\n`
             );
           }
         }, 30_000); // Check every 30 seconds
@@ -255,9 +255,9 @@ export function registerRunCommand(program: Command): void {
             // eslint-disable-next-line no-console
             console.log("");
 
-            const doCheckpoint = await promptConfirm("Checkpoint erstellen?", true);
+            const doCheckpoint = await promptConfirm("Create checkpoint?", true);
             if (doCheckpoint) {
-              const msg = await promptText("Commit-Message", "checkpoint: work in progress");
+              const msg = await promptText("Commit message", "checkpoint: work in progress");
               const { exec } = await import("../lib/exec.js");
               await exec("git", ["add", "-A"], { cwd: repoRoot });
               await exec("git", ["commit", "-m", msg], { cwd: repoRoot });
@@ -270,7 +270,7 @@ export function registerRunCommand(program: Command): void {
           }
 
           // Offer review
-          const doReview = await promptConfirm("Review erstellen?", dirty);
+          const doReview = await promptConfirm("Create review?", dirty);
           if (doReview) {
             // eslint-disable-next-line no-console
             console.log("\n💡 Führe aus: pulse review\n");

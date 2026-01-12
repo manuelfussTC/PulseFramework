@@ -24,7 +24,7 @@ export function registerDoctorCommand(program: Command): void {
   program
     .command("doctor")
     .alias("d")
-    .description("Safeguards + Red Flags prüfen (Secrets, Deletes, Loops, Scope)")
+    .description("Check safeguards + red flags (secrets, deletes, loops, scope)")
     .option("--staged", "Scan staged diff")
     .option("--ci", "CI mode: quieter output + exit codes")
     .option("--hook <name>", "Hook mode: pre-commit | pre-push", "none")
@@ -41,12 +41,12 @@ export function registerDoctorCommand(program: Command): void {
         allowPush?: boolean;
       }) => {
         const repoRoot = await findRepoRoot(process.cwd());
-        if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
+        if (!repoRoot) throw new Error("Not in a git repository.");
 
         const [config, state] = await Promise.all([loadConfig(repoRoot), loadState(repoRoot)]);
         const hook = (opts.hook ?? "none") as HookName;
 
-        // Safeguard: Push gate (hook-only)
+        // Safeguard: Push gate (hook only)
         if (hook === "pre-push") {
           const allowed = opts.allowPush || process.env.PULSE_ALLOW_PUSH === "1";
           if (!allowed) {
@@ -125,7 +125,7 @@ export function registerDoctorCommand(program: Command): void {
             scan.findings.push({
               severity: "warn",
               code: "BIG_CHANGESET",
-              message: `Preset-Limit überschritten (${presetName}): ${field} ${current}/${max}`,
+              message: `Preset limit exceeded (${presetName}): ${field} ${current}/${max}`,
             });
           }
         }
@@ -150,7 +150,7 @@ export function registerDoctorCommand(program: Command): void {
           // eslint-disable-next-line no-console
           console.log(`\n🔍 Pulse Doctor (${staged ? "staged" : "working tree"})\n`);
           // eslint-disable-next-line no-console
-          console.log(`Profil: ${presetProfile}`);
+          console.log(`Profile: ${presetProfile}`);
           // eslint-disable-next-line no-console
           console.log(
             `Scope: ${scan.stats.filesChanged} files | +${scan.stats.linesAdded} -${scan.stats.linesDeleted} lines`
@@ -173,7 +173,7 @@ export function registerDoctorCommand(program: Command): void {
           console.log("");
 
           // ══════════════════════════════════════════════════════════════════════
-          // Empfehlung anzeigen
+          // Show recommendation
           // ══════════════════════════════════════════════════════════════════════
           const actionEmoji = {
             approve: "✅",
@@ -183,7 +183,7 @@ export function registerDoctorCommand(program: Command): void {
           }[recommendation.action];
 
           // eslint-disable-next-line no-console
-          console.log(`${actionEmoji} EMPFEHLUNG: ${recommendation.action.toUpperCase()}`);
+          console.log(`${actionEmoji} RECOMMENDATION: ${recommendation.action.toUpperCase()}`);
           // eslint-disable-next-line no-console
           console.log(`   → ${recommendation.reason}`);
           if (recommendation.command) {
@@ -222,7 +222,7 @@ function printFindings(
 ) {
   if (!findings.length) {
     // eslint-disable-next-line no-console
-    console.log("✅ Keine Findings");
+    console.log("✅ No findings");
     return;
   }
   for (const f of findings) {

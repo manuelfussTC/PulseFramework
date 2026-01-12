@@ -3,7 +3,7 @@
 /**
  * PULSE MCP Server
  * 
- * Model Context Protocol Server für Cursor IDE Integration.
+ * Model Context Protocol Server for Cursor IDE Integration.
  * Exposed die Pulse CLI Funktionen als MCP Tools.
  */
 

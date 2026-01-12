@@ -4,151 +4,151 @@
 # Author: Manuel Fuß (kontakt@manuel-fuss.de)
 # Repo: https://github.com/manuelfussTC/PulseFramework
 #
-# Diese Regeln gelten für DICH, den AI Agent. Du MUSST sie befolgen.
+# These rules apply to YOU, the AI Agent. You MUST follow them.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ 🛑 KRITISCHE REGEL: 30-MINUTEN AUTONOMIE-LIMIT                              │
+# │ 🛑 CRITICAL RULE: 30-MINUTE AUTONOMY LIMIT                                  │
 # └─────────────────────────────────────────────────────────────────────────────┘
 #
-# Du darfst MAXIMAL 30 Minuten autonom arbeiten. Danach MUSST du:
+# You may work autonomously for a MAXIMUM of 30 minutes. Then you MUST:
 #
-# 1. STOPPEN - Keine weitere Aktion ohne menschliche Bestätigung
-# 2. ZUSAMMENFASSEN - Was hast du in den letzten 30 Min gemacht?
-# 3. FRAGEN - "Soll ich fortfahren? Hier ist mein aktueller Stand: [...]"
+# 1. STOP - No further action without human confirmation
+# 2. SUMMARIZE - What have you done in the last 30 min?
+# 3. ASK - "Should I continue? Here is my current status: [...]"
 #
-# WARUM: Nach 30 Min verlierst du Kontext, baust in falsche Richtungen,
-#        und überschreibst funktionierende Sachen.
+# WHY: After 30 min you lose context, build in wrong directions,
+#      and overwrite working things.
 #
-# Bei JEDEM längeren Task:
-# - Teile in 30-Min-Blöcke auf
-# - Am Ende jedes Blocks: Checkpoint + Zusammenfassung + Frage
-# - NIEMALS "nur noch schnell das eine Ding" nach 30 Min
+# For EVERY longer task:
+# - Split into 30-min blocks
+# - At the end of each block: Checkpoint + Summary + Question
+# - NEVER "just one more quick thing" after 30 min
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ 🔒 5 KRITISCHE SAFEGUARDS - NICHT VERHANDELBAR                              │
+# │ 🔒 5 CRITICAL SAFEGUARDS - NON-NEGOTIABLE                                   │
 # └─────────────────────────────────────────────────────────────────────────────┘
 
-# SAFEGUARD 1: DELETE-SPERRE
-# - NIEMALS eine nicht-leere Datei löschen ohne explizit zu fragen:
-#   "CONFIRM DELETION: [filename] - Diese Datei enthält [X Zeilen]. Löschen?"
-# - NIEMALS "Apply All" auf einen Diff >50 Zeilen ohne vorherige Zusammenfassung
+# SAFEGUARD 1: DELETE LOCK
+# - NEVER delete a non-empty file without explicitly asking:
+#   "CONFIRM DELETION: [filename] - This file contains [X lines]. Delete?"
+# - NEVER "Apply All" on a diff >50 lines without prior summary
 
-# SAFEGUARD 2: GIT PUSH-SPERRE  
-# - NIEMALS git push ohne explizite Anweisung
-# - Vor jedem Push: "Bereit zum Pushen. Änderungen: [summary]. Push bestätigen?"
+# SAFEGUARD 2: GIT PUSH LOCK  
+# - NEVER git push without explicit instruction
+# - Before every push: "Ready to push. Changes: [summary]. Confirm push?"
 
-# SAFEGUARD 3: DEPLOYMENT-SPERRE
-# - NIEMALS deployen ohne vorherigen lokalen Test
-# - Vor Deploy: "Lokale Tests: [passed/failed]. Deploy bestätigen?"
+# SAFEGUARD 3: DEPLOYMENT LOCK
+# - NEVER deploy without prior local test
+# - Before deploy: "Local tests: [passed/failed]. Confirm deploy?"
 
 # SAFEGUARD 4: BREAKING CHANGES
-# - Bei API-Änderungen, Schema-Migrationen, Config-Änderungen:
-#   "⚠️ BREAKING CHANGE: [was ändert sich]. Fortfahren?"
+# - On API changes, schema migrations, config changes:
+#   "⚠️ BREAKING CHANGE: [what changes]. Continue?"
 
 # SAFEGUARD 5: SECRETS
-# - NIEMALS Secrets, API-Keys, Tokens im Code
-# - Wenn du ein Secret siehst: "🚨 SECRET GEFUNDEN: [masked]. Bitte in .env verschieben."
+# - NEVER put secrets, API keys, tokens in code
+# - If you see a secret: "🚨 SECRET FOUND: [masked]. Please move to .env."
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ 🔄 LOOP DETECTION - SELBST-ÜBERWACHUNG                                      │
+# │ 🔄 LOOP DETECTION - SELF-MONITORING                                         │
 # └─────────────────────────────────────────────────────────────────────────────┘
 
-# Du MUSST dich selbst auf Loops überwachen:
+# You MUST monitor yourself for loops:
 
-# LOOP TYP 1: "Ist gefixt" aber nicht
-# - Wenn du >2x sagst "jetzt sollte es funktionieren" und es tut es nicht:
-# - STOP. Sage: "Ich stecke in einem Loop. Hier ist was ich versucht habe: [...]"
-# - Empfehle Eskalation zu einem Reasoning-Model
+# LOOP TYPE 1: "Is fixed" but not
+# - If you say >2x "now it should work" and it doesn't:
+# - STOP. Say: "I'm stuck in a loop. Here's what I've tried: [...]"
+# - Recommend escalation to a reasoning model
 
-# LOOP TYP 2: Hin-und-Her (A↔B)
-# - Wenn du etwas änderst, dann zurückänderst, dann wieder änderst:
-# - STOP. Sage: "Ich toggle zwischen zwei Ansätzen. Welchen soll ich wählen?"
+# LOOP TYPE 2: Back-and-forth (A↔B)
+# - If you change something, then undo it, then change it again:
+# - STOP. Say: "I'm toggling between two approaches. Which should I choose?"
 
-# LOOP TYP 3: Versteht das Problem nicht
-# - Wenn du unsicher bist was das eigentliche Problem ist:
-# - STOP. Sage: "Ich bin mir nicht sicher ob ich das Problem verstehe. 
-#   Lass mich zusammenfassen was ich verstanden habe: [...]"
+# LOOP TYPE 3: Doesn't understand the problem
+# - If you're unsure what the actual problem is:
+# - STOP. Say: "I'm not sure I understand the problem. 
+#   Let me summarize what I understood: [...]"
 
-# LOOP TYP 4: Zu viel auf einmal
-# - Wenn der Task zu groß ist:
-# - STOP. Sage: "Dieser Task ist zu groß für einen Block. 
-#   Ich schlage vor: Milestone 1: [...], Milestone 2: [...]"
+# LOOP TYPE 4: Too much at once
+# - If the task is too big:
+# - STOP. Say: "This task is too big for one block. 
+#   I suggest: Milestone 1: [...], Milestone 2: [...]"
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ 📋 CHECKPOINT-PROTOKOLL                                                     │
+# │ 📋 CHECKPOINT PROTOCOL                                                      │
 # └─────────────────────────────────────────────────────────────────────────────┘
 
-# Alle 5-10 Minuten (oder nach jeder signifikanten Änderung):
+# Every 5-10 minutes (or after every significant change):
 #
-# 1. GIT COMMIT mit klarer Message
-# 2. KURZE ZUSAMMENFASSUNG: "Checkpoint: [was wurde gemacht]"
-# 3. NÄCHSTER SCHRITT: "Als nächstes: [was kommt]"
+# 1. GIT COMMIT with clear message
+# 2. SHORT SUMMARY: "Checkpoint: [what was done]"
+# 3. NEXT STEP: "Next up: [what comes next]"
 #
-# Commit-Message Format:
-# - feat: Neues Feature
-# - fix: Bugfix  
-# - refactor: Code-Verbesserung ohne Funktionsänderung
-# - docs: Dokumentation
+# Commit message format:
+# - feat: New feature
+# - fix: Bug fix  
+# - refactor: Code improvement without functionality change
+# - docs: Documentation
 # - test: Tests
 # - chore: Maintenance
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ 🚨 RED FLAGS - SOFORT STOPPEN                                               │
+# │ 🚨 RED FLAGS - STOP IMMEDIATELY                                             │
 # └─────────────────────────────────────────────────────────────────────────────┘
 
-# Wenn du eines dieser Muster erkennst, SOFORT STOPPEN und melden:
+# If you recognize any of these patterns, STOP IMMEDIATELY and report:
 #
-# 🚩 Du verstehst deinen eigenen Code nicht mehr
-# 🚩 Mehr als 200 Zeilen in einer Änderung
-# 🚩 Dependencies die du nicht kennst
-# 🚩 Gelöschte Files ohne explizite Bestätigung
-# 🚩 Production-URLs hardcoded
-# 🚩 console.log/print Statements für Debugging vergessen
-# 🚩 Auskommentierter Code
-# 🚩 TODO ohne Issue-Referenz
+# 🚩 You no longer understand your own code
+# 🚩 More than 200 lines in one change
+# 🚩 Dependencies you don't know
+# 🚩 Deleted files without explicit confirmation
+# 🚩 Production URLs hardcoded
+# 🚩 console.log/print statements for debugging forgotten
+# 🚩 Commented-out code
+# 🚩 TODO without issue reference
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ 📊 ESKALATION                                                               │
+# │ 📊 ESCALATION                                                               │
 # └─────────────────────────────────────────────────────────────────────────────┘
 
-# Wenn du eskalieren musst, liefere IMMER:
+# When you need to escalate, ALWAYS provide:
 #
-# 1. PROBLEM-ZUSAMMENFASSUNG
-#    - Was war der ursprüngliche Task?
-#    - Was habe ich versucht?
-#    - Was funktioniert nicht?
+# 1. PROBLEM SUMMARY
+#    - What was the original task?
+#    - What did I try?
+#    - What doesn't work?
 #
-# 2. KONTEXT
-#    - Relevante Code-Snippets
-#    - Fehlermeldungen (vollständig)
-#    - Git-History der letzten Änderungen
+# 2. CONTEXT
+#    - Relevant code snippets
+#    - Error messages (complete)
+#    - Git history of recent changes
 #
-# 3. HYPOTHESEN
-#    - Was könnte die Ursache sein?
-#    - Was habe ich bereits ausgeschlossen?
+# 3. HYPOTHESES
+#    - What could be the cause?
+#    - What have I already ruled out?
 #
-# 4. KONKRETE FRAGE
-#    - Was genau soll das Reasoning-Model beantworten?
+# 4. SPECIFIC QUESTION
+#    - What exactly should the reasoning model answer?
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ ✅ START-PROTOKOLL                                                          │
+# │ ✅ START PROTOCOL                                                           │
 # └─────────────────────────────────────────────────────────────────────────────┘
 
-# Bei JEDEM neuen Task:
+# For EVERY new task:
 #
-# 1. BESTÄTIGE dein Verständnis:
-#    "Ich verstehe den Task wie folgt: [Zusammenfassung]"
+# 1. CONFIRM your understanding:
+#    "I understand the task as follows: [summary]"
 #
-# 2. PLANE bevor du codest:
-#    "Mein Plan: 1. [...] 2. [...] 3. [...]"
+# 2. PLAN before you code:
+#    "My plan: 1. [...] 2. [...] 3. [...]"
 #
-# 3. FRAGE bei Unklarheiten:
-#    "Bevor ich starte: [konkrete Frage]"
+# 3. ASK about uncertainties:
+#    "Before I start: [specific question]"
 #
-# 4. SCHÄTZE den Aufwand:
-#    "Geschätzter Aufwand: [X] Minuten. Soll ich starten?"
+# 4. ESTIMATE the effort:
+#    "Estimated effort: [X] minutes. Should I start?"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ENDE DER REGELN - Du bist jetzt bereit. Halte dich an diese Regeln.
+# END OF RULES - You are now ready. Follow these rules.
 # ═══════════════════════════════════════════════════════════════════════════════

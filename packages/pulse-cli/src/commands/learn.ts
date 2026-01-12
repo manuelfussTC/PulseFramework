@@ -8,12 +8,12 @@ import { findRepoRoot, pulseDir } from "../lib/paths.js";
 export function registerLearnCommand(program: Command): void {
   program
     .command("learn")
-    .description("Gelerntes Wissen speichern (Problem → Lösung → Regel)")
-    .option("--problem <text>", "Was war das Problem?")
-    .option("--solution <text>", "Was war die Lösung?")
-    .option("--rule <text>", "Abgeleitete Regel")
-    .option("--reason <text>", "Warum diese Regel?")
-    .option("--no-promote", "Nicht nach .cursorrules-Update fragen")
+    .description("Save learned knowledge (Problem → Solution → Rule)")
+    .option("--problem <text>", "What was the problem?")
+    .option("--solution <text>", "What was the solution?")
+    .option("--rule <text>", "Derived rule")
+    .option("--reason <text>", "Why this rule?")
+    .option("--no-promote", "Do not ask to update .cursorrules")
     .action(async (opts: { 
       problem?: string; 
       solution?: string;
@@ -22,7 +22,7 @@ export function registerLearnCommand(program: Command): void {
       promote?: boolean;
     }) => {
       const repoRoot = await findRepoRoot(process.cwd());
-      if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
+      if (!repoRoot) throw new Error("Not in a git repository.");
 
       await ensurePulseDirs(repoRoot);
 
@@ -30,23 +30,23 @@ export function registerLearnCommand(program: Command): void {
       console.log("\n📚 PULSE Learn\n");
 
       // Gather information
-      const problem = opts.problem ?? (await promptText("Was war das Problem?", ""));
-      const solution = opts.solution ?? (await promptText("Was war die Lösung?", ""));
-      const rule = opts.rule ?? (await promptText("Abgeleitete Regel (was beachten?)", ""));
-      const reason = opts.reason ?? (await promptText("Warum? (optional)", ""));
+      const problem = opts.problem ?? (await promptText("What was the problem?", ""));
+      const solution = opts.solution ?? (await promptText("What was the solution?", ""));
+      const rule = opts.rule ?? (await promptText("Derived rule (what to observe?)", ""));
+      const reason = opts.reason ?? (await promptText("Why? (optional)", ""));
 
       const ts = timestampId();
       
       // ════════════════════════════════════════════════════════════════════════
-      // Memory-Entry erstellen
+      // Create memory entry
       // ════════════════════════════════════════════════════════════════════════
       const entry = [
         `## Learning: ${ts}`,
         ``,
         problem.trim() ? `**Problem:** ${problem.trim()}` : "",
-        solution.trim() ? `**Lösung:** ${solution.trim()}` : "",
-        rule.trim() ? `**Regel:** ${rule.trim()}` : "",
-        reason.trim() ? `**Grund:** ${reason.trim()}` : "",
+        solution.trim() ? `**Solution:** ${solution.trim()}` : "",
+        rule.trim() ? `**Rule:** ${rule.trim()}` : "",
+        reason.trim() ? `**Reason:** ${reason.trim()}` : "",
         ``,
         `---`,
         ``,
@@ -60,13 +60,13 @@ export function registerLearnCommand(program: Command): void {
       try {
         await fs.access(memPath);
       } catch {
-        const header = `# PULSE Memory\n\nGelernte Regeln und Erkenntnisse aus diesem Projekt.\n\n---\n\n`;
+        const header = `# PULSE Memory\n\nLearned rules and insights from this project.\n\n---\n\n`;
         await fs.writeFile(memPath, header, "utf8");
       }
       
       await fs.appendFile(memPath, entry, "utf8");
       // eslint-disable-next-line no-console
-      console.log(`✅ Gespeichert: ${memPath}`);
+      console.log(`✅ Saved: ${memPath}`);
 
       // ════════════════════════════════════════════════════════════════════════
       // Auto-Promotion zu .cursorrules
@@ -75,22 +75,22 @@ export function registerLearnCommand(program: Command): void {
         // eslint-disable-next-line no-console
         console.log(`\n${"─".repeat(50)}`);
         // eslint-disable-next-line no-console
-        console.log(`\n📋 Vorschlag für .cursorrules:\n`);
+        console.log(`\n📋 Proposal for .cursorrules:\n`);
         
         const cursorrulesSnippet = formatCursorrulesSnippet(rule, reason, problem);
         // eslint-disable-next-line no-console
         console.log(cursorrulesSnippet);
         
-        const doPromote = await promptConfirm("\nIn .cursorrules übernehmen?", true);
+        const doPromote = await promptConfirm("\nAdd to .cursorrules?", true);
         
         if (doPromote) {
           const cursorrulesPath = path.join(repoRoot, ".cursorrules");
           await appendToCursorrules(cursorrulesPath, cursorrulesSnippet);
           // eslint-disable-next-line no-console
-          console.log(`\n✅ Zu .cursorrules hinzugefügt!`);
+          console.log(`\n✅ Added to .cursorrules!`);
         } else {
           // eslint-disable-next-line no-console
-          console.log(`\nℹ️ Nicht übernommen. Du kannst es später manuell hinzufügen.`);
+          console.log(`\nℹ️ Not added. You can add it manually later.`);
         }
       }
 
@@ -106,19 +106,19 @@ function formatCursorrulesSnippet(rule: string, reason: string, problem: string)
   const lines: string[] = [];
   
   lines.push(`# ┌────────────────────────────────────────────────────────────────────────────┐`);
-  lines.push(`# │ GELERNTE REGEL                                                             │`);
+  lines.push(`# │ LEARNED RULE                                                               │`);
   lines.push(`# └────────────────────────────────────────────────────────────────────────────┘`);
   lines.push(`#`);
   lines.push(`# ${rule.trim()}`);
   
   if (reason.trim()) {
     lines.push(`#`);
-    lines.push(`# Grund: ${reason.trim()}`);
+    lines.push(`# Reason: ${reason.trim()}`);
   }
   
   if (problem.trim()) {
     lines.push(`#`);
-    lines.push(`# Kontext: ${problem.trim()}`);
+    lines.push(`# Context: ${problem.trim()}`);
   }
   
   lines.push(`#`);
@@ -143,8 +143,8 @@ async function appendToCursorrules(filepath: string, snippet: string): Promise<v
 `;
   }
   
-  // Check if there's already a "GELERNTE REGEL" section
-  const hasLearnedSection = content.includes("# GELERNTE REGEL");
+  // Check if there's already a "LEARNED RULE" section
+  const hasLearnedSection = content.includes("# LEARNED RULE");
   
   if (hasLearnedSection) {
     // Append to existing section (before the last closing block if possible)

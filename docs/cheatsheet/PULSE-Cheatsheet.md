@@ -1,171 +1,171 @@
 # PULSE Cheat-Sheet
 
-> "Der Loop läuft. Du setzt die Impulse."
+> "The loop runs. You set the impulses."
 
-Quick Reference für kontrollierte KI-gestützte Entwicklung.
-
----
-
-## 01 · Der Kern: Kontrollierte Loops
-
-KI läuft autonom im Loop. Du steuerst nur an entscheidenden Punkten.
-
-`Start-Pulse → Loop → Korrektur → Loop → Review`
-
-**Merksatz:** KI-Entwicklung ist nicht den perfekten Prompt finden, sondern ein gutes Gespräch mit der KI führen.
+Quick Reference for controlled AI-assisted development.
 
 ---
 
-## 02 · Die 3-Ebenen-Architektur
+## 01 · The Core: Controlled Loops
 
-Jedes Tool hat seine Rolle. Nicht mischen.
+AI runs autonomously in a loop. You steer only at crucial points.
 
-| Ebene | Tool | Zweck |
-|-------|------|-------|
-| 1: Konzept | ChatGPT / Claude | Denken, nicht Bauen |
-| 2: Build | Cursor | Bauen, nicht Denken |
-| 3: Eskalation | GPT-5 / Opus | Wenn der Loop kippt |
+`Start-Pulse → Loop → Correction → Loop → Review`
+
+**Key insight:** AI development isn't about finding the perfect prompt, but about having a good conversation with the AI.
 
 ---
 
-## 03 · Das 6-Elemente-Framework
+## 02 · The 3-Layer Architecture
 
-Minimum 3-4 Elemente pro Prompt. Eine Action pro Prompt.
+Each tool has its role. Don't mix them.
 
-| Element | Frage |
-|---------|-------|
-| Rolle | Wer ist die KI? |
-| Kontext | Was ist die Situation? |
-| Input | Was gibst du mit? |
-| Output | Was soll rauskommen? |
-| Action | Was soll die KI TUN? |
-| Beispiele | Wie soll es (nicht) aussehen? |
+| Layer | Tool | Purpose |
+|-------|------|---------|
+| 1: Concept | ChatGPT / Claude | Think, don't build |
+| 2: Build | Cursor | Build, don't think |
+| 3: Escalation | GPT-5 / Opus | When the loop breaks |
 
 ---
 
-## 04 · Die 30-Minuten-Regel
+## 03 · The 6-Element Framework
 
-Die wichtigste Regel aus 10.000+ Stunden Agent Mode.
+Minimum 3-4 elements per prompt. One action per prompt.
 
-⚠️ **NIEMALS** Agent Mode länger als 30 Min unbeaufsichtigt lassen.
-
-Nach 30 Min:
-- Kontext verloren
-- Baut in falsche Richtung
-- Überschreibt funktionierende Sachen
-
-**Action:** Timer stellen → Zuschauen → Alle 30 Min: Checkpoint
+| Element | Question |
+|---------|----------|
+| Role | Who is the AI? |
+| Context | What's the situation? |
+| Input | What are you providing? |
+| Output | What should come out? |
+| Action | What should the AI DO? |
+| Examples | How should it (not) look? |
 
 ---
 
-## 05 · Die 5 Critical Safeguards
+## 04 · The 30-Minute Rule
 
-Non-negotiable Regeln für .cursorrules
+The most important rule from 10,000+ hours of Agent Mode.
 
-1. DELETE nur nach Nachfrage
-2. GIT PUSH nur nach Nachfrage
-3. Erst lokal testen, dann deployen
-4. Keine Breaking Changes ohne Warning
-5. Keine Secrets im Code
+⚠️ **NEVER** leave Agent Mode unsupervised for more than 30 min.
+
+After 30 min:
+- Context lost
+- Builds in wrong direction
+- Overwrites working things
+
+**Action:** Set timer → Watch → Every 30 min: Checkpoint
+
+---
+
+## 05 · The 5 Critical Safeguards
+
+Non-negotiable rules for .cursorrules
+
+1. DELETE only after confirmation
+2. GIT PUSH only after confirmation
+3. Test locally first, then deploy
+4. No breaking changes without warning
+5. No secrets in code
 
 ---
 
 ## 06 · Loop Detection
 
-Die 4 häufigsten Loop-Typen erkennen und handeln.
+Recognize and act on the 4 most common loop types.
 
-| Loop-Typ | Action |
-|----------|--------|
-| "ist gefixt" aber nicht | STOP → Reject → Eskaliere |
-| Hin-und-Her A↔B | Git Reset → Klare Entscheidung |
-| Versteht Problem nicht | Chat: "Erkläre was du verstehst" |
-| Macht zu viel auf einmal | Kleinere Milestones geben |
-
----
-
-## 07 · 3-Stufen-Eskalation
-
-Nicht Panik, sondern Prozess.
-
-| Stufe | Wann | Was tun |
-|-------|------|---------|
-| 1 (80%) | Erster Versuch | "Erkläre unser Problem" |
-| 2 (15%) | Cursor hängt | ChatGPT/Claude fragen |
-| 3 (5%) | Sehr komplex | Model-Switch: GPT-5/Opus |
+| Loop Type | Action |
+|-----------|--------|
+| "is fixed" but not | STOP → Reject → Escalate |
+| Back-and-forth A↔B | Git Reset → Clear decision |
+| Doesn't understand problem | Chat: "Explain what you understand" |
+| Doing too much at once | Give smaller milestones |
 
 ---
 
-## 08 · Git als Sicherheitsnetz
+## 07 · 3-Stage Escalation
 
-Git ist nicht nur Versionskontrolle. Es ist dein wichtigstes Safety-Tool.
+Not panic, but process.
 
-| Wann | Was |
-|------|-----|
-| Vor Start | `git checkout -b feature/xyz` |
-| Alle 5-10 Min | Commit (kontrollieren!) |
-| Bei Problem | `git reset --hard HEAD~1` |
-| Nach Feature | Push + PR (außerhalb Cursor) |
+| Stage | When | What to do |
+|-------|------|------------|
+| 1 (80%) | First attempt | "Explain our problem" |
+| 2 (15%) | Cursor is stuck | Ask ChatGPT/Claude |
+| 3 (5%) | Very complex | Model-Switch: GPT-5/Opus |
 
 ---
 
-## 09 · .cursorrules als Gedächtnis
+## 08 · Git as Safety Net
 
-Jedes gelöste Problem macht dein Projekt schlauer.
+Git isn't just version control. It's your most important safety tool.
+
+| When | What |
+|------|------|
+| Before start | `git checkout -b feature/xyz` |
+| Every 5-10 min | Commit (review it!) |
+| On problem | `git reset --hard HEAD~1` |
+| After feature | Push + PR (outside Cursor) |
+
+---
+
+## 09 · .cursorrules as Memory
+
+Every solved problem makes your project smarter.
 
 **Workflow:**
-Problem gelöst → "Dokumentiere in .cursorrules" → Nächstes Mal automatisch richtig
+Problem solved → "Document in .cursorrules" → Next time automatically correct
 
-✓ Selbstlernendes System  
-✓ Neue Devs profitieren automatisch  
-✓ Konsistente Code-Qualität im Team
-
----
-
-## 10 · Review-Checklist
-
-Nach jeder Agent-Mode-Session oder alle 30 Min.
-
-| Bereich | Fragen |
-|---------|--------|
-| Code | Verstehe ich es? Naming ok? |
-| Funktion | Funktioniert es? Lokal getestet? |
-| Security | Keine Secrets? Input-Validation? |
-| Git | Commit-Messages klar? |
+✓ Self-learning system  
+✓ New devs benefit automatically  
+✓ Consistent code quality in team
 
 ---
 
-## 11 · Red Flags – Sofort Action
+## 10 · Review Checklist
 
-Wenn du das siehst: STOP und handeln.
+After every Agent Mode session or every 30 min.
 
-🚩 Code den du nicht verstehst  
-🚩 Hunderte Zeilen in einem Commit  
-🚩 Dependencies die du nicht kennst  
-🚩 Gelöschte Files ohne Rückfrage  
-🚩 Production-URLs im Code  
-🚩 "Ich kann nichts mehr ohne KI"
-
----
-
-## 12 · Die 3 größten Anfänger-Fehler
-
-Was Devs falsch machen – und wie es richtig geht.
-
-| Fehler | Lösung |
-|--------|--------|
-| Ungeduld | KI-Entwicklung IST Iteration |
-| Zu vage | Konkret: Was, Wie, Warum |
-| Eigene Maßstäbe | Ergebnis korrigieren, nicht Weg |
-
-**Denk dran:** KI ohne Entwickler ist Mist. Entwickler ohne KI auch. Zusammen: unschlagbar.
+| Area | Questions |
+|------|-----------|
+| Code | Do I understand it? Naming ok? |
+| Function | Does it work? Tested locally? |
+| Security | No secrets? Input validation? |
+| Git | Commit messages clear? |
 
 ---
 
-## Mehr
+## 11 · Red Flags – Immediate Action
 
-- **Vollständiges Framework:** [PULSE Framework](https://github.com/manuelfussTC/PulseFramework)
+When you see this: STOP and act.
+
+🚩 Code you don't understand  
+🚩 Hundreds of lines in one commit  
+🚩 Dependencies you don't know  
+🚩 Deleted files without asking  
+🚩 Production URLs in code  
+🚩 "I can't do anything without AI anymore"
+
+---
+
+## 12 · The 3 Biggest Beginner Mistakes
+
+What devs do wrong – and how to do it right.
+
+| Mistake | Solution |
+|---------|----------|
+| Impatience | AI development IS iteration |
+| Too vague | Be concrete: What, How, Why |
+| Own standards | Correct the result, not the path |
+
+**Remember:** AI without developers is garbage. Developers without AI too. Together: unbeatable.
+
+---
+
+## More
+
+- **Full Framework:** [PULSE Framework](https://github.com/manuelfussTC/PulseFramework)
 - **Website:** [manuel-fuss.de](https://manuel-fuss.de)
-- **Fragen?** kontakt@manuel-fuss.de
+- **Questions?** kontakt@manuel-fuss.de
 
 ---
 

@@ -11,7 +11,7 @@ export function registerWatchCommand(program: Command): void {
   program
     .command("watch")
     .alias("w") // Kurzform: pulse w
-    .description("Background-Watcher: 30-Min-Timer + Checkpoint-Erinnerungen (macOS Notifications)")
+    .description("Background watcher: 30-min timer + checkpoint reminders (macOS notifications)")
     .option("--minutes <n>", "Minutes between checkpoint reminders", "30")
     .option("--poll-seconds <n>", "Polling interval seconds", "30")
     .action(async (opts: { minutes?: string; pollSeconds?: string }) => {

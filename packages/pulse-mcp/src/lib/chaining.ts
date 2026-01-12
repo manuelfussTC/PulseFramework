@@ -26,7 +26,7 @@ export function chainResponse(response: ToolResponse): ChainedResponse {
   lines.push("");
   
   if (response.recommendation) {
-    lines.push(`💡 Empfehlung: ${response.recommendation}`);
+    lines.push(`💡 Recommendation: ${response.recommendation}`);
   }
   
   if (response.next_action) {
@@ -35,11 +35,11 @@ export function chainResponse(response: ToolResponse): ChainedResponse {
   
   if (response.safeguards_active) {
     lines.push("");
-    lines.push("⚠️ PULSE Safeguards aktiv:");
+    lines.push("⚠️ PULSE Safeguards active:");
     lines.push("   - MAX 30 Min autonom arbeiten");
     lines.push("   - KEIN DELETE ohne Bestätigung");
     lines.push("   - KEIN PUSH ohne Bestätigung");
-    lines.push("   - Git-Commit alle 5-10 Min");
+    lines.push("   - Git commit every 5-10 min");
   }
   
   return {
@@ -74,7 +74,7 @@ export function errorResponse(message: string): ChainedResponse {
     content: [
       {
         type: "text",
-        text: `❌ Fehler: ${message}`,
+        text: `❌ Error: ${message}`,
       },
     ],
     isError: true,

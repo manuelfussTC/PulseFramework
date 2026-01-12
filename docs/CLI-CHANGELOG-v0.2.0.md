@@ -1,29 +1,29 @@
 # PULSE CLI v0.2.0 - Changelog
 
 > **Release:** v0.2.0  
-> **Datum:** Januar 2026  
-> **Vorherige Version:** v0.1.0
+> **Date:** January 2026  
+> **Previous Version:** v0.1.0
 
 ---
 
-## Zusammenfassung
+## Summary
 
-Diese Version bringt **6 größere Verbesserungen** basierend auf externem Feedback:
+This version brings **6 major improvements** based on external feedback:
 
-1. Neuer Befehl `pulse status`
-2. Neuer Befehl `pulse run`
-3. Clipboard-Support (`-C, --clipboard`)
-4. Team-Presets bei `pulse init`
-5. Erweiterte Loop-Detection
-6. Auto-Promotion bei `pulse learn`
+1. New command `pulse status`
+2. New command `pulse run`
+3. Clipboard support (`-C, --clipboard`)
+4. Team presets with `pulse init`
+5. Extended loop detection
+6. Auto-promotion with `pulse learn`
 
 ---
 
-## Neue Befehle
+## New Commands
 
 ### 1. `pulse status`
 
-**Einzeiler-Übersicht** über den aktuellen Projektzustand.
+**One-liner overview** of the current project state.
 
 ```bash
 pulse status
@@ -33,85 +33,85 @@ pulse status --json
 # Output: {"profile":"build","lastCheckpointMinutesAgo":12,...}
 ```
 
-**Anzeigt:**
-- Aktuelles Profil (🧠 concept, 🔨 build, 🚨 escalation)
-- Zeit seit letztem Checkpoint (🟢 <15m, 🟡 <30m, 🔴 >30m)
-- Anzahl geänderter Dateien
-- Anzahl Findings (Warnings/Critical)
+**Shows:**
+- Current profile (🧠 concept, 🔨 build, 🚨 escalation)
+- Time since last checkpoint (🟢 <15m, 🟡 <30m, 🔴 >30m)
+- Number of changed files
+- Number of findings (Warnings/Critical)
 
-**Dateien:**
-- `packages/pulse-cli/src/commands/status.ts` (neu)
+**Files:**
+- `packages/pulse-cli/src/commands/status.ts` (new)
 
 ---
 
 ### 2. `pulse run`
 
-**Kombinierter Workflow:** Start → Watch → Checkpoint → Review in einem Befehl.
+**Combined workflow:** Start → Watch → Checkpoint → Review in one command.
 
 ```bash
 pulse run
 pulse run -t feature --minutes 20
-pulse run --no-watch --action "API implementieren"
+pulse run --no-watch --action "Implement API"
 ```
 
-**Optionen:**
-| Option | Beschreibung |
-|--------|--------------|
+**Options:**
+| Option | Description |
+|--------|-------------|
 | `-t, --template <id>` | Template: feature, bugfix, refactor, concept, analyze, review |
-| `--minutes <n>` | Checkpoint-Intervall (default: 30) |
-| `--no-watch` | Watcher nicht starten |
-| `--action <text>` | ACTION direkt angeben |
+| `--minutes <n>` | Checkpoint interval (default: 30) |
+| `--no-watch` | Don't start watcher |
+| `--action <text>` | Specify ACTION directly |
 
 **Flow:**
-1. Template-Auswahl (interaktiv oder per Flag)
-2. Prompt generieren und ausgeben
-3. Watch-Loop starten (Checkpoint-Erinnerungen)
-4. Bei Ctrl+C: Checkpoint und Review anbieten
+1. Template selection (interactive or via flag)
+2. Generate and output prompt
+3. Start watch loop (checkpoint reminders)
+4. On Ctrl+C: Offer checkpoint and review
 
-**Dateien:**
-- `packages/pulse-cli/src/commands/run.ts` (neu)
+**Files:**
+- `packages/pulse-cli/src/commands/run.ts` (new)
 
 ---
 
-## Neue Features
+## New Features
 
-### 3. Clipboard-Support (`-C, --clipboard`)
+### 3. Clipboard Support (`-C, --clipboard`)
 
-Alle prompt-generierenden Befehle können jetzt den Prompt direkt in die Zwischenablage kopieren.
+All prompt-generating commands can now copy the prompt directly to clipboard.
 
 ```bash
-pulse start --action "Feature bauen" -C
+pulse start --action "Build feature" -C
 pulse escalate -C
 pulse correct -C
 ```
 
-**Plattform-Support:**
+**Platform Support:**
 | OS | Tool |
 |----|------|
 | macOS | `pbcopy` |
 | Windows | `clip` |
-| Linux | `xclip` oder `xsel` |
+| Linux | `xclip` or `xsel` |
 
-**Dateien:**
-- `packages/pulse-cli/src/lib/clipboard.ts` (neu)
-- `packages/pulse-cli/src/commands/start.ts` (erweitert)
-- `packages/pulse-cli/src/commands/escalate.ts` (erweitert)
-- `packages/pulse-cli/src/commands/correct.ts` (erweitert)
+**Files:**
+- `packages/pulse-cli/src/lib/clipboard.ts` (new)
+- `packages/pulse-cli/src/commands/start.ts` (extended)
+- `packages/pulse-cli/src/commands/escalate.ts` (extended)
+- `packages/pulse-cli/src/commands/correct.ts` (extended)
 
 ---
 
-### 4. Team-Presets bei `pulse init`
+### 4. Team Presets with `pulse init`
 
-Interaktive Preset-Auswahl bei Projekt-Initialisierung.
+Interactive preset selection during project initialization.
 
 ```bash
 pulse init
-# Zeigt Auswahl: frontend, backend, fullstack, monorepo, custom
+# Shows selection: frontend, backend, fullstack, monorepo, custom
 
 pulse init --preset backend --no-interactive
 ```
 
-**Verfügbare Presets:**
+**Available Presets:**
 
 | Preset | Max Lines | Max Files | Max Deletes | Checkpoint |
 |--------|-----------|-----------|-------------|------------|
@@ -121,7 +121,7 @@ pulse init --preset backend --no-interactive
 | `monorepo` | 800 | 30 | 100 | 30 min |
 | `custom` | 300 | 15 | 50 | 30 min |
 
-**Neue Config-Felder:**
+**New Config Fields:**
 ```json
 {
   "preset": "backend",
@@ -129,130 +129,129 @@ pulse init --preset backend --no-interactive
 }
 ```
 
-**Dateien:**
-- `packages/pulse-cli/src/lib/config.ts` (erweitert: `PRESETS`, `getPresetNames()`)
-- `packages/pulse-cli/src/lib/types.ts` (erweitert: `PresetName`, `PresetConfig`)
-- `packages/pulse-cli/src/commands/init.ts` (komplett überarbeitet)
+**Files:**
+- `packages/pulse-cli/src/lib/config.ts` (extended: `PRESETS`, `getPresetNames()`)
+- `packages/pulse-cli/src/lib/types.ts` (extended: `PresetName`, `PresetConfig`)
+- `packages/pulse-cli/src/commands/init.ts` (completely revised)
 
 ---
 
-### 5. Erweiterte Loop-Detection
+### 5. Extended Loop Detection
 
-`pulse doctor --loop` erkennt jetzt **5 verschiedene Loop-Signale**:
+`pulse doctor --loop` now detects **5 different loop signals**:
 
-| Signal | Severity | Beschreibung |
-|--------|----------|--------------|
-| **Fix-Chain** | warn | 3+ "fix" Commits in den letzten 15 Commits |
-| **Revert** | critical | Revert-Commits erkannt (A↔B Toggling) |
-| **File-Churn** | warn | Gleiche Datei 5+ mal geändert |
-| **Pendeln** | critical | Ähnliche Commit-Messages wiederholen sich |
-| **Fix-No-Test** | warn | Fix-Commits ohne zugehörige Test-Änderungen |
+| Signal | Severity | Description |
+|--------|----------|-------------|
+| **Fix-Chain** | warn | 3+ "fix" commits in last 15 commits |
+| **Revert** | critical | Revert commits detected (A↔B toggling) |
+| **File-Churn** | warn | Same file changed 5+ times |
+| **Pendulum** | critical | Similar commit messages repeating |
+| **Fix-No-Test** | warn | Fix commits without corresponding test changes |
 
 ```bash
 pulse doctor --loop
 
-# Beispiel-Output:
-# WARN: LOOP_SIGNAL: Loop-Signal: 3x "fix" Commits in den letzten 15 Commits.
-# WARN: LOOP_SIGNAL: Loop-Signal: File-Churn - .gitignore (5x)
-# CRITICAL: LOOP_SIGNAL: Loop-Signal: Ähnliche Commits wiederholen sich.
+# Example output:
+# WARN: LOOP_SIGNAL: Loop signal: 3x "fix" commits in last 15 commits.
+# WARN: LOOP_SIGNAL: Loop signal: File-Churn - .gitignore (5x)
+# CRITICAL: LOOP_SIGNAL: Loop signal: Similar commits repeating.
 ```
 
-**Dateien:**
-- `packages/pulse-cli/src/lib/scanner.ts` (erweitert: `detectLoopSignals()`, `LoopSignal` type)
-- `packages/pulse-cli/src/commands/doctor.ts` (angepasst: nutzt neue Loop-Detection)
+**Files:**
+- `packages/pulse-cli/src/lib/scanner.ts` (extended: `detectLoopSignals()`, `LoopSignal` type)
+- `packages/pulse-cli/src/commands/doctor.ts` (adapted: uses new loop detection)
 
 ---
 
-### 6. Auto-Promotion bei `pulse learn`
+### 6. Auto-Promotion with `pulse learn`
 
-Regeln können jetzt automatisch zu `.cursorrules` hinzugefügt werden.
+Rules can now be automatically added to `.cursorrules`.
 
 ```bash
 pulse learn
-# Interaktiv: Problem, Lösung, Regel eingeben
-# Am Ende: "In .cursorrules übernehmen? (j/n)"
+# Interactive: Enter problem, solution, rule
+# At the end: "Add to .cursorrules? (y/n)"
 ```
 
-**Neue Optionen:**
-| Option | Beschreibung |
-|--------|--------------|
-| `--problem <text>` | Was war das Problem? |
-| `--solution <text>` | Was war die Lösung? |
-| `--rule <text>` | Abgeleitete Regel |
-| `--reason <text>` | Warum diese Regel? |
-| `--no-promote` | Nicht nach .cursorrules-Update fragen |
+**New Options:**
+| Option | Description |
+|--------|-------------|
+| `--problem <text>` | What was the problem? |
+| `--solution <text>` | What was the solution? |
+| `--rule <text>` | Derived rule |
+| `--reason <text>` | Why this rule? |
+| `--no-promote` | Don't ask about .cursorrules update |
 
-**Generierter .cursorrules-Snippet:**
+**Generated .cursorrules Snippet:**
 ```
 # ┌────────────────────────────────────────────────────────────────────────────┐
-# │ GELERNTE REGEL                                                             │
+# │ LEARNED RULE                                                               │
 # └────────────────────────────────────────────────────────────────────────────┘
 #
-# Bei Prisma-Updates immer Migration Guide prüfen
+# Always check Migration Guide on Prisma updates
 #
-# Grund: Breaking Changes in Major Versions
+# Reason: Breaking changes in major versions
 #
-# Kontext: Prisma 5 änderte findUnique Verhalten
+# Context: Prisma 5 changed findUnique behavior
 #
 ```
 
-**Dateien:**
-- `packages/pulse-cli/src/commands/learn.ts` (komplett überarbeitet)
+**Files:**
+- `packages/pulse-cli/src/commands/learn.ts` (completely revised)
 
 ---
 
-## Kleinere Änderungen
+## Minor Changes
 
-### Verbesserte Ausgabe bei `pulse correct`
+### Improved Output for `pulse correct`
 
-- Neue Modi: `explain`, `narrow`, `milestone`
-- Deutsche Prompts
-- Bessere Formatierung
+- New modes: `explain`, `narrow`, `milestone`
+- Better formatting
 
-### Version-Bump
+### Version Bump
 
 - `package.json`: `0.1.0` → `0.2.0`
 - `src/index.ts`: `.version("0.2.0")`
 
 ---
 
-## Geänderte Dateien (Übersicht)
+## Changed Files (Overview)
 
-| Datei | Änderung |
-|-------|----------|
-| `commands/status.ts` | **NEU** |
-| `commands/run.ts` | **NEU** |
-| `lib/clipboard.ts` | **NEU** |
-| `commands/start.ts` | `-C, --clipboard` hinzugefügt |
-| `commands/escalate.ts` | `-C, --clipboard` hinzugefügt |
-| `commands/correct.ts` | `-C, --clipboard` + neue Modi |
-| `commands/init.ts` | Preset-Auswahl |
-| `commands/learn.ts` | Auto-Promotion |
-| `commands/doctor.ts` | Erweiterte Loop-Detection |
+| File | Change |
+|------|--------|
+| `commands/status.ts` | **NEW** |
+| `commands/run.ts` | **NEW** |
+| `lib/clipboard.ts` | **NEW** |
+| `commands/start.ts` | `-C, --clipboard` added |
+| `commands/escalate.ts` | `-C, --clipboard` added |
+| `commands/correct.ts` | `-C, --clipboard` + new modes |
+| `commands/init.ts` | Preset selection |
+| `commands/learn.ts` | Auto-promotion |
+| `commands/doctor.ts` | Extended loop detection |
 | `lib/config.ts` | `PRESETS`, `getPresetNames()` |
-| `lib/scanner.ts` | `detectLoopSignals()` + 5 Signal-Typen |
+| `lib/scanner.ts` | `detectLoopSignals()` + 5 signal types |
 | `lib/types.ts` | `PresetName`, `PresetConfig` |
 | `index.ts` | `registerStatusCommand`, `registerRunCommand` |
 | `package.json` | Version 0.2.0 |
 
 ---
 
-## Migration von v0.1.0
+## Migration from v0.1.0
 
-Keine Breaking Changes. Alle bestehenden Befehle funktionieren wie zuvor.
+No breaking changes. All existing commands work as before.
 
-**Empfohlen:**
+**Recommended:**
 1. `npm run build -w packages/pulse-cli`
 2. `npm link -w packages/pulse-cli`
-3. In Projekten: `pulse init --preset <type>` für neue Preset-Config
+3. In projects: `pulse init --preset <type>` for new preset config
 
 ---
 
-## Dokumentation
+## Documentation
 
-Die vollständige aktualisierte Dokumentation ist in:
+The complete updated documentation is in:
 - `docs/tooling/pulse-cli.md` (v0.2.0)
 
 ---
 
-*Changelog erstellt: Januar 2026*
+*Changelog created: January 2026*
