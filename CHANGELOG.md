@@ -9,6 +9,16 @@ This repository contains multiple packages:
 
 ---
 
+## 0.4.5 (2026-01-12)
+
+### Improved
+- **Better error messaging in `pulse init`**:
+  - `AGENTS.md` creation now shows specific error + actionable hints (permission denied, directory not found, disk full)
+  - `.cursorrules` creation now catches and reports errors instead of silently failing
+  - Helps users debug issues faster (e.g., "Permission denied → try sudo" or "Check write permissions")
+
+---
+
 ## 0.4.4 (2026-01-12)
 
 ### Changed
