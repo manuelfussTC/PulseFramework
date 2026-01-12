@@ -2,7 +2,7 @@
   "name": "pulse-framework",
   "displayName": "Pulse Framework",
   "description": "Guardrails, checkpoints, and escalation for AI-assisted development with Cursor Agent Mode.",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "publisher": "pulse-framework",
   "license": "MIT",
   "icon": "icon.png",
@@ -36,6 +36,8 @@
   "activationEvents": [
     "workspaceContains:.pulse",
     "workspaceContains:pulse.config.json",
+    "workspaceContains:package.json",
+    "workspaceContains:.git",
     "onCommand:pulse.init"
   ],
   "main": "./dist/extension.js",

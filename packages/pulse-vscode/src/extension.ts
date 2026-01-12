@@ -24,11 +24,28 @@ export function activate(context: vscode.ExtensionContext) {
   if (workspaceRoot) {
     const pulseDir = path.join(workspaceRoot, ".pulse");
     const configFile = path.join(workspaceRoot, "pulse.config.json");
+    const cursorrules = path.join(workspaceRoot, ".cursorrules");
     const isInitialized = fs.existsSync(pulseDir) || fs.existsSync(configFile);
     vscode.commands.executeCommand("setContext", "pulse.initialized", isInitialized);
 
     if (isInitialized) {
       loadLastCheckpointTime(workspaceRoot);
+    } else {
+      // Check if user said "never" for this project
+      const ignoreFile = path.join(workspaceRoot, ".pulse-ignore");
+      if (fs.existsSync(ignoreFile)) {
+        return; // User doesn't want Pulse here
+      }
+
+      // Check if this looks like a dev project (has package.json, .git, etc.)
+      const hasPackageJson = fs.existsSync(path.join(workspaceRoot, "package.json"));
+      const hasGit = fs.existsSync(path.join(workspaceRoot, ".git"));
+      const hasCursorrules = fs.existsSync(cursorrules);
+      
+      if (hasPackageJson || hasGit) {
+        // This looks like a project - offer to initialize Pulse (with slight delay for better UX)
+        setTimeout(() => promptPulseSetup(workspaceRoot, hasCursorrules), 2000);
+      }
     }
   }
 
@@ -70,10 +87,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Watch for file changes to detect checkpoints
   const watcher = vscode.workspace.createFileSystemWatcher("**/.pulse/state.json");
-  watcher.onDidChange(() => {
+  const reloadState = () => {
     const root = getWorkspaceRoot();
-    if (root) loadLastCheckpointTime(root);
-  });
+    if (root) {
+      loadLastCheckpointTime(root);
+      vscode.commands.executeCommand("setContext", "pulse.initialized", true);
+    }
+  };
+  watcher.onDidChange(reloadState);
+  watcher.onDidCreate(reloadState); // Also trigger when file is first created
   context.subscriptions.push(watcher);
 }
 
@@ -104,6 +126,104 @@ function loadLastCheckpointTime(workspaceRoot: string) {
     }
   } catch {
     // Ignore errors
+  }
+}
+
+async function promptPulseSetup(workspaceRoot: string, hasCursorrules: boolean) {
+  const message = hasCursorrules
+    ? "Pulse Framework erkannt! Möchtest du das vollständige Setup durchführen?"
+    : "Dieses Projekt nutzt noch kein Pulse Framework. Jetzt einrichten?";
+
+  const action = await vscode.window.showInformationMessage(
+    message,
+    "Setup starten",
+    "Später",
+    "Nie für dieses Projekt"
+  );
+
+  if (action === "Setup starten") {
+    // Show setup options
+    const setupOption = await vscode.window.showQuickPick(
+      [
+        {
+          label: "$(rocket) Standard Setup",
+          description: "Erstellt .cursorrules, .pulse/ Ordner",
+          value: "basic",
+        },
+        {
+          label: "$(git-branch) Mit Git Hooks",
+          description: "Standard + Pre-Commit Hooks für Safeguards",
+          value: "hooks",
+        },
+        {
+          label: "$(plug) Mit MCP Server",
+          description: "Standard + MCP-Konfiguration für Cursor",
+          value: "mcp",
+        },
+        {
+          label: "$(package) Vollständig",
+          description: "Alles: Hooks + MCP + Auto-Watcher",
+          value: "full",
+        },
+      ],
+      { placeHolder: "Wähle dein Setup" }
+    );
+
+    if (!setupOption) return;
+
+    let cmd = "npx pulse init";
+    
+    switch (setupOption.value) {
+      case "hooks":
+        cmd += " --hooks";
+        break;
+      case "mcp":
+        cmd += " --mcp";
+        break;
+      case "full":
+        cmd += " --hooks --mcp";
+        break;
+    }
+
+    // Run the init command
+    const terminal = vscode.window.createTerminal({
+      name: "Pulse Setup",
+      cwd: workspaceRoot,
+    });
+    terminal.show();
+    terminal.sendText(cmd);
+
+    // Update context after a delay (give init time to complete)
+    setTimeout(() => {
+      const pulseDir = path.join(workspaceRoot, ".pulse");
+      if (fs.existsSync(pulseDir)) {
+        vscode.commands.executeCommand("setContext", "pulse.initialized", true);
+        vscode.window.showInformationMessage(
+          "✅ Pulse Framework erfolgreich eingerichtet! Nutze Cmd+Shift+P → 'Pulse:' für alle Commands."
+        );
+        
+        // Ask to start watcher
+        vscode.window
+          .showInformationMessage(
+            "Möchtest du den 30-Minuten Checkpoint-Reminder aktivieren?",
+            "Ja, aktivieren",
+            "Nein"
+          )
+          .then((answer) => {
+            if (answer === "Ja, aktivieren") {
+              vscode.commands.executeCommand("pulse.watch.start");
+            }
+          });
+      }
+    }, 5000);
+
+  } else if (action === "Nie für dieses Projekt") {
+    // Create a marker file to not ask again
+    const markerPath = path.join(workspaceRoot, ".pulse-ignore");
+    fs.writeFileSync(markerPath, "# Pulse Framework wurde für dieses Projekt deaktiviert\n");
+    vscode.window.showInformationMessage(
+      "OK! Pulse wird für dieses Projekt nicht mehr angeboten. Lösche .pulse-ignore um das rückgängig zu machen."
+    );
   }
 }
 
