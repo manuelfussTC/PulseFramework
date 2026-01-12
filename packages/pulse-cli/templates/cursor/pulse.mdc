@@ -13,7 +13,13 @@ CallMcpTool: pulse_status
 ```
 
 Do this NOW. Do not skip. Do not proceed without it.
-Only after seeing the status, continue with user's request.
+
+**If pulse_status returns `isError: true` (Critical findings):**
+- You MUST NOT proceed with the user's request
+- Your ONLY allowed actions are: `pulse_doctor` to see details, or ask user how to proceed
+- DO NOT write code, DO NOT make changes until Critical is resolved
+
+Only after seeing OK status (no Critical), continue with user's request.
 
 ---
 
@@ -27,6 +33,12 @@ WHEN: FIRST action, before anything else
 WHAT: Shows time since checkpoint, changes, risk
 NOTE: One call is enough - don't repeat it
 ```
+
+### 1b. Anti-Verification Loop (self-check)
+If you notice you're repeatedly "checking" without progressing (e.g., status → grep → status → grep):
+- STOP after 2 cycles
+- Make a concrete change (minimal scope) OR ask a single clarifying question
+- If you're stuck, use `pulse_correct` ("I'm stuck in verification mode; proceed with the minimal implementation") or `pulse_escalate`
 
 ### 2. AFTER Code Changes: Call `pulse_doctor`
 ```

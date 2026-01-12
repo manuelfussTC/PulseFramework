@@ -28,7 +28,7 @@ import { registerRunTool, handleRunTool } from "./tools/run.js";
 const server = new Server(
   {
     name: "pulse",
-    version: "0.3.0",
+    version: "0.4.1",
   },
   {
     capabilities: {

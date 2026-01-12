@@ -9,6 +9,17 @@ This repository contains multiple packages:
 
 ---
 
+## 0.4.1 (2026-01-12)
+
+### Fixed
+- **MCP project-root resolution**: `pulse-mcp` now normalizes `PULSE_PROJECT_ROOT` / `cwd` to the git top-level to prevent tools from scanning the wrong repository (reduces false loop/critical reports).
+- **Anti-verification loop guidance**: Updated templates (`pulse.mdc`, `.cursorrules`) to stop agents from getting stuck in repeated status/check cycles and to enforce "implement → verify" behavior.
+
+### Changed
+- **MCP chaining output** now uses fully English wording for "next step" and safeguard reminders.
+
+---
+
 ## 0.4.0 (2026-01-12)
 
 ### Added

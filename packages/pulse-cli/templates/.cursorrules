@@ -75,6 +75,11 @@
 # - STOP. Say: "This task is too big for one block. 
 #   I suggest: Milestone 1: [...], Milestone 2: [...]"
 
+# LOOP TYPE 5: Verification loop (status/search/status without action)
+# - If you keep running checks without implementing anything (2 cycles):
+# - STOP. Say: "I'm in verification mode. I'll now implement the smallest concrete change."
+# - Then implement ONE minimal change and re-check once.
+
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ 📋 CHECKPOINT PROTOCOL                                                      │
 # └─────────────────────────────────────────────────────────────────────────────┘

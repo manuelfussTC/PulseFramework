@@ -13,7 +13,13 @@ CallMcpTool: pulse_status
 ```
 
 Tu das JETZT. Nicht überspringen. Nicht ohne fortfahren.
-Erst nach dem Status, fahre mit der Anfrage fort.
+
+**Wenn pulse_status `isError: true` zurückgibt (Critical findings):**
+- Du darfst NICHT mit der User-Anfrage fortfahren
+- Deine EINZIGEN erlaubten Aktionen sind: `pulse_doctor` für Details, oder den User fragen
+- KEIN Code schreiben, KEINE Änderungen bis Critical gelöst ist
+
+Erst nach OK Status (kein Critical), fahre mit der Anfrage fort.
 
 ---
 

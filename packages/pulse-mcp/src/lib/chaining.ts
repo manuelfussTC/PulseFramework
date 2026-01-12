@@ -9,6 +9,7 @@ export type ToolResponse = {
   next_action?: string;
   safeguards_active: boolean;
   recommendation?: string;
+  is_critical?: boolean; // If true, response is marked as error to signal agent must stop
 };
 
 export type ChainedResponse = {
@@ -30,15 +31,15 @@ export function chainResponse(response: ToolResponse): ChainedResponse {
   }
   
   if (response.next_action) {
-    lines.push(`📌 Nächster Schritt: ${response.next_action}`);
+    lines.push(`📌 Next step: ${response.next_action}`);
   }
   
   if (response.safeguards_active) {
     lines.push("");
     lines.push("⚠️ PULSE Safeguards active:");
-    lines.push("   - MAX 30 Min autonom arbeiten");
-    lines.push("   - KEIN DELETE ohne Bestätigung");
-    lines.push("   - KEIN PUSH ohne Bestätigung");
+    lines.push("   - MAX 30 min autonomous work");
+    lines.push("   - NO DELETE without explicit confirmation");
+    lines.push("   - NO PUSH without explicit confirmation");
     lines.push("   - Git commit every 5-10 min");
   }
   
@@ -49,6 +50,7 @@ export function chainResponse(response: ToolResponse): ChainedResponse {
         text: lines.join("\n"),
       },
     ],
+    isError: response.is_critical, // Signal agent to STOP on critical
   };
 }
 

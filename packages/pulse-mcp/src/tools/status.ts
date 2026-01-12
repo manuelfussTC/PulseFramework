@@ -38,21 +38,21 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
     // Format response
     const presetProfile = data.preset ? `${data.preset}/${data.profile}` : data.profile;
     const cpStatus = data.lastCheckpointMinutesAgo !== null 
-      ? `vor ${data.lastCheckpointMinutesAgo} Min`
-      : "noch keiner";
+      ? `${data.lastCheckpointMinutesAgo} min ago`
+      : "none yet";
     
     let recommendation: string | undefined;
     let nextAction: string | undefined;
     
     // Generate recommendations
     if (data.criticalFindings > 0) {
-      recommendation = "STOP - Critical Findings beheben";
-      nextAction = "Rufe pulse_doctor auf um Details zu sehen";
+      recommendation = "🛑 CRITICAL - You MUST stop and fix before continuing";
+      nextAction = "Call pulse_doctor to see details. DO NOT proceed with other tasks.";
     } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 30 && data.dirtyFiles > 0) {
-      recommendation = "Checkpoint overdue";
-      nextAction = "Rufe pulse_checkpoint auf";
+      recommendation = "⏰ Checkpoint overdue";
+      nextAction = "Call pulse_checkpoint now";
     } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 15 && data.dirtyFiles > 0) {
-      nextAction = "In ~${30 - data.lastCheckpointMinutesAgo} Min pulse_checkpoint aufrufen";
+      nextAction = `Call pulse_checkpoint in ~${30 - data.lastCheckpointMinutesAgo} min`;
     }
     
     const lines: string[] = [
@@ -60,16 +60,23 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       ``,
       `Profile: ${presetProfile}`,
       `Checkpoint: ${cpStatus}`,
-      `Dateien: ${data.dirtyFiles}`,
+      `Files: ${data.dirtyFiles}`,
       `Lines: ${data.linesChanged || "n/a"}`,
       `Findings: ${data.criticalFindings} Critical, ${data.warningFindings || data.findings - data.criticalFindings} Warnings`,
     ];
+    
+    // Add blocking header for critical findings
+    if (data.criticalFindings > 0) {
+      lines.unshift(`🛑 CRITICAL FINDINGS DETECTED - STOP`);
+      lines.unshift(``);
+    }
     
     return chainResponse({
       result: lines.join("\n"),
       next_action: nextAction,
       recommendation,
       safeguards_active: true,
+      is_critical: data.criticalFindings > 0, // Block agent on critical findings
     });
     
   } catch (error) {

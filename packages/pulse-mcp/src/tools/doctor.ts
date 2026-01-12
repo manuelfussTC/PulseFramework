@@ -14,7 +14,7 @@ export function registerDoctorTool() {
       properties: {
         loop: {
           type: "boolean",
-          description: "Loop-Detection aktivieren (Fix-Chain, Reverts, etc.)",
+          description: "Enable loop detection hints (fix-chain, reverts, churn, etc.)",
         },
         staged: {
           type: "boolean",
@@ -51,7 +51,7 @@ export async function handleDoctorTool(args: unknown): Promise<ChainedResponse> 
       nextAction = "Fix the critical findings and call pulse_doctor again";
     } else if (hasWarning) {
       recommendation = "Review warnings, then pulse_checkpoint";
-      nextAction = "Entscheide ob Warnings akzeptabel sind";
+      nextAction = "Decide whether warnings are acceptable, then checkpoint";
     } else {
       nextAction = "All OK - continue working or pulse_checkpoint";
     }
@@ -65,7 +65,7 @@ export async function handleDoctorTool(args: unknown): Promise<ChainedResponse> 
     
   } catch (error) {
     return chainResponse({
-      result: `Doctor Scan fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
+      result: `Doctor scan failed: ${error instanceof Error ? error.message : String(error)}`,
       safeguards_active: true,
     });
   }

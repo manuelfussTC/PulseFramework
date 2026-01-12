@@ -24,6 +24,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Local MCP / tooling artifacts
+.playwright-mcp/
+
 # Pulse local artifacts (generated per-project)
 .pulse/
 pulse.config.json
@@ -40,3 +43,4 @@ plan.md
 PULSE_Framework*.pdf
 PULSE_Framework*.docx
 pulse_text.txt
+KI-Spuren-vermeiden_RSLT.pdf
