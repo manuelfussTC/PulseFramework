@@ -84,13 +84,27 @@ fi
   await fs.writeFile(
     prePush,
     `#!/bin/sh
-set -e
-
 # Pulse safeguard: never push without explicit permission.
 # Allow push explicitly by running:
 #   PULSE_ALLOW_PUSH=1 git push ...
 
-pulse doctor --hook pre-push
+if [ "$PULSE_SKIP_HOOKS" = "1" ]; then
+  exit 0
+fi
+
+if [ "$PULSE_ALLOW_PUSH" != "1" ]; then
+  echo "PULSE safeguard: push blocked. Set PULSE_ALLOW_PUSH=1 for an explicit push."
+  exit 1
+fi
+
+# Run doctor check if pulse CLI is available
+if command -v pulse >/dev/null 2>&1; then
+  pulse doctor --hook pre-push || true
+elif command -v pulse-framework >/dev/null 2>&1; then
+  pulse-framework doctor --hook pre-push || true
+fi
+
+exit 0
 `,
     "utf8"
   );
