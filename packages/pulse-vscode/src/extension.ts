@@ -171,7 +171,7 @@ async function promptPulseSetup(workspaceRoot: string, hasCursorrules: boolean) 
 
     if (!setupOption) return;
 
-    let cmd = "npx pulse init";
+    let cmd = "npx pulse-framework-cli init";
     
     switch (setupOption.value) {
       case "hooks":
@@ -322,7 +322,7 @@ async function cmdInit() {
   });
 
   const hookFlag = installHooks === "Yes" ? " --hooks" : "";
-  await runPulseCommand(`npx pulse init${hookFlag}`, { interactive: true });
+  await runPulseCommand(`npx pulse-framework-cli init${hookFlag}`, { interactive: true });
 
   // Update context
   vscode.commands.executeCommand("setContext", "pulse.initialized", true);
@@ -331,7 +331,7 @@ async function cmdInit() {
 
 async function cmdStart() {
   // Open terminal for interactive start
-  await runPulseCommand("npx pulse start", { interactive: true });
+  await runPulseCommand("npx pulse-framework-cli start", { interactive: true });
 }
 
 async function cmdCheckpoint() {
@@ -351,7 +351,7 @@ async function cmdCheckpoint() {
 
   if (!option) return;
 
-  let cmd = "npx pulse checkpoint";
+  let cmd = "npx pulse-framework-cli checkpoint";
   if (option.value === "commit") {
     const message = await vscode.window.showInputBox({
       prompt: "Commit message",
@@ -386,20 +386,20 @@ async function cmdDoctor() {
 
   if (!option) return;
 
-  await runPulseCommand(`npx pulse doctor ${option.value}`);
+  await runPulseCommand(`npx pulse-framework-cli doctor ${option.value}`);
 }
 
 async function cmdReview() {
-  await runPulseCommand("npx pulse review");
+  await runPulseCommand("npx pulse-framework-cli review");
   vscode.window.showInformationMessage("Pulse: Review checklist created in .pulse/reviews/");
 }
 
 async function cmdEscalate() {
-  await runPulseCommand("npx pulse escalate", { interactive: true });
+  await runPulseCommand("npx pulse-framework-cli escalate", { interactive: true });
 }
 
 async function cmdSetProfile(profile: "concept" | "build" | "escalation") {
-  await runPulseCommand(`npx pulse profile ${profile}`, { showOutput: false });
+  await runPulseCommand(`npx pulse-framework-cli profile ${profile}`, { showOutput: false });
   vscode.window.showInformationMessage(`Pulse: Profile set to ${profile}`);
 }
 

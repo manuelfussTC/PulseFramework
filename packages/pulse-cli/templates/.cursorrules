@@ -154,6 +154,48 @@
 # 4. ESTIMATE the effort:
 #    "Estimated effort: [X] minutes. Should I start?"
 
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ 📦 PULSE PUBLISHING PROTOCOL                                               │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Pulse Framework consists of multiple packages that need to be published separately:
+#
+# PACKAGE OVERVIEW:
+# ┌────────────────────┬──────────────┬─────────────────────────┐
+# │ Package            │ Registry     │ Name                    │
+# ├────────────────────┼──────────────┼─────────────────────────┤
+# │ pulse-cli          │ npm          │ pulse-framework-cli     │
+# │ pulse-vscode       │ OpenVSX      │ pulse-framework         │
+# │ pulse-mcp          │ npm          │ (if published)          │
+# └────────────────────┴──────────────┴─────────────────────────┘
+#
+# WHEN TO PUBLISH:
+# - CLI changes (templates, commands, guardrails) → Publish to npm
+# - Extension changes (UI, commands) → Publish to OpenVSX
+# - BOTH must be updated if they depend on each other
+#
+# PUBLISHING STEPS:
+#
+# 1. CLI (npm):
+#    cd packages/pulse-cli
+#    npm version patch  # or minor/major
+#    npm run build
+#    npm publish --access public
+#
+# 2. Extension (OpenVSX):
+#    cd packages/pulse-vscode
+#    npm version patch  # or minor/major
+#    npm run build
+#    npx @vscode/vsce package
+#    npx ovsx publish *.vsix -p <OPENVSX_TOKEN>
+#
+# IMPORTANT:
+# - The Extension calls `npx pulse-framework-cli` (npm package)
+# - CLI updates are automatically available to Extension users
+# - Extension updates require manual re-publishing
+# - Always test locally before publishing
+# - Keep versions in sync when making related changes
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # END OF RULES - You are now ready. Follow these rules.
 # ═══════════════════════════════════════════════════════════════════════════════

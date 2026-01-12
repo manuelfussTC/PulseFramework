@@ -1,10 +1,26 @@
 {
-  "name": "@pulseframework/pulse-cli",
-  "version": "0.4.1",
-  "private": true,
-  "description": "Pulse Toolkit CLI (loops, guardrails, checkpoints, watcher).",
+  "name": "pulse-framework-cli",
+  "version": "0.4.2",
+  "description": "Pulse Framework CLI – Guardrails, checkpoints, and escalation for AI-assisted development.",
+  "author": "Manuel Fuß <kontakt@manuel-fuss.de>",
+  "license": "MIT",
+  "homepage": "https://manuel-fuss.de/pulse",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manuelfussTC/PulseFramework"
+  },
+  "keywords": [
+    "pulse",
+    "ai",
+    "cursor",
+    "agent",
+    "guardrails",
+    "checkpoint",
+    "cli"
+  ],
   "bin": {
-    "pulse": "dist/index.js"
+    "pulse": "dist/index.js",
+    "pulse-framework": "dist/index.js"
   },
   "type": "commonjs",
   "main": "dist/index.js",
