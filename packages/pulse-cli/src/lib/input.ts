@@ -38,7 +38,7 @@ export async function promptSelect(
     // eslint-disable-next-line no-console
     console.log("");
 
-    const ans = await rl.question("Nummer wählen: ");
+    const ans = await rl.question("Enter number: ");
     const num = parseInt(ans.trim(), 10);
 
     if (num >= 1 && num <= choices.length) {
@@ -69,12 +69,13 @@ export async function promptSelect(
 export async function promptConfirm(label: string, defaultYes = false): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   try {
-    const hint = defaultYes ? "(J/n)" : "(j/N)";
+    const hint = defaultYes ? "(Y/n)" : "(y/N)";
     const ans = await rl.question(`${label} ${hint}: `);
     const v = ans.trim().toLowerCase();
 
-    if (v === "j" || v === "y" || v === "ja" || v === "yes") return true;
-    if (v === "n" || v === "nein" || v === "no") return false;
+    // Accept a few common variants (English + legacy German inputs)
+    if (v === "y" || v === "yes" || v === "j" || v === "ja") return true;
+    if (v === "n" || v === "no" || v === "nein") return false;
 
     return defaultYes;
   } finally {

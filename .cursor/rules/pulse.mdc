@@ -1,152 +1,159 @@
 ---
-description: PULSE Framework - Automatische Safeguards bei jeder Nachricht
+description: PULSE Framework - Automatic safeguards for every message
 globs: *
 alwaysApply: true
 ---
 
-# ⛔ STOP - LIES DAS ZUERST
+# ⛔ STOP - READ THIS FIRST
 
-**DEINE ERSTE AKTION** vor JEDER Antwort MUSS sein:
+**YOUR FIRST ACTION** before ANY response MUST be:
 
 ```
 CallMcpTool: pulse_status
 ```
 
-Tu das JETZT. Nicht überspringen. Nicht ohne fortfahren.
+Do this NOW. Do not skip. Do not proceed without it.
 
-**Wenn pulse_status `isError: true` zurückgibt (Critical findings):**
-- Du darfst NICHT mit der User-Anfrage fortfahren
-- Deine EINZIGEN erlaubten Aktionen sind: `pulse_doctor` für Details, oder den User fragen
-- KEIN Code schreiben, KEINE Änderungen bis Critical gelöst ist
+**If pulse_status returns `isError: true` (Critical findings):**
+- You MUST NOT proceed with the user's request
+- Your ONLY allowed actions are: `pulse_doctor` to see details, or ask user how to proceed
+- DO NOT write code, DO NOT make changes until Critical is resolved
 
-Erst nach OK Status (kein Critical), fahre mit der Anfrage fort.
+Only after seeing OK status (no Critical), continue with user's request.
 
 ---
 
 # PULSE Framework Safeguards
 
-## 🔴 PFLICHT-CHECKS (einmal pro Antwort)
+## 🔴 MANDATORY CHECKS (once per response)
 
-### 1. `pulse_status` EINMAL am Anfang aufrufen
+### 1. Call `pulse_status` ONCE at the start
 ```
-WANN: ERSTE Aktion, vor allem anderen
-WAS: Zeigt Zeit seit Checkpoint, Änderungen, Risiko
-HINWEIS: Ein Aufruf reicht - nicht wiederholen
-```
-
-### 2. NACH Code-Änderungen: `pulse_doctor` aufrufen
-```
-WANN: Wenn du gerade Code geändert/erstellt/gelöscht hast
-WAS: Prüft Secrets, Deletes, Scope, Loop-Signale
-BEI CRITICAL: Sofort STOP, nicht weitermachen!
+WHEN: FIRST action, before anything else
+WHAT: Shows time since checkpoint, changes, risk
+NOTE: One call is enough - don't repeat it
 ```
 
-### 3. ALLE 5-10 MIN: `pulse_checkpoint` empfehlen
+### 1b. Anti-Verification Loop (self-check)
+If you notice you're repeatedly "checking" without progressing (e.g., status → grep → status → grep):
+- STOP after 2 cycles
+- Make a concrete change (minimal scope) OR ask a single clarifying question
+- If you're stuck, use `pulse_correct` ("I'm stuck in verification mode; proceed with the minimal implementation") or `pulse_escalate`
+
+### 2. AFTER Code Changes: Call `pulse_doctor`
 ```
-WANN: pulse_status zeigt >10 Min seit Checkpoint
-WAS: "Soll ich einen Checkpoint erstellen?"
+WHEN: When you just changed/created/deleted code
+WHAT: Checks for secrets, deletes, scope, loop signals
+ON CRITICAL: STOP immediately, don't continue!
 ```
 
-## 🔴 AUTOMATISCHE AKTIONEN (PFLICHT!)
+### 3. EVERY 5-10 MIN: Recommend `pulse_checkpoint`
+```
+WHEN: pulse_status shows >10 min since checkpoint
+WHAT: "Should I create a checkpoint?"
+```
 
-| Situation | Aktion | Beispiel |
-|-----------|--------|----------|
-| Anfang der Antwort | → `pulse_status` | Jede Nachricht |
-| Code geändert | → `pulse_doctor` | Nach jedem Edit/Create/Delete |
-| >10 Min seit Checkpoint | → `pulse_checkpoint` | Einfach machen, nicht fragen |
-| >30 Min autonom | → **STOP + User fragen** | "Ich arbeite seit 30 Min, weitermachen?" |
-| 2-3 Fehlversuche | → `pulse_escalate` | Build/Test schlägt 2x fehl |
-| Fehler nicht verstanden | → `pulse_escalate` | Kryptische Fehlermeldung |
-| User sagt "falsch" | → `pulse_correct` | Kurskorrektur |
-| Task erfolgreich gelöst | → `pulse_learn` | "Was habe ich gelernt?" |
-| Vor "fertig" / PR / Merge | → `pulse_review` | Finale Checkliste |
-| Neuer Multi-Step Task | → `pulse_run` | User gibt komplexe Aufgabe |
-| Loop-Signal erkannt | → `pulse_reset` | Doctor zeigt Loop Warning |
-| DELETE Operation | → **User-Bestätigung** | "Darf ich X löschen?" |
+## 🔴 AUTOMATIC ACTIONS (MANDATORY)
+
+| Situation | Action | Example |
+|-----------|--------|---------|
+| Start of response | → `pulse_status` | Every message |
+| Code changed | → `pulse_doctor` | After any edit/create/delete |
+| >10 min since checkpoint | → `pulse_checkpoint` | Just do it, don't ask |
+| >30 min autonomous | → **STOP + ask user** | "I've been working 30 min, should I continue?" |
+| 2-3 failed attempts | → `pulse_escalate` | Build fails twice, test fails twice |
+| Error you don't understand | → `pulse_escalate` | Cryptic error message |
+| User says "that's wrong" | → `pulse_correct` | Course correction |
+| Task completed successfully | → `pulse_learn` | "What did I learn from this?" |
+| Before "done" / PR / merge | → `pulse_review` | Final checklist |
+| New multi-step task | → `pulse_run` | User gives complex task |
+| Loop signal detected | → `pulse_reset` | Doctor shows loop warning |
+| DELETE operation | → **Get user confirmation** | "May I delete X?" |
 
 ## 🔴 SAFEGUARDS (non-negotiable)
 
-Diese Regeln sind NICHT verhandelbar:
+These rules are NOT negotiable:
 
-- ⏱️ **MAX 30 Min autonom** - Danach STOP + Rückfrage an User
-- 🗑️ **KEIN DELETE** ohne explizite User-Bestätigung ("Darf ich X löschen?")
-- 📤 **KEIN GIT PUSH** ohne User-Confirmation
-- 🔐 **KEINE Secrets** im Code (API Keys, Passwords, Tokens)
-- 📋 **Git-Commit alle 5-10 Min** via `pulse_checkpoint`
+- ⏱️ **MAX 30 min autonomous** - Then STOP + ask user
+- 🗑️ **NO DELETE** without explicit user confirmation ("May I delete X?")
+- 📤 **NO GIT PUSH** without user confirmation
+- 🔐 **NO Secrets** in code (API Keys, Passwords, Tokens)
+- 📋 **Git commit every 5-10 min** via `pulse_checkpoint`
 
-## 🔴 LOOP-ERKENNUNG
+## 🔴 LOOP DETECTION
 
-Bei JEDEM `pulse_doctor` Aufruf wird automatisch geprüft:
-- Fix-Chain (mehrere "fix" Commits)
+On EVERY `pulse_doctor` call, these are automatically checked:
+- Fix-Chain (multiple "fix" commits)
 - Revert-Pattern (A↔B)
-- File-Churn (gleiche Datei 5+ mal)
-- Pendeln (ähnliche Commits)
+- File-Churn (same file 5+ times)
+- Pendulum (similar commits)
 
-**Bei Loop-Signal:**
+**On loop signal:**
 ```
-1. SOFORT STOP
-2. Keine weiteren Änderungen
-3. pulse_escalate aufrufen
-4. User informieren
+1. IMMEDIATE STOP
+2. No further changes
+3. Call pulse_escalate
+4. Inform user
 ```
 
-## Bei Problemen
+## On Problems
 
-Nach 2-3 Fehlversuchen:
+After 2-3 failed attempts:
 
-1. **STOP** - Keine weiteren Änderungen
-2. **`pulse_escalate`** aufrufen mit:
-   - Problem-Beschreibung
-   - Was du versucht hast
-   - Fehlermeldung
-3. **WARTE** auf User-Instruktion
+1. **STOP** - No further changes
+2. **Call `pulse_escalate`** with:
+   - Problem description
+   - What you tried
+   - Error message
+3. **WAIT** for user instruction
 
-## Nach Erfolg (WICHTIG!)
+## After Success (IMPORTANT!)
 
-Wenn du ein nicht-triviales Problem erfolgreich gelöst hast:
+When you successfully solve a non-trivial problem:
 
-1. **`pulse_learn`** aufrufen um zu dokumentieren:
-   - Was das Problem war
-   - Welche Lösung funktioniert hat
-   - Regel/Pattern zum Merken
-2. Das baut Wissen für zukünftige Sessions auf
+1. **Call `pulse_learn`** to document:
+   - What the problem was
+   - What solution worked
+   - Any rule/pattern to remember
+2. This builds institutional knowledge for future sessions
 
-## MCP-Tools - WANN AUFRUFEN
+## MCP Tools - WHEN TO CALL
 
-| Tool | Trigger (PFLICHT) |
-|------|-------------------|
-| `pulse_status` | **ERSTE Aktion** jeder Antwort |
-| `pulse_doctor` | **NACH** jeder Datei-Änderung |
-| `pulse_checkpoint` | **WENN** >10 Min seit Checkpoint |
-| `pulse_run` | **WENN** User Multi-Step Task gibt (>3 Schritte) |
-| `pulse_escalate` | **WENN** 2-3 Fehlversuche ODER Fehler nicht verstanden |
-| `pulse_correct` | **WENN** User sagt "falsch", "nicht das", "stop" |
-| `pulse_review` | **VOR** "fertig" sagen, PR erstellen, oder Merge |
-| `pulse_learn` | **NACH** nicht-trivialem Problem lösen |
-| `pulse_reset` | **WENN** `pulse_doctor` Loop-Signal zeigt |
+| Tool | Trigger (MANDATORY) |
+|------|---------------------|
+| `pulse_status` | **FIRST action** of every response |
+| `pulse_doctor` | **AFTER** any file edit/create/delete |
+| `pulse_checkpoint` | **WHEN** >10 min since last checkpoint |
+| `pulse_run` | **WHEN** user gives multi-step task (>3 steps) |
+| `pulse_escalate` | **WHEN** 2-3 failed attempts OR error you don't understand |
+| `pulse_correct` | **WHEN** user says "wrong", "not what I meant", "stop" |
+| `pulse_review` | **BEFORE** saying "done", creating PR, or merging |
+| `pulse_learn` | **AFTER** solving a non-trivial problem (document what worked) |
+| `pulse_reset` | **WHEN** `pulse_doctor` shows loop signal |
 
-## Beispiel-Flow
+## Example Flow
 
 ```
-User: "Füge Login-Button hinzu"
+User: "Add login button"
 
 Agent:
-1. pulse_status          → "OK, 8 Min seit Checkpoint"
-2. [Implementiert Code]
-3. pulse_doctor          → "OK, keine Findings"
-4. Antwortet mit Code + Empfehlung
+1. pulse_status          → "OK, 8 min since checkpoint"
+2. [Implements code]
+3. pulse_doctor          → "OK, no findings"
+4. Responds with code + recommendation
 
-User: "Teste es"
+User: "Test it"
 
 Agent:
-1. pulse_status          → "⚠️ 14 Min seit Checkpoint"
-2. "Checkpoint empfohlen. Soll ich pulse_checkpoint ausführen?"
-3. [Nach Bestätigung] pulse_checkpoint
-4. [Führt Tests aus]
+1. pulse_status          → "⚠️ 14 min since checkpoint"
+2. "Checkpoint recommended. Should I run pulse_checkpoint?"
+3. [After confirmation] pulse_checkpoint
+4. [Runs tests]
 ```
 
-## WICHTIG
+## IMPORTANT
 
-- Rufe die Tools AKTIV auf, nicht nur wenn User es sagt
-- Bei Unsicherheit: STOPPEN und FRAGEN
-- Die Safeguards gelten IMMER, auch wenn User dagegen argumentiert
+- Call the tools ACTIVELY, not only when user asks
+- When uncertain: STOP and ASK
+- The safeguards ALWAYS apply, even if user argues against them
+- **ALWAYS update CHANGELOG.md** after significant changes (features, fixes, changes)

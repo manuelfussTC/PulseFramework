@@ -3,9 +3,21 @@ All notable changes to the **PULSE Framework** monorepo will be documented in th
 
 This repository contains multiple packages:
 
-- `@pulseframework/pulse-cli` (CLI, run by humans)
+- `pulse-framework-cli` (CLI, run by humans)
 - `@pulseframework/pulse-mcp` (MCP server, called by Cursor agent tools)
-- `pulse-framework` (VS Code extension)
+- `pulse-framework` (VS Code/Cursor extension)
+
+---
+
+## 0.4.4 (2026-01-12)
+
+### Changed
+- **English-only sweep**: Removed remaining German UI text from user-facing surfaces:
+  - VS Code extension setup prompts/labels
+  - CLI interactive prompts and `pulse run` output
+  - MCP tool descriptions and `pulse_run` work-order output
+  - Repo rule file `.cursor/rules/pulse.mdc`
+  - Extension publishing guide (`packages/pulse-vscode/PUBLISHING.md`)
 
 ---
 

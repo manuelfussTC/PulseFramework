@@ -8,13 +8,13 @@ import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 export function registerStartTool() {
   return {
     name: "pulse_start",
-    description: "Strukturierten Prompt nach 6-Elemente-Framework generieren.",
+    description: "Generate a structured prompt using the 6-element framework.",
     inputSchema: {
       type: "object" as const,
       properties: {
         action: {
           type: "string",
-          description: "ACTION - Was soll gemacht werden? (PFLICHT)",
+          description: "ACTION - What should be done? (required)",
         },
         template: {
           type: "string",
@@ -22,11 +22,11 @@ export function registerStartTool() {
         },
         role: {
           type: "string",
-          description: "ROLLE - Wer soll die KI sein?",
+          description: "ROLE - Who should the AI be?",
         },
         context: {
           type: "string",
-          description: "KONTEXT - Projekt, Stack, Situation",
+          description: "CONTEXT - Project, stack, situation",
         },
       },
       required: ["action"],
@@ -65,14 +65,14 @@ export async function handleStartTool(args: unknown): Promise<ChainedResponse> {
     const result = await runCli(cliArgs);
     
     return chainResponse({
-      result: `✅ Prompt erstellt\n\n${result}`,
+      result: `✅ Prompt created\n\n${result}`,
       next_action: "Execute the ACTION. Checkpoint after 5-10 min.",
       safeguards_active: true,
     });
     
   } catch (error) {
     return chainResponse({
-      result: `Start fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
+      result: `Start failed: ${error instanceof Error ? error.message : String(error)}`,
       safeguards_active: true,
     });
   }

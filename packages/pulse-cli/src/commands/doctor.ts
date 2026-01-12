@@ -103,7 +103,7 @@ export function registerDoctorCommand(program: Command): void {
         }
 
         // ════════════════════════════════════════════════════════════════════════
-        // Preset-Verletzungen explizit hinzufügen
+        // Add preset limit violations explicitly
         // ════════════════════════════════════════════════════════════════════════
         const scope = calculateScopeCheck(config, scan.stats);
         if (scope.exceeded) {

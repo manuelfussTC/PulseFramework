@@ -8,35 +8,35 @@ const execAsync = promisify(exec);
 export function registerRunTool() {
   return {
     name: "pulse_run",
-    description: `Starts a PULSE workflow: Creates branch + gives work order.
+    description: `Starts a PULSE workflow: creates a feature branch (if needed) and returns a concrete work order.
 
-WICHTIG: 
-- Auto-creates feature branch (if on main/master)
-- After this tool, START implementation IMMEDIATELY!
+IMPORTANT:
+- Auto-creates a feature branch (when on main/master)
+- After this tool, START implementation IMMEDIATELY
 
-WANN NUTZEN:
+WHEN TO USE:
 - User says "new task", "start feature", "begin with..."
-- Am Anfang einer Coding-Session
+- At the start of a coding session
 
-NACH AUFRUF:
-- Feature-Branch wird erstellt
-- Du erhältst den Arbeitsauftrag
-- START IMMEDIATELY with implementation`,
+AFTER CALLING:
+- A feature branch may be created
+- You receive a work order
+- Start implementation immediately`,
     inputSchema: {
       type: "object" as const,
       properties: {
         action: {
           type: "string",
-          description: "Was soll gemacht werden? (z.B. 'User-Dashboard implementieren')",
+          description: "What should be built? (e.g. 'Implement user dashboard')",
         },
         template: {
           type: "string",
           enum: ["feature", "bugfix", "refactor", "concept", "analyze"],
-          description: "Vorlage (default: feature)",
+          description: "Template (default: feature)",
         },
         branch: {
           type: "string",
-          description: "Branch-Name (optional, wird automatisch generiert)",
+          description: "Branch name (optional; will be generated if omitted)",
         },
       },
       required: ["action"],
@@ -56,7 +56,7 @@ export async function handleRunTool(args: {
   const template = args.template ?? "feature";
   
   try {
-    // 1. Status holen
+    // 1) Fetch status (best-effort)
     let status: {
       profile?: string;
       preset?: string;
@@ -120,7 +120,7 @@ export async function handleRunTool(args: {
       // Ignore errors - worklog is nice-to-have
     });
     
-    // 4. Response: DIREKTE ARBEITSANWEISUNG
+    // 4) Response: DIRECT WORK ORDER
     const profile = status.preset 
       ? `${status.preset}/${status.profile ?? "build"}` 
       : (status.profile ?? "build");
@@ -128,46 +128,46 @@ export async function handleRunTool(args: {
     const checkpointInterval = status.checkpointReminderMinutes ?? 15;
     
     const output = `
-# 🚀 ARBEITSAUFTRAG
+# 🚀 WORK ORDER
 
 ${branchInfo}
 
 **ACTION:** ${action}
 
-## JETZT SOFORT ANFANGEN
+## START NOW
 
 You are the agent. Start DIRECTLY with implementation.
-NICHT "Prompt kopieren" - DU arbeitest jetzt.
+Do not ask the user to copy prompts. You work now.
 
-## Deine Aufgabe
+## Your task
 
-Implementiere: **${action}**
+Implement: **${action}**
 
 Template: ${template}
 Profile: ${profile}
 Branch: ${currentBranch}
 
-## Während der Arbeit
+## While working
 
 - ⏱️ **Checkpoint every ${checkpointInterval} min:** call \`pulse_checkpoint\`
-- 🔍 **Nach Code-Änderungen:** \`pulse_doctor\` aufrufen
-- ❌ **Bei Problemen nach 2-3 Versuchen:** \`pulse_escalate\`
+- 🔍 **After code changes:** call \`pulse_doctor\`
+- ❌ **If stuck after 2-3 attempts:** call \`pulse_escalate\`
 
-## Safeguards (IMMER beachten)
+## Safeguards (always apply)
 
-- 🗑️ **KEIN DELETE** ohne User-Bestätigung
-- 📤 **KEIN PUSH** ohne User-Bestätigung
+- 🗑️ **NO DELETE** without user confirmation
+- 📤 **NO PUSH** without user confirmation
 - 🔐 **No Secrets** in code
-- ⏱️ **Max 30 Min** autonom, dann STOP
+- ⏱️ **Max 30 min** autonomous, then STOP
 
 ---
 
-**BEGINNE JETZT MIT DER IMPLEMENTIERUNG.**
+**BEGIN IMPLEMENTATION NOW.**
 `;
 
     return chainResponse({
       result: output.trim(),
-      next_action: `JETZT IMPLEMENTIEREN: "${action}"`,
+      next_action: `IMPLEMENT NOW: "${action}"`,
       safeguards_active: true,
       recommendation: `Start immediately. Checkpoint in ${checkpointInterval} min.`,
     });
@@ -177,7 +177,7 @@ Branch: ${currentBranch}
     
     return chainResponse({
       result: `❌ Error: ${errMsg}\n\nStart anyway with: ${action}`,
-      next_action: `Implementiere: "${action}"`,
+      next_action: `Implement: "${action}"`,
       safeguards_active: true,
       recommendation: "Start with the task anyway",
     });
@@ -192,7 +192,7 @@ function generateBranchName(action: string, template: string): string {
   const prefix = template === "bugfix" ? "fix" : 
                  template === "refactor" ? "refactor" : "feature";
   
-  // Normalisiere: lowercase, entferne Sonderzeichen, ersetze Leerzeichen
+  // Normalize: lowercase, strip special chars, replace whitespace
   const slug = action
     .toLowerCase()
     .replace(/[äöü]/g, (c) => ({ ä: "ae", ö: "oe", ü: "ue" })[c] ?? c)
@@ -200,8 +200,8 @@ function generateBranchName(action: string, template: string): string {
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-")
-    .substring(0, 40) // Max 40 Zeichen
-    .replace(/-+$/, ""); // Trailing dashes entfernen
+    .substring(0, 40) // max 40 chars
+    .replace(/-+$/, ""); // trim trailing dashes
   
   return `${prefix}/${slug}`;
 }

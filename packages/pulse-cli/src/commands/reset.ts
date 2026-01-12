@@ -49,7 +49,7 @@ export function registerResetCommand(program: Command): void {
       }
 
       // ══════════════════════════════════════════════════════════════════════
-      // Zeige betroffene Commits
+      // Show affected commits
       // ══════════════════════════════════════════════════════════════════════
       const recentLog = await gitLogOneline(repoRoot, numCommits + 2);
       const logLines = recentLog.split("\n").filter((l) => l.trim());
@@ -72,7 +72,7 @@ export function registerResetCommand(program: Command): void {
       console.log("");
 
       // ══════════════════════════════════════════════════════════════════════
-      // Reset-Modus wählen
+      // Choose reset mode
       // ══════════════════════════════════════════════════════════════════════
       let mode: "soft" | "mixed" | "hard" = "mixed";
       
@@ -90,7 +90,7 @@ export function registerResetCommand(program: Command): void {
       }
 
       // ══════════════════════════════════════════════════════════════════════
-      // Letzte Bestätigung bei Hard Reset
+      // Final confirmation for hard reset
       // ══════════════════════════════════════════════════════════════════════
       if (mode === "hard" && !opts.yes) {
         // eslint-disable-next-line no-console
@@ -105,7 +105,7 @@ export function registerResetCommand(program: Command): void {
       }
 
       // ══════════════════════════════════════════════════════════════════════
-      // Git Reset ausführen
+      // Execute git reset
       // ══════════════════════════════════════════════════════════════════════
       const resetArg = `HEAD~${numCommits}`;
       const modeArg = mode === "mixed" ? "" : `--${mode}`;
@@ -124,7 +124,7 @@ export function registerResetCommand(program: Command): void {
       }
 
       // ══════════════════════════════════════════════════════════════════════
-      // Erfolgsmeldung
+      // Success message
       // ══════════════════════════════════════════════════════════════════════
       const newLog = await gitLogOneline(repoRoot, 1);
       
@@ -133,7 +133,7 @@ export function registerResetCommand(program: Command): void {
       // eslint-disable-next-line no-console
       console.log(`📍 New HEAD: ${newLog}\n`);
 
-      // Hinweise
+      // Tips
       if (mode === "soft" || mode === "mixed") {
         // eslint-disable-next-line no-console
         console.log(`💡 Tip: Changes are still there.`);

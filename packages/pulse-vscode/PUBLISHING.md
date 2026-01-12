@@ -1,119 +1,108 @@
 # Publishing Pulse Framework Extension
 
-Diese Anleitung erklärt, wie du die Pulse Framework Extension auf **OpenVSX** (für Cursor) und optional auf dem **VS Code Marketplace** veröffentlichst.
+This guide explains how to publish the Pulse Framework extension to **OpenVSX** (for Cursor) and optionally to the **VS Code Marketplace**.
 
 ---
 
-## 📦 VSIX-Datei ist bereit
+## Build a VSIX (local install)
 
-Die Extension wurde bereits gebaut und verpackt:
-
-```
-packages/pulse-vscode/pulse-framework-0.1.0.vsix
-```
-
-### Lokale Installation (Cursor/VS Code)
-
-1. Öffne Cursor oder VS Code
-2. Gehe zu Extensions (Cmd+Shift+X)
-3. Klicke auf `...` → **Install from VSIX...**
-4. Wähle `pulse-framework-0.1.0.vsix`
-
----
-
-## 🌐 OpenVSX Publishing (für Cursor)
-
-Cursor nutzt seit April 2025 den [OpenVSX Marketplace](https://open-vsx.org/) als Extension-Quelle.
-
-### 1. OpenVSX Account erstellen
-
-1. Gehe zu https://open-vsx.org/
-2. Klicke **Log in with GitHub**
-3. Autorisiere die App
-
-### 2. Access Token generieren
-
-1. Nach dem Login: Klicke auf dein Profil → **Access Tokens**
-2. Klicke **Generate Token**
-3. Speichere den Token sicher (wird nur einmal angezeigt!)
-
-### 3. Publisher erstellen
+Build and package the extension:
 
 ```bash
-# Installiere ovsx CLI
+cd packages/pulse-vscode
+npm install
+npm run build
+npx @vscode/vsce package
+```
+
+### Local install (Cursor / VS Code)
+
+1. Open Cursor or VS Code
+2. Extensions (Cmd+Shift+X)
+3. `...` → **Install from VSIX...**
+4. Select the generated `.vsix`
+
+---
+
+## Publish to OpenVSX (for Cursor)
+
+Cursor uses the [OpenVSX marketplace](https://open-vsx.org/) as an extension source.
+
+### 1. Create an OpenVSX account
+
+1. Go to `https://open-vsx.org/`
+2. **Log in with GitHub**
+3. Authorize the app
+
+### 2. Generate an access token
+
+1. After login: Profile → **Access Tokens**
+2. **Generate Token**
+3. Save the token (shown once)
+
+### 3. Create the namespace (once)
+
+```bash
 npm install -g ovsx
-
-# Erstelle Publisher (einmalig)
-npx ovsx create-namespace pulse-framework -p <YOUR_TOKEN>
+npx ovsx create-namespace pulse-framework -p <OPENVSX_TOKEN>
 ```
 
-### 4. Extension veröffentlichen
+### 4. Publish the extension
 
 ```bash
 cd packages/pulse-vscode
-
-# Veröffentlichen
-npx ovsx publish pulse-framework-0.1.0.vsix -p <YOUR_TOKEN>
+npx ovsx publish *.vsix -p <OPENVSX_TOKEN>
 ```
 
-### 5. Fertig! 🎉
-
-Die Extension ist jetzt unter verfügbar:
-- **URL:** https://open-vsx.org/extension/pulse-framework/pulse-framework
-- **In Cursor:** Extensions → Suche "Pulse Framework"
+The extension will be available at:
+- **URL:** `https://open-vsx.org/extension/pulse-framework/pulse-framework`
+- **In Cursor:** Extensions → search “Pulse Framework”
 
 ---
 
-## 🔷 VS Code Marketplace (Optional)
+## VS Code Marketplace (optional)
 
-Falls du auch auf dem offiziellen VS Code Marketplace veröffentlichen möchtest:
+If you also want to publish to the official VS Code Marketplace:
 
-### 1. Azure DevOps Account
+### 1. Azure DevOps account
 
-1. Gehe zu https://dev.azure.com/
-2. Erstelle eine Organisation (falls nicht vorhanden)
-3. Gehe zu **User Settings** → **Personal Access Tokens**
-4. Erstelle Token mit Scope: **Marketplace → Manage**
+1. Go to `https://dev.azure.com/`
+2. Create an organization (if needed)
+3. **User settings** → **Personal Access Tokens**
+4. Create a token with scope: **Marketplace → Manage**
 
-### 2. Publisher erstellen
+### 2. Create a publisher
 
-1. Gehe zu https://marketplace.visualstudio.com/manage
-2. Klicke **Create Publisher**
-3. Gib `pulse-framework` als Publisher ID ein
+1. Go to `https://marketplace.visualstudio.com/manage`
+2. **Create Publisher**
+3. Use `pulse-framework` as the publisher ID
 
-### 3. Veröffentlichen
+### 3. Publish
 
 ```bash
 cd packages/pulse-vscode
-
-# Mit vsce publishen
 npx @vscode/vsce publish -p <AZURE_PAT>
 ```
 
 ---
 
-## 🔄 Updates veröffentlichen
+## Publishing updates
 
-### Version erhöhen
+### Bump version
 
 ```bash
-# Version in package.json erhöhen
-npm version patch  # 0.1.0 → 0.1.1
-# oder
-npm version minor  # 0.1.0 → 0.2.0
-# oder
-npm version major  # 0.1.0 → 1.0.0
+cd packages/pulse-vscode
+npm version patch  # 0.3.0 → 0.3.1
 ```
 
-### Neu bauen und publishen
+### Rebuild and publish
 
 ```bash
-# Neu verpacken
 npm run build
 npx @vscode/vsce package
 
 # OpenVSX
-npx ovsx publish pulse-framework-0.1.1.vsix -p <TOKEN>
+npx ovsx publish *.vsix -p <OPENVSX_TOKEN>
 
 # VS Code Marketplace (optional)
 npx @vscode/vsce publish -p <AZURE_PAT>
@@ -121,33 +110,34 @@ npx @vscode/vsce publish -p <AZURE_PAT>
 
 ---
 
-## 📋 Checkliste vor dem Publishing
+## Pre-publish checklist
 
-- [ ] Version in `package.json` aktualisiert
-- [ ] CHANGELOG aktualisiert (falls vorhanden)
-- [ ] README ist aktuell
-- [ ] `npm run build` läuft ohne Fehler
-- [ ] Extension lokal getestet
-
----
-
-## 🔗 Links
-
-- **OpenVSX:** https://open-vsx.org/
-- **VS Code Marketplace:** https://marketplace.visualstudio.com/
-- **vsce Docs:** https://code.visualstudio.com/api/working-with-extensions/publishing-extension
-- **ovsx Docs:** https://github.com/eclipse/openvsx/wiki/Publishing-Extensions
+- [ ] Version in `package.json` updated
+- [ ] CHANGELOG updated (if applicable)
+- [ ] README is up to date
+- [ ] `npm run build` runs without errors
+- [ ] Extension tested locally
 
 ---
 
-## ⚠️ Wichtige Hinweise
+## Links
 
-1. **Publisher Name:** Der `publisher` in `package.json` muss mit dem registrierten Publisher-Namen übereinstimmen.
+- OpenVSX: `https://open-vsx.org/`
+- VS Code Marketplace: `https://marketplace.visualstudio.com/`
+- vsce docs: `https://code.visualstudio.com/api/working-with-extensions/publishing-extension`
+- ovsx docs: `https://github.com/eclipse/openvsx/wiki/Publishing-Extensions`
 
-2. **Cursor Kompatibilität:** Die Extension wurde für VS Code Engine `^1.85.0` entwickelt, was mit aktuellen Cursor-Versionen kompatibel ist.
+---
 
-3. **Token Sicherheit:** Speichere Tokens niemals in Git! Nutze Environment Variables:
-   ```bash
-   export OVSX_PAT="your-token"
-   npx ovsx publish *.vsix -p $OVSX_PAT
-   ```
+## Notes
+
+1. **Publisher name:** `publisher` in `package.json` must match the OpenVSX namespace.
+
+2. **Cursor compatibility:** Keep `engines.vscode` reasonably low for Cursor compatibility.
+
+3. **Token safety:** Never commit tokens. Use environment variables:
+
+```bash
+export OVSX_PAT="your-token"
+npx ovsx publish *.vsix -p "$OVSX_PAT"
+```

@@ -18,11 +18,14 @@ export function registerRunCommand(program: Command): void {
   program
     .command("run")
     .description("Combined workflow: Start → Watch → Checkpoints → Review")
-    .option("-t, --template <id>", "Vorlage: feature, bugfix, refactor, concept, analyze, review")
+    .option(
+      "-t, --template <id>",
+      "Template: feature, bugfix, refactor, concept, analyze, review"
+    )
     .option("--minutes <n>", "Minutes between checkpoint reminders")
     .option("--no-watch", "Don't start watcher")
-    .option("--action <text>", "ACTION direkt angeben")
-    .option("-C, --clipboard", "Prompt in Zwischenablage kopieren")
+    .option("--action <text>", "Provide ACTION directly")
+    .option("-C, --clipboard", "Copy prompt to clipboard")
     .action(
       async (opts: {
         template?: string;
@@ -32,7 +35,7 @@ export function registerRunCommand(program: Command): void {
         clipboard?: boolean;
       }) => {
         const repoRoot = await findRepoRoot(process.cwd());
-        if (!repoRoot) throw new Error("Nicht in einem Git-Repository.");
+        if (!repoRoot) throw new Error("Not in a git repository.");
 
         const [state, config] = await Promise.all([loadState(repoRoot), loadConfig(repoRoot)]);
 
@@ -60,7 +63,7 @@ export function registerRunCommand(program: Command): void {
         // eslint-disable-next-line no-console
         console.log(`━━━ PHASE 1: Prompt ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
 
-        // Template auswählen
+        // Select template
         let template = opts.template ? getTemplateById(opts.template) : undefined;
 
         if (!template && !opts.action) {
@@ -69,11 +72,11 @@ export function registerRunCommand(program: Command): void {
             label: `${t.name} - ${t.description}`,
           }));
 
-          const selectedId = await promptSelect("📋 Vorlage wählen", choices, "feature");
+          const selectedId = await promptSelect("📋 Choose template", choices, "feature");
           template = getTemplateById(selectedId);
         }
 
-        // 6-Elemente sammeln
+        // Collect the 6 elements
         const el: SixElements = {
           role: template?.defaults.role,
           context: template?.defaults.context,
@@ -84,17 +87,17 @@ export function registerRunCommand(program: Command): void {
         const layer: PulseLayer = template?.layer ?? state.profile;
 
         if (!el.action?.trim()) {
-          el.action = await promptText("⚡ ACTION (Was soll gemacht werden?)", "");
+          el.action = await promptText("⚡ ACTION (what should be built?)", "");
         }
 
         if (!el.context?.trim()) {
-          el.context = await promptText("📍 KONTEXT (Projekt, Stack)", "");
+          el.context = await promptText("📍 CONTEXT (project, stack)", "");
         }
 
-        // Prompt generieren
+        // Generate prompt
         const prompt = renderSixElementPrompt(layer, el);
 
-        // Artefakt speichern
+        // Save artifact
         const ts = timestampId();
         const filename = `${ts}-run.md`;
         const content = [
@@ -102,7 +105,7 @@ export function registerRunCommand(program: Command): void {
           ``,
           `- Profile: **${presetProfile}**`,
           `- Layer: **${layer}**`,
-          template ? `- Vorlage: **${template.name}**` : "",
+          template ? `- Template: **${template.name}**` : "",
           `- Checkpoint interval: **${minutes} min**`,
           ``,
           `## Prompt`,
@@ -120,7 +123,7 @@ export function registerRunCommand(program: Command): void {
         // eslint-disable-next-line no-console
         console.log(`✅ Template: ${template?.name ?? "custom"}`);
         // eslint-disable-next-line no-console
-        console.log(`✅ Artefakt: ${artifactPath}`);
+        console.log(`✅ Artifact: ${artifactPath}`);
 
         // Clipboard
         if (opts.clipboard) {
@@ -146,19 +149,19 @@ export function registerRunCommand(program: Command): void {
 
         if (opts.watch === false) {
           // eslint-disable-next-line no-console
-          console.log(`━━━ PHASE 2: Übersprungen ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+          console.log(`━━━ PHASE 2: Skipped ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
           // eslint-disable-next-line no-console
           console.log("Watcher not started (--no-watch).\n");
           // eslint-disable-next-line no-console
           console.log("💡 Next steps:");
           // eslint-disable-next-line no-console
-          console.log("   1. Prompt in Cursor einfügen");
+          console.log("   1. Paste the prompt into Cursor");
           // eslint-disable-next-line no-console
-          console.log("   2. `pulse checkpoint` alle 5-10 Min");
+          console.log("   2. Run `pulse checkpoint` every 5-10 min");
           // eslint-disable-next-line no-console
-          console.log("   3. Bei Problemen: `pulse escalate`");
+          console.log("   3. If stuck: `pulse escalate`");
           // eslint-disable-next-line no-console
-          console.log("   4. Am Ende: `pulse review`\n");
+          console.log("   4. At the end: `pulse review`\n");
           return;
         }
 
@@ -169,15 +172,15 @@ export function registerRunCommand(program: Command): void {
         // eslint-disable-next-line no-console
         console.log(`📍 Watcher running... (Ctrl+C to stop)\n`);
         // eslint-disable-next-line no-console
-        console.log(`   1. Kopiere den Prompt oben in Cursor`);
+        console.log(`   1. Paste the prompt above into Cursor`);
         // eslint-disable-next-line no-console
-        console.log(`   2. Arbeite los`);
+        console.log(`   2. Start working`);
         // eslint-disable-next-line no-console
-        console.log(`   3. Ctrl+C wenn fertig\n`);
+        console.log(`   3. Ctrl+C when done\n`);
 
         await notify(
           config.notifications,
-          "Pulse Run gestartet",
+          "Pulse Run started",
           `Checkpoint reminder every ${minutes} min. Ctrl+C to exit.`
         );
 
@@ -216,11 +219,11 @@ export function registerRunCommand(program: Command): void {
             // eslint-disable-next-line no-console
             console.log(`└${"─".repeat(58)}┘`);
             // eslint-disable-next-line no-console
-            console.log(`   Zeit: ${new Date().toLocaleTimeString()}`);
+            console.log(`   Time: ${new Date().toLocaleTimeString()}`);
             // eslint-disable-next-line no-console
-            console.log(`   Status: Uncommitted Changes vorhanden`);
+            console.log(`   Status: uncommitted changes present`);
             // eslint-disable-next-line no-console
-            console.log(`   → pulse checkpoint -m 'deine message'\n`);
+            console.log(`   → pulse checkpoint -m 'your message'\n`);
           } else {
             // eslint-disable-next-line no-console
             console.log(
@@ -237,9 +240,9 @@ export function registerRunCommand(program: Command): void {
           clearInterval(interval);
 
           // eslint-disable-next-line no-console
-          console.log(`\n\n━━━ PHASE 3: Abschluss ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+          console.log(`\n\n━━━ PHASE 3: Wrap-up ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
           // eslint-disable-next-line no-console
-          console.log(`🛑 ${signal} empfangen - Beende Pulse Run...\n`);
+          console.log(`🛑 Received ${signal} - stopping Pulse Run...\n`);
 
           // Check final status
           const status = await gitStatusPorcelain(repoRoot);
@@ -247,7 +250,7 @@ export function registerRunCommand(program: Command): void {
 
           if (dirty) {
             // eslint-disable-next-line no-console
-            console.log("📝 Uncommitted Changes gefunden:\n");
+            console.log("📝 Uncommitted changes found:\n");
 
             const stat = await gitDiffStat(repoRoot);
             // eslint-disable-next-line no-console
@@ -266,27 +269,27 @@ export function registerRunCommand(program: Command): void {
             }
           } else {
             // eslint-disable-next-line no-console
-            console.log("✨ Keine uncommitted Changes.\n");
+            console.log("✨ No uncommitted changes.\n");
           }
 
           // Offer review
           const doReview = await promptConfirm("Create review?", dirty);
           if (doReview) {
             // eslint-disable-next-line no-console
-            console.log("\n💡 Führe aus: pulse review\n");
+            console.log("\n💡 Run: pulse review\n");
           }
 
           // Summary
           // eslint-disable-next-line no-console
           console.log(`┌${"─".repeat(58)}┐`);
           // eslint-disable-next-line no-console
-          console.log(`│ 👋 Pulse Run beendet${" ".repeat(37)}│`);
+          console.log(`│ 👋 Pulse Run finished${" ".repeat(35)}│`);
           // eslint-disable-next-line no-console
           console.log(`│                                                          │`);
           // eslint-disable-next-line no-console
           console.log(`│ Checkpoints: ${checkpointCount}${" ".repeat(43 - String(checkpointCount).length)}│`);
           // eslint-disable-next-line no-console
-          console.log(`│ Artefakt: .pulse/pulses/${filename}${" ".repeat(Math.max(0, 32 - filename.length))}│`);
+          console.log(`│ Artifact: .pulse/pulses/${filename}${" ".repeat(Math.max(0, 32 - filename.length))}│`);
           // eslint-disable-next-line no-console
           console.log(`└${"─".repeat(58)}┘\n`);
 
