@@ -49,11 +49,14 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       recommendation = "🛑 CRITICAL - You MUST stop and fix before continuing";
       nextAction = "Call pulse_doctor to see details. DO NOT proceed with other tasks.";
     } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 30 && data.dirtyFiles > 0) {
-      recommendation = "⏰ Checkpoint overdue";
-      nextAction = "Call pulse_checkpoint now";
+      recommendation = "🛑 CHECKPOINT OVERDUE - You MUST checkpoint before continuing";
+      nextAction = "Call pulse_checkpoint NOW. DO NOT proceed with other tasks.";
     } else if (data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 15 && data.dirtyFiles > 0) {
       nextAction = `Call pulse_checkpoint in ~${30 - data.lastCheckpointMinutesAgo} min`;
     }
+    
+    // Check for blocking conditions
+    const isOverdue = data.lastCheckpointMinutesAgo !== null && data.lastCheckpointMinutesAgo > 30 && data.dirtyFiles > 0;
     
     const lines: string[] = [
       `📊 PULSE Status`,
@@ -65,18 +68,24 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       `Findings: ${data.criticalFindings} Critical, ${data.warningFindings || data.findings - data.criticalFindings} Warnings`,
     ];
     
-    // Add blocking header for critical findings
+    // Add blocking header for critical findings or overdue checkpoint
     if (data.criticalFindings > 0) {
       lines.unshift(`🛑 CRITICAL FINDINGS DETECTED - STOP`);
       lines.unshift(``);
+    } else if (isOverdue) {
+      lines.unshift(`🛑 CHECKPOINT OVERDUE (${data.lastCheckpointMinutesAgo} min) - STOP AND CHECKPOINT`);
+      lines.unshift(``);
     }
+    
+    // Block agent on: critical findings OR >30 min without checkpoint
+    const mustStop = data.criticalFindings > 0 || isOverdue;
     
     return chainResponse({
       result: lines.join("\n"),
       next_action: nextAction,
       recommendation,
       safeguards_active: true,
-      is_critical: data.criticalFindings > 0, // Block agent on critical findings
+      is_critical: mustStop,
     });
     
   } catch (error) {
