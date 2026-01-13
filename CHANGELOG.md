@@ -4,8 +4,36 @@ All notable changes to the **PULSE Framework** monorepo will be documented in th
 This repository contains multiple packages:
 
 - `pulse-framework-cli` (CLI, run by humans)
-- `@pulseframework/pulse-mcp` (MCP server, called by Cursor agent tools)
+- `pulse-framework-mcp` (MCP server, called by Cursor agent tools)
 - `pulse-framework` (VS Code/Cursor extension)
+
+---
+
+## CLI 0.4.6 / MCP 0.5.0 (2026-01-13)
+
+### Added
+- 🚀 **MCP Server published to npm** as `pulse-framework-mcp`
+  - `npm install -g pulse-framework-mcp` now works!
+  - `pulse init --mcp` auto-installs the MCP server
+
+### Fixed
+- `pulse init --mcp` no longer fails looking for unpublished package
+- Updated install command from `@pulseframework/pulse-mcp` to `pulse-framework-mcp`
+
+---
+
+## Extension 0.5.3 (2026-01-13)
+
+### Changed
+- 📖 **Complete README rewrite** - Now properly describes full Pulse Framework
+- Better OpenVSX marketplace presentation
+
+---
+
+## Extension 0.5.2 (2026-01-13)
+
+### Added
+- 📄 **Changelog visible on Marketplace** - CHANGELOG.md now included in package
 
 ---
 

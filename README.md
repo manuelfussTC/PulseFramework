@@ -1,8 +1,8 @@
 # PULSE Framework – Controlled AI-Assisted Development
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CLI Version](https://img.shields.io/badge/CLI-v0.4.5-blue.svg)](packages/pulse-cli)
-[![MCP Version](https://img.shields.io/badge/MCP-v0.4.2-blue.svg)](packages/pulse-mcp)
+[![CLI Version](https://img.shields.io/badge/CLI-v0.4.6-blue.svg)](packages/pulse-cli)
+[![MCP Version](https://img.shields.io/badge/MCP-v0.5.0-blue.svg)](packages/pulse-mcp)
 [![Website](https://img.shields.io/badge/Website-manuel--fuss.de-green)](https://manuel-fuss.de/pulse)
 
 **PULSE** is a complete toolkit for controlled AI-assisted software development: methodology, CLI commands, MCP server for Cursor IDE, automatic safeguards, and loop detection.

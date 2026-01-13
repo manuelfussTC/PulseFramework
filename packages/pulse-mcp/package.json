@@ -1,10 +1,26 @@
 {
-  "name": "@pulseframework/pulse-mcp",
-  "version": "0.4.2",
-  "private": true,
-  "description": "PULSE MCP Server - Model Context Protocol integration for Cursor",
+  "name": "pulse-framework-mcp",
+  "version": "0.5.0",
+  "description": "PULSE MCP Server - Model Context Protocol integration for Cursor AI Agent Mode",
+  "author": "Manuel Fuß <kontakt@manuel-fuss.de>",
+  "license": "MIT",
+  "homepage": "https://manuel-fuss.de/pulse",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manuelfussTC/PulseFramework"
+  },
+  "keywords": [
+    "pulse",
+    "mcp",
+    "cursor",
+    "ai",
+    "agent",
+    "model-context-protocol",
+    "guardrails"
+  ],
   "bin": {
-    "pulse-mcp": "dist/index.js"
+    "pulse-mcp": "dist/index.js",
+    "pulse-framework-mcp": "dist/index.js"
   },
   "type": "module",
   "main": "dist/index.js",

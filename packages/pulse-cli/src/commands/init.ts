@@ -89,8 +89,8 @@ async function ensurePulseMcpInstalled(): Promise<string> {
   console.log("\n⚠️  pulse-mcp not found. Attempting to install...\n");
 
   try {
-    // Try npm link first (for development)
-    execSync("npm link @pulseframework/pulse-mcp 2>/dev/null || npm install -g @pulseframework/pulse-mcp", {
+    // Install from npm
+    execSync("npm install -g pulse-framework-mcp", {
       encoding: "utf8",
       stdio: "inherit",
     });
@@ -105,11 +105,9 @@ async function ensurePulseMcpInstalled(): Promise<string> {
     // eslint-disable-next-line no-console
     console.log("   Please run manually:");
     // eslint-disable-next-line no-console
-    console.log("   npm install -g @pulseframework/pulse-mcp");
+    console.log("   npm install -g pulse-framework-mcp");
     // eslint-disable-next-line no-console
-    console.log("   OR (from PulseFramework repo):");
-    // eslint-disable-next-line no-console
-    console.log("   npm link -w packages/pulse-mcp\n");
+    console.log("");
     throw new Error("pulse-mcp installation failed");
   }
 }
