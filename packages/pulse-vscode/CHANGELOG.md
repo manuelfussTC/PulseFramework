@@ -2,6 +2,18 @@
 
 All notable changes to the **Pulse Framework** VS Code/Cursor extension.
 
+## [0.8.0] - 2026-01-13
+
+### Added
+- 🎯 **Default profile 'fullstack'** - Quick setup uses fullstack by default
+- ⚡ **Faster setup** - No prompts, just click "Setup Now" and go
+
+### Fixed
+- 🐛 **999 minutes bug** - New projects no longer show old checkpoint warnings
+- Timer now shows "Ready" on fresh projects until first checkpoint
+
+---
+
 ## [0.7.0] - 2026-01-13
 
 ### Added

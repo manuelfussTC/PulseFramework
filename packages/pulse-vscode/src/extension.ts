@@ -7,8 +7,13 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.7.0";
+const CURRENT_VERSION = "0.8.0";
 const CHANGELOG: Record<string, string[]> = {
+  "0.8.0": [
+    "🎯 Default profile is now 'fullstack' for quick setup",
+    "🐛 Fixed '999 minutes' warning on new projects",
+    "⚡ Setup runs without prompts - just click and go",
+  ],
   "0.7.0": [
     "🔄 Auto-update CLI & MCP packages on extension update",
     "📦 Always uses latest pulse-framework-cli and pulse-framework-mcp",
@@ -543,13 +548,17 @@ async function runFullSetup(workspaceRoot: string) {
     cwd: workspaceRoot,
   });
   terminal.show();
-  terminal.sendText("npx pulse-framework-cli init --hooks --mcp");
+  terminal.sendText("npx pulse-framework-cli init --hooks --mcp --profile fullstack");
 
   // Update context after a delay
   setTimeout(async () => {
     const pulseDir = path.join(workspaceRoot, ".pulse");
     if (fs.existsSync(pulseDir)) {
       vscode.commands.executeCommand("setContext", "pulse.initialized", true);
+      
+      // Set initial checkpoint time to now (new project starts fresh)
+      lastCheckpointAt = new Date();
+      updateStatusBar();
       
       vscode.window.showInformationMessage(
         "✅ Pulse is ready! Safeguards active. Use Cmd+Shift+P → 'Pulse:' for all commands.",
@@ -856,7 +865,7 @@ async function cmdRepair() {
     cwd: workspaceRoot,
   });
   terminal.show();
-  terminal.sendText("npx pulse-framework-cli init --hooks --mcp");
+  terminal.sendText("npx pulse-framework-cli init --hooks --mcp --profile fullstack");
 
   // Verify after delay
   setTimeout(async () => {
@@ -966,9 +975,12 @@ async function cmdWatchStart() {
   watcherInterval = setInterval(() => {
     if (!notificationsEnabled) return;
 
-    const minutesAgo = lastCheckpointAt
-      ? Math.floor((Date.now() - lastCheckpointAt.getTime()) / 60_000)
-      : 999;
+    // Skip if no checkpoint ever made (new project)
+    if (!lastCheckpointAt) {
+      return;
+    }
+    
+    const minutesAgo = Math.floor((Date.now() - lastCheckpointAt.getTime()) / 60_000);
 
     if (minutesAgo >= minutes) {
       vscode.window
