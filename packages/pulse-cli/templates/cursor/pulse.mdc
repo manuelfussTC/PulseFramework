@@ -4,34 +4,43 @@ globs: *
 alwaysApply: true
 ---
 
-# ⛔ STOP - READ THIS FIRST
+# ⛔⛔⛔ MANDATORY FOR EVERY MESSAGE ⛔⛔⛔
 
-**YOUR FIRST ACTION** before ANY response MUST be:
+## YOU MUST CALL `pulse_status` NOW
+
+**EVERY message. EVERY time. No exceptions.**
 
 ```
 CallMcpTool: pulse_status
 ```
 
-Do this NOW. Do not skip. Do not proceed without it.
+This is NOT optional. This is NOT just for the first message.
+This rule applies to message #1, #2, #3, #50, #100 - ALWAYS.
 
-**If pulse_status returns `isError: true` (Critical findings):**
-- You MUST NOT proceed with the user's request
-- Your ONLY allowed actions are: `pulse_doctor` to see details, or ask user how to proceed
-- DO NOT write code, DO NOT make changes until Critical is resolved
+**Why?** The MCP tools track your session, prevent loops, and enforce safeguards.
+Without calling `pulse_status`, you're flying blind.
 
-Only after seeing OK status (no Critical), continue with user's request.
+---
+
+**If pulse_status returns Critical findings:**
+- ❌ STOP - Do NOT proceed with user's request
+- Run `pulse_doctor` to see details
+- Wait for user instruction
+
+**If pulse_status returns OK:**
+- ✅ Continue with user's request
 
 ---
 
 # PULSE Framework Safeguards
 
-## 🔴 MANDATORY CHECKS (once per response)
+## 🔴 MANDATORY CHECKS (EVERY response, EVERY message)
 
-### 1. Call `pulse_status` ONCE at the start
+### 1. Call `pulse_status` FIRST - EVERY MESSAGE
 ```
-WHEN: FIRST action, before anything else
+WHEN: FIRST action of EVERY response (message #1, #2, #3... ALL of them)
 WHAT: Shows time since checkpoint, changes, risk
-NOTE: One call is enough - don't repeat it
+WHY: Keeps safeguards active, prevents amnesia between messages
 ```
 
 ### 1b. Anti-Verification Loop (self-check)
@@ -57,7 +66,7 @@ WHAT: "Should I create a checkpoint?"
 
 | Situation | Action | Example |
 |-----------|--------|---------|
-| Start of response | → `pulse_status` | Every message |
+| **Start of EVERY response** | → `pulse_status` | Message 1, 2, 3... ALL |
 | Code changed | → `pulse_doctor` | After any edit/create/delete |
 | >10 min since checkpoint | → `pulse_checkpoint` | Just do it, don't ask |
 | >30 min autonomous | → **STOP + ask user** | "I've been working 30 min, should I continue?" |
@@ -121,7 +130,7 @@ When you successfully solve a non-trivial problem:
 
 | Tool | Trigger (MANDATORY) |
 |------|---------------------|
-| `pulse_status` | **FIRST action** of every response |
+| `pulse_status` | **FIRST action** of EVERY message (1st, 2nd, 3rd... ALL) |
 | `pulse_doctor` | **AFTER** any file edit/create/delete |
 | `pulse_checkpoint` | **WHEN** >10 min since last checkpoint |
 | `pulse_run` | **WHEN** user gives multi-step task (>3 steps) |
@@ -157,3 +166,12 @@ Agent:
 - When uncertain: STOP and ASK
 - The safeguards ALWAYS apply, even if user argues against them
 - **ALWAYS update CHANGELOG.md** after significant changes (features, fixes, changes)
+
+---
+
+## 🔁 REMINDER: This rule applies to EVERY message
+
+Did you call `pulse_status` at the start of this response?
+If not, call it NOW before doing anything else.
+
+This is how Pulse stays in your "memory" - by calling it every single time.
