@@ -1,9 +1,11 @@
 {
-    "mcpServers": {
-        "pulse": {
-            "command": "pulse-mcp",
-            "args": [],
-            "env": {}
-        }
+  "mcpServers": {
+    "pulse": {
+      "command": "/Users/Nano2012/.nvm/versions/node/v20.19.5/bin/node",
+      "args": ["/Users/Nano2012/Documents/DEV/PulseFramework/packages/pulse-mcp/dist/index.js"],
+      "env": {
+        "PULSE_PROJECT_ROOT": "/Users/Nano2012/Documents/DEV/PulseFramework"
+      }
     }
+  }
 }
