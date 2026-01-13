@@ -9,6 +9,25 @@ This repository contains multiple packages:
 
 ---
 
+## Extension 0.5.0 (2026-01-13)
+
+### Added
+- **Welcome Notification**: Prominent "Setup Now" button when opening non-initialized projects
+- **Status Bar Setup Button**: Shows "🚀 Setup Pulse" in status bar for new projects (replaces timer)
+- **Explorer Panel**: New "Pulse" section in Explorer sidebar with quick actions:
+  - Not initialized: "Setup Pulse" + "Custom Setup" buttons
+  - Initialized: Start Task, Checkpoint, Doctor, Watcher, Escalate, Artifacts
+- **Quick Setup Command**: `pulse.setupFull` for one-click full setup (hooks + MCP)
+
+### Changed
+- Setup flow is now more discoverable - three ways to initialize:
+  1. Click status bar button
+  2. Use Explorer panel  
+  3. Welcome notification popup
+- After init, status bar automatically switches from "Setup" to checkpoint timer
+
+---
+
 ## 0.4.5 / Extension 0.4.0 (2026-01-12)
 
 ### Added (Extension)

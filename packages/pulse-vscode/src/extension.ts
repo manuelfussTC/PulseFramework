@@ -8,9 +8,11 @@ const execAsync = promisify(exec);
 
 // State
 let statusBarItem: vscode.StatusBarItem | undefined;
+let setupStatusBarItem: vscode.StatusBarItem | undefined;
 let watcherInterval: NodeJS.Timeout | undefined;
 let lastCheckpointAt: Date | null = null;
 let isWatcherRunning = false;
+let pulseTreeDataProvider: PulseTreeDataProvider | undefined;
 
 // -------------------------------------------------------------------
 // Activation
@@ -21,11 +23,13 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Check if this is a Pulse project
   const workspaceRoot = getWorkspaceRoot();
+  let isInitialized = false;
+  
   if (workspaceRoot) {
     const pulseDir = path.join(workspaceRoot, ".pulse");
     const configFile = path.join(workspaceRoot, "pulse.config.json");
     const cursorrules = path.join(workspaceRoot, ".cursorrules");
-    const isInitialized = fs.existsSync(pulseDir) || fs.existsSync(configFile);
+    isInitialized = fs.existsSync(pulseDir) || fs.existsSync(configFile);
     vscode.commands.executeCommand("setContext", "pulse.initialized", isInitialized);
 
     if (isInitialized) {
@@ -33,18 +37,16 @@ export function activate(context: vscode.ExtensionContext) {
     } else {
       // Check if user said "never" for this project
       const ignoreFile = path.join(workspaceRoot, ".pulse-ignore");
-      if (fs.existsSync(ignoreFile)) {
-        return; // User doesn't want Pulse here
-      }
-
-      // Check if this looks like a dev project (has package.json, .git, etc.)
-      const hasPackageJson = fs.existsSync(path.join(workspaceRoot, "package.json"));
-      const hasGit = fs.existsSync(path.join(workspaceRoot, ".git"));
-      const hasCursorrules = fs.existsSync(cursorrules);
-      
-      if (hasPackageJson || hasGit) {
-        // This looks like a project - offer to initialize Pulse (with slight delay for better UX)
-        setTimeout(() => promptPulseSetup(workspaceRoot, hasCursorrules), 2000);
+      if (!fs.existsSync(ignoreFile)) {
+        // Check if this looks like a dev project (has package.json, .git, etc.)
+        const hasPackageJson = fs.existsSync(path.join(workspaceRoot, "package.json"));
+        const hasGit = fs.existsSync(path.join(workspaceRoot, ".git"));
+        const hasCursorrules = fs.existsSync(cursorrules);
+        
+        if (hasPackageJson || hasGit) {
+          // Show welcome notification with prominent button
+          setTimeout(() => showWelcomeNotification(workspaceRoot, hasCursorrules), 1500);
+        }
       }
     }
   }
@@ -52,6 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Register commands
   context.subscriptions.push(
     vscode.commands.registerCommand("pulse.init", cmdInit),
+    vscode.commands.registerCommand("pulse.setupFull", cmdSetupFull),
     vscode.commands.registerCommand("pulse.start", cmdStart),
     vscode.commands.registerCommand("pulse.checkpoint", cmdCheckpoint),
     vscode.commands.registerCommand("pulse.doctor", cmdDoctor),
@@ -68,35 +71,78 @@ export function activate(context: vscode.ExtensionContext) {
   // Create status bar
   const config = vscode.workspace.getConfiguration("pulse");
   if (config.get<boolean>("showStatusBar", true)) {
-    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-    statusBarItem.command = "pulse.checkpoint";
-    statusBarItem.tooltip = "Click to create a Pulse checkpoint";
-    context.subscriptions.push(statusBarItem);
-    updateStatusBar();
-    statusBarItem.show();
+    if (isInitialized) {
+      // Show checkpoint timer status bar
+      statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+      statusBarItem.command = "pulse.checkpoint";
+      statusBarItem.tooltip = "Click to create a Pulse checkpoint";
+      context.subscriptions.push(statusBarItem);
+      updateStatusBar();
+      statusBarItem.show();
+    } else {
+      // Show setup button in status bar for non-initialized projects
+      setupStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+      setupStatusBarItem.command = "pulse.setupFull";
+      setupStatusBarItem.text = "$(rocket) Setup Pulse";
+      setupStatusBarItem.tooltip = "Click to initialize Pulse Framework in this project";
+      setupStatusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.prominentBackground");
+      context.subscriptions.push(setupStatusBarItem);
+      setupStatusBarItem.show();
+    }
 
     // Update status bar every minute
     const statusInterval = setInterval(updateStatusBar, 60_000);
     context.subscriptions.push({ dispose: () => clearInterval(statusInterval) });
   }
 
+  // Create Explorer Tree View
+  pulseTreeDataProvider = new PulseTreeDataProvider(isInitialized);
+  const treeView = vscode.window.createTreeView("pulseExplorer", {
+    treeDataProvider: pulseTreeDataProvider,
+    showCollapseAll: false,
+  });
+  context.subscriptions.push(treeView);
+
   // Auto-start watcher if configured
-  if (config.get<boolean>("autoStartWatcher", false)) {
+  if (config.get<boolean>("autoStartWatcher", false) && isInitialized) {
     cmdWatchStart();
   }
 
-  // Watch for file changes to detect checkpoints
+  // Watch for file changes to detect checkpoints and initialization
   const watcher = vscode.workspace.createFileSystemWatcher("**/.pulse/state.json");
+  const pulseWatcher = vscode.workspace.createFileSystemWatcher("**/.pulse");
+  
   const reloadState = () => {
     const root = getWorkspaceRoot();
     if (root) {
       loadLastCheckpointTime(root);
       vscode.commands.executeCommand("setContext", "pulse.initialized", true);
+      
+      // Switch from setup button to timer status bar
+      if (setupStatusBarItem) {
+        setupStatusBarItem.dispose();
+        setupStatusBarItem = undefined;
+      }
+      if (!statusBarItem) {
+        statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+        statusBarItem.command = "pulse.checkpoint";
+        statusBarItem.tooltip = "Click to create a Pulse checkpoint";
+        context.subscriptions.push(statusBarItem);
+        updateStatusBar();
+        statusBarItem.show();
+      }
+      
+      // Update tree view
+      if (pulseTreeDataProvider) {
+        pulseTreeDataProvider.setInitialized(true);
+      }
     }
   };
+  
   watcher.onDidChange(reloadState);
-  watcher.onDidCreate(reloadState); // Also trigger when file is first created
-  context.subscriptions.push(watcher);
+  watcher.onDidCreate(reloadState);
+  pulseWatcher.onDidCreate(reloadState);
+  context.subscriptions.push(watcher, pulseWatcher);
 }
 
 export function deactivate() {
@@ -224,6 +270,172 @@ async function promptPulseSetup(workspaceRoot: string, hasCursorrules: boolean) 
     vscode.window.showInformationMessage(
       "OK. Pulse will not be offered for this project. Delete .pulse-ignore to re-enable."
     );
+  }
+}
+
+/**
+ * Show a prominent welcome notification for new projects
+ */
+async function showWelcomeNotification(workspaceRoot: string, hasCursorrules: boolean) {
+  const message = "🚀 Pulse Framework: Protect your AI coding with safeguards, checkpoints & timers!";
+  
+  const action = await vscode.window.showInformationMessage(
+    message,
+    { modal: false },
+    "Setup Now",
+    "Show Options",
+    "Not Now"
+  );
+
+  if (action === "Setup Now") {
+    // Quick full setup
+    await runFullSetup(workspaceRoot);
+  } else if (action === "Show Options") {
+    // Show the detailed setup options
+    await promptPulseSetup(workspaceRoot, hasCursorrules);
+  }
+  // "Not Now" just dismisses - will show again next time
+}
+
+/**
+ * Run full setup (hooks + MCP)
+ */
+async function runFullSetup(workspaceRoot: string) {
+  const terminal = vscode.window.createTerminal({
+    name: "Pulse Setup",
+    cwd: workspaceRoot,
+  });
+  terminal.show();
+  terminal.sendText("npx pulse-framework-cli init --hooks --mcp");
+
+  // Update context after a delay
+  setTimeout(async () => {
+    const pulseDir = path.join(workspaceRoot, ".pulse");
+    if (fs.existsSync(pulseDir)) {
+      vscode.commands.executeCommand("setContext", "pulse.initialized", true);
+      
+      vscode.window.showInformationMessage(
+        "✅ Pulse is ready! Safeguards active. Use Cmd+Shift+P → 'Pulse:' for all commands.",
+        "Start Watcher"
+      ).then((answer) => {
+        if (answer === "Start Watcher") {
+          vscode.commands.executeCommand("pulse.watch.start");
+        }
+      });
+    }
+  }, 8000);
+}
+
+// -------------------------------------------------------------------
+// Explorer Tree View
+// -------------------------------------------------------------------
+
+class PulseTreeDataProvider implements vscode.TreeDataProvider<PulseTreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<PulseTreeItem | undefined>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private initialized: boolean;
+
+  constructor(initialized: boolean) {
+    this.initialized = initialized;
+  }
+
+  setInitialized(value: boolean) {
+    this.initialized = value;
+    this._onDidChangeTreeData.fire(undefined);
+  }
+
+  refresh() {
+    this._onDidChangeTreeData.fire(undefined);
+  }
+
+  getTreeItem(element: PulseTreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  getChildren(): PulseTreeItem[] {
+    if (!this.initialized) {
+      // Not initialized - show setup options
+      return [
+        new PulseTreeItem(
+          "🚀 Setup Pulse",
+          "Initialize Pulse in this project",
+          "pulse.setupFull",
+          vscode.TreeItemCollapsibleState.None,
+          "rocket"
+        ),
+        new PulseTreeItem(
+          "⚙️ Custom Setup...",
+          "Choose setup options",
+          "pulse.init",
+          vscode.TreeItemCollapsibleState.None,
+          "gear"
+        ),
+      ];
+    }
+
+    // Initialized - show Pulse actions
+    return [
+      new PulseTreeItem(
+        "$(play) Start Task",
+        "Begin a new Pulse workflow",
+        "pulse.start",
+        vscode.TreeItemCollapsibleState.None,
+        "play"
+      ),
+      new PulseTreeItem(
+        "$(save) Checkpoint",
+        "Create a checkpoint now",
+        "pulse.checkpoint",
+        vscode.TreeItemCollapsibleState.None,
+        "save"
+      ),
+      new PulseTreeItem(
+        "$(shield) Doctor",
+        "Run safeguard checks",
+        "pulse.doctor",
+        vscode.TreeItemCollapsibleState.None,
+        "shield"
+      ),
+      new PulseTreeItem(
+        "$(eye) Start Watcher",
+        "Enable 30-min reminders",
+        "pulse.watch.start",
+        vscode.TreeItemCollapsibleState.None,
+        "eye"
+      ),
+      new PulseTreeItem(
+        "$(warning) Escalate",
+        "Create escalation package",
+        "pulse.escalate",
+        vscode.TreeItemCollapsibleState.None,
+        "warning"
+      ),
+      new PulseTreeItem(
+        "$(folder) Artifacts",
+        "Open .pulse folder",
+        "pulse.openArtifacts",
+        vscode.TreeItemCollapsibleState.None,
+        "folder"
+      ),
+    ];
+  }
+}
+
+class PulseTreeItem extends vscode.TreeItem {
+  constructor(
+    label: string,
+    tooltip: string,
+    commandId: string,
+    collapsibleState: vscode.TreeItemCollapsibleState,
+    icon: string
+  ) {
+    super(label, collapsibleState);
+    this.tooltip = tooltip;
+    this.command = {
+      command: commandId,
+      title: label,
+    };
+    this.iconPath = new vscode.ThemeIcon(icon);
   }
 }
 
@@ -359,16 +571,18 @@ async function cmdInit() {
     return;
   }
 
-  const installHooks = await vscode.window.showQuickPick(["Yes", "No"], {
-    placeHolder: "Install git hooks (mixed enforcement)?",
-  });
+  // Show setup options
+  await promptPulseSetup(workspaceRoot, fs.existsSync(path.join(workspaceRoot, ".cursorrules")));
+}
 
-  const hookFlag = installHooks === "Yes" ? " --hooks" : "";
-  await runPulseCommand(`npx pulse-framework-cli init${hookFlag}`, { interactive: true });
+async function cmdSetupFull() {
+  const workspaceRoot = getWorkspaceRoot();
+  if (!workspaceRoot) {
+    vscode.window.showErrorMessage("Pulse: No workspace folder open.");
+    return;
+  }
 
-  // Update context
-  vscode.commands.executeCommand("setContext", "pulse.initialized", true);
-  vscode.window.showInformationMessage("Pulse initialized! Run `pulse start` to begin.");
+  await runFullSetup(workspaceRoot);
 }
 
 async function cmdStart() {
