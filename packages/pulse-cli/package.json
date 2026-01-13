@@ -1,6 +1,6 @@
 {
   "name": "pulse-framework-cli",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Pulse Framework CLI – Guardrails, checkpoints, and escalation for AI-assisted development.",
   "author": "Manuel Fuß <kontakt@manuel-fuss.de>",
   "license": "MIT",

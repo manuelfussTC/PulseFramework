@@ -30,10 +30,13 @@ export function registerLearnCommand(program: Command): void {
       console.log("\n📚 PULSE Learn\n");
 
       // Gather information
-      const problem = opts.problem ?? (await promptText("What was the problem?", ""));
-      const solution = opts.solution ?? (await promptText("What was the solution?", ""));
-      const rule = opts.rule ?? (await promptText("Derived rule (what to observe?)", ""));
-      const reason = opts.reason ?? (await promptText("Why? (optional)", ""));
+      // If --no-promote is set, skip interactive prompts (non-interactive mode)
+      const isInteractive = opts.promote !== false;
+      
+      const problem = opts.problem ?? (isInteractive ? await promptText("What was the problem?", "") : "");
+      const solution = opts.solution ?? (isInteractive ? await promptText("What was the solution?", "") : "");
+      const rule = opts.rule ?? (isInteractive ? await promptText("Derived rule (what to observe?)", "") : "");
+      const reason = opts.reason ?? (isInteractive ? await promptText("Why? (optional)", "") : "");
 
       const ts = timestampId();
       
