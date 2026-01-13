@@ -2,6 +2,18 @@
 
 All notable changes to the **Pulse Framework** VS Code/Cursor extension.
 
+## [0.7.0] - 2026-01-13
+
+### Added
+- 🔄 **Auto-update packages** - On extension update, prompts to update CLI & MCP
+- 📦 **Update command** - "Pulse: Update CLI & MCP Packages" in command palette
+- Always installs latest `pulse-framework-cli` and `pulse-framework-mcp` globally
+
+### Changed
+- Update flow now: Extension update → CLI/MCP update → Repair missing files
+
+---
+
 ## [0.6.0] - 2026-01-13
 
 ### Added

@@ -9,6 +9,15 @@ This repository contains multiple packages:
 
 ---
 
+## Extension 0.7.0 (2026-01-13)
+
+### Added
+- 🔄 **Auto-update packages** - On extension update, prompts to update CLI & MCP globally
+- 📦 **Update command** - "Pulse: Update CLI & MCP Packages" in command palette
+- Ensures users always have latest `pulse-framework-cli` and `pulse-framework-mcp`
+
+---
+
 ## Extension 0.6.0 (2026-01-13)
 
 ### Added

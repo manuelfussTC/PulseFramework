@@ -7,8 +7,12 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.6.0";
+const CURRENT_VERSION = "0.7.0";
 const CHANGELOG: Record<string, string[]> = {
+  "0.7.0": [
+    "🔄 Auto-update CLI & MCP packages on extension update",
+    "📦 Always uses latest pulse-framework-cli and pulse-framework-mcp",
+  ],
   "0.6.0": [
     "🔧 Auto-repair: Detects and fixes missing MCP/rules on update",
     "🔔 Improved update notifications",
@@ -88,6 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("pulse.init", cmdInit),
     vscode.commands.registerCommand("pulse.setupFull", cmdSetupFull),
     vscode.commands.registerCommand("pulse.repair", cmdRepair),
+    vscode.commands.registerCommand("pulse.updatePackages", () => updatePulsePackages()),
     vscode.commands.registerCommand("pulse.start", cmdStart),
     vscode.commands.registerCommand("pulse.checkpoint", cmdCheckpoint),
     vscode.commands.registerCommand("pulse.doctor", cmdDoctor),
@@ -194,6 +199,54 @@ function getWorkspaceRoot(): string | undefined {
 }
 
 /**
+ * Update CLI and MCP packages globally
+ */
+async function updatePulsePackages(): Promise<boolean> {
+  const terminal = vscode.window.createTerminal({
+    name: "Pulse Update",
+  });
+  terminal.show();
+  
+  // Update both packages to latest
+  terminal.sendText("echo '🔄 Updating Pulse Framework packages...'");
+  terminal.sendText("npm install -g pulse-framework-cli@latest pulse-framework-mcp@latest");
+  terminal.sendText("echo ''");
+  terminal.sendText("echo '✅ Pulse packages updated! You may close this terminal.'");
+  
+  return true;
+}
+
+/**
+ * Show changelog in a quick pick
+ */
+async function showChangelog() {
+  const items: vscode.QuickPickItem[] = [];
+  
+  // Add current version's changes
+  const currentChanges = CHANGELOG[CURRENT_VERSION] || [];
+  for (const change of currentChanges) {
+    items.push({ label: change, description: `v${CURRENT_VERSION}` });
+  }
+  
+  // Add previous versions' highlights
+  const previousVersions = Object.keys(CHANGELOG)
+    .filter((v) => v !== CURRENT_VERSION)
+    .slice(0, 3);
+  
+  for (const version of previousVersions) {
+    items.push({ label: "", description: `─── v${version} ───` });
+    for (const change of CHANGELOG[version]) {
+      items.push({ label: change, description: `v${version}` });
+    }
+  }
+
+  await vscode.window.showQuickPick(items, {
+    placeHolder: `What's new in Pulse Framework v${CURRENT_VERSION}`,
+    canPickMany: false,
+  });
+}
+
+/**
  * Check what Pulse components are missing
  */
 function checkMissingComponents(workspaceRoot: string): string[] {
@@ -221,13 +274,49 @@ function checkMissingComponents(workspaceRoot: string): string[] {
 async function checkForUpdate(context: vscode.ExtensionContext) {
   const lastVersion = context.globalState.get<string>("pulse.lastVersion");
   const workspaceRoot = getWorkspaceRoot();
+  const isVersionChange = lastVersion !== CURRENT_VERSION;
   
   // Always store current version
-  if (lastVersion !== CURRENT_VERSION) {
+  if (isVersionChange) {
     await context.globalState.update("pulse.lastVersion", CURRENT_VERSION);
   }
   
-  // Check for missing components in initialized projects
+  // On version change (not first install), update CLI & MCP packages
+  if (isVersionChange && lastVersion) {
+    const action = await vscode.window.showInformationMessage(
+      `✨ Pulse Framework updated to v${CURRENT_VERSION}! Update CLI & MCP packages to latest?`,
+      "Update Now",
+      "Later",
+      "What's New"
+    );
+    
+    if (action === "Update Now") {
+      await updatePulsePackages();
+      
+      // Also check for missing components
+      if (workspaceRoot) {
+        const missing = checkMissingComponents(workspaceRoot);
+        if (missing.length > 0) {
+          setTimeout(async () => {
+            const repairAction = await vscode.window.showWarningMessage(
+              `Missing components: ${missing.slice(0, 3).join(", ")}. Repair?`,
+              "Repair",
+              "Skip"
+            );
+            if (repairAction === "Repair") {
+              await cmdRepair();
+            }
+          }, 3000);
+        }
+      }
+      return;
+    } else if (action === "What's New") {
+      showChangelog();
+    }
+    return;
+  }
+  
+  // Check for missing components in initialized projects (on every activation)
   if (workspaceRoot) {
     const pulseDir = path.join(workspaceRoot, ".pulse");
     const isInitialized = fs.existsSync(pulseDir);
@@ -246,19 +335,19 @@ async function checkForUpdate(context: vscode.ExtensionContext) {
         
         if (action === "Repair Now") {
           await cmdRepair();
-          return; // Skip update notification, repair is more important
+          return;
         }
       }
     }
   }
   
-  // Skip update notification on first install
+  // Skip further notifications on first install
   if (!lastVersion) {
     return;
   }
   
-  // Show update notification if version changed
-  if (lastVersion !== CURRENT_VERSION) {
+  // Show update notification if version changed (fallback, shouldn't reach here)
+  if (isVersionChange) {
     // Show status bar message briefly
     const updateStatusBar = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
