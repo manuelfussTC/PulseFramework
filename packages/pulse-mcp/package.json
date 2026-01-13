@@ -1,6 +1,6 @@
 {
   "name": "pulse-framework-mcp",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "PULSE MCP Server - Model Context Protocol integration for Cursor AI Agent Mode",
   "author": "Manuel Fuß <kontakt@manuel-fuss.de>",
   "license": "MIT",
