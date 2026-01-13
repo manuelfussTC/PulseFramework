@@ -7,8 +7,13 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.8.0";
+const CURRENT_VERSION = "0.9.0";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.0": [
+    "🏥 Automatic health checks every 30 min (configurable)",
+    "📊 Monitors uncommitted changes & warns on large changesets",
+    "⚙️ New settings: autoHealthCheck, healthCheckIntervalMinutes",
+  ],
   "0.8.0": [
     "🎯 Default profile is now 'fullstack' for quick setup",
     "🐛 Fixed '999 minutes' warning on new projects",
@@ -965,22 +970,36 @@ async function cmdWatchStart() {
   const config = vscode.workspace.getConfiguration("pulse");
   const minutes = config.get<number>("checkpointReminderMinutes", 30);
   const notificationsEnabled = config.get<boolean>("notificationsEnabled", true);
+  const autoHealthCheck = config.get<boolean>("autoHealthCheck", true);
+  const healthCheckIntervalMinutes = config.get<number>("healthCheckIntervalMinutes", 30);
 
   isWatcherRunning = true;
   updateStatusBar();
 
-  vscode.window.showInformationMessage(`Pulse: Watcher started (${minutes}min reminders)`);
+  vscode.window.showInformationMessage(
+    `Pulse: Watcher started (${minutes}min reminders${autoHealthCheck ? `, health check every ${healthCheckIntervalMinutes}min` : ""})`
+  );
 
-  // Start internal timer for reminders
-  watcherInterval = setInterval(() => {
+  let lastHealthCheck = Date.now();
+
+  // Start internal timer for reminders and health checks
+  watcherInterval = setInterval(async () => {
+    const now = Date.now();
+    
+    // Health check every X minutes
+    if (autoHealthCheck && (now - lastHealthCheck) >= healthCheckIntervalMinutes * 60_000) {
+      lastHealthCheck = now;
+      await runPeriodicHealthCheck();
+    }
+
     if (!notificationsEnabled) return;
 
-    // Skip if no checkpoint ever made (new project)
+    // Skip checkpoint reminder if no checkpoint ever made (new project)
     if (!lastCheckpointAt) {
       return;
     }
     
-    const minutesAgo = Math.floor((Date.now() - lastCheckpointAt.getTime()) / 60_000);
+    const minutesAgo = Math.floor((now - lastCheckpointAt.getTime()) / 60_000);
 
     if (minutesAgo >= minutes) {
       vscode.window
@@ -998,6 +1017,65 @@ async function cmdWatchStart() {
   }, 60_000); // Check every minute
 
   updateStatusBar();
+}
+
+/**
+ * Run periodic health check in background
+ */
+async function runPeriodicHealthCheck() {
+  const workspaceRoot = getWorkspaceRoot();
+  if (!workspaceRoot) return;
+
+  try {
+    // Check git status
+    const { stdout: gitStatus } = await execAsync("git status --porcelain", { cwd: workspaceRoot });
+    const uncommittedFiles = gitStatus.trim().split("\n").filter(l => l.length > 0).length;
+    
+    // Check for large uncommitted changes
+    const { stdout: diffStat } = await execAsync("git diff --stat HEAD 2>/dev/null || echo ''", { cwd: workspaceRoot });
+    const diffLines = diffStat.trim().split("\n");
+    const lastLine = diffLines[diffLines.length - 1] || "";
+    const insertionsMatch = lastLine.match(/(\d+) insertion/);
+    const deletionsMatch = lastLine.match(/(\d+) deletion/);
+    const totalChanges = (insertionsMatch ? parseInt(insertionsMatch[1]) : 0) + 
+                         (deletionsMatch ? parseInt(deletionsMatch[1]) : 0);
+
+    // Determine health status
+    let status: "ok" | "warning" | "critical" = "ok";
+    let message = "";
+
+    if (totalChanges > 500) {
+      status = "critical";
+      message = `⚠️ Large uncommitted changes: ${totalChanges} lines across ${uncommittedFiles} files. Consider checkpointing!`;
+    } else if (uncommittedFiles > 10) {
+      status = "warning";
+      message = `${uncommittedFiles} uncommitted files. Consider a checkpoint.`;
+    } else if (totalChanges > 200) {
+      status = "warning";
+      message = `${totalChanges} lines changed. Good time for a checkpoint.`;
+    }
+
+    // Show notification only for warnings/critical
+    if (status === "critical") {
+      const action = await vscode.window.showWarningMessage(
+        `Pulse Health Check: ${message}`,
+        "Checkpoint Now",
+        "Run Doctor",
+        "Dismiss"
+      );
+      if (action === "Checkpoint Now") {
+        cmdCheckpoint();
+      } else if (action === "Run Doctor") {
+        cmdDoctor();
+      }
+    } else if (status === "warning") {
+      // Just update status bar, don't interrupt
+      vscode.window.setStatusBarMessage(`$(pulse) Health: ${message}`, 10000);
+    }
+
+  } catch (error) {
+    // Silently ignore errors in background check
+  }
 }
 
 async function cmdWatchStop() {

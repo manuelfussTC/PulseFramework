@@ -2,6 +2,23 @@
 
 All notable changes to the **Pulse Framework** VS Code/Cursor extension.
 
+## [0.9.0] - 2026-01-13
+
+### Added
+- 🏥 **Automatic health checks** - Monitors git status & change size every 30 min
+- 📊 **Smart warnings** - Warns on large uncommitted changesets (>500 lines = critical)
+- ⚙️ **New settings**:
+  - `pulse.autoHealthCheck` - Enable/disable periodic checks (default: true)
+  - `pulse.healthCheckIntervalMinutes` - Interval between checks (default: 30)
+
+### How it works
+- Watcher checks git status and diff size periodically
+- >500 lines changed → Critical warning with Checkpoint/Doctor options
+- >200 lines or >10 files → Status bar hint (non-intrusive)
+- All quiet if changes are small ✓
+
+---
+
 ## [0.8.0] - 2026-01-13
 
 ### Added
