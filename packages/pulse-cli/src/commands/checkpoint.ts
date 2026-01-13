@@ -15,8 +15,9 @@ export function registerCheckpointCommand(program: Command): void {
     .option("--inspect-latest", "Inspect the latest commit diff (useful if Cursor auto-committed)")
     .option("--run-tests", "Run configured test command")
     .option("-m, --message <msg>", "If provided, run git commit -am/-m with this message (staged only)")
+    .option("-s, --summary <text>", "Summary of what was done (for the checkpoint log)")
     .action(
-      async (opts: { staged?: boolean; inspectLatest?: boolean; runTests?: boolean; message?: string }) => {
+      async (opts: { staged?: boolean; inspectLatest?: boolean; runTests?: boolean; message?: string; summary?: string }) => {
         const repoRoot = await findRepoRoot(process.cwd());
         if (!repoRoot) throw new Error("Not inside a git repository.");
 
@@ -55,9 +56,19 @@ export function registerCheckpointCommand(program: Command): void {
         const scan = scanDiff(config, { diffText, diffStat, diffNumstat, diffNameStatus });
 
         const ts = timestampId();
-        const artifact = [
+        const artifactParts = [
           `# Checkpoint (${ts})`,
           ``,
+        ];
+        
+        // Add summary if provided
+        if (opts.summary) {
+          artifactParts.push(`## Summary`);
+          artifactParts.push(opts.summary);
+          artifactParts.push(``);
+        }
+        
+        artifactParts.push(
           `## Git status`,
           "```",
           status || "(clean)",
@@ -76,7 +87,9 @@ export function registerCheckpointCommand(program: Command): void {
           `## Findings`,
           ...formatFindings(scan.findings),
           ``,
-        ].join("\n");
+        );
+        
+        const artifact = artifactParts.join("\n");
 
         const p = await writeArtifact(repoRoot, "worklogs", `${ts}-checkpoint.md`, artifact);
         // eslint-disable-next-line no-console
