@@ -2,6 +2,19 @@
 
 All notable changes to the **Pulse Framework** VS Code/Cursor extension.
 
+## [0.6.0] - 2026-01-13
+
+### Added
+- 🔧 **Auto-repair on update** - Detects missing MCP/rules and prompts to fix
+- ⚙️ **Repair command** - New "Pulse: Repair Installation" in command palette
+- 🔔 **Improved update notifications** - More visible, 15s status bar message
+
+### Fixed
+- Update notifications now work reliably
+- Existing projects get prompted to install missing components
+
+---
+
 ## [0.5.3] - 2026-01-13
 
 ### Changed

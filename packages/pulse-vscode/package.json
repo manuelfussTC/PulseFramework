@@ -2,7 +2,7 @@
   "name": "pulse-framework",
   "displayName": "Pulse Framework",
   "description": "Guardrails, checkpoints, and escalation for AI-assisted development with Cursor Agent Mode.",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "publisher": "pulse-framework",
   "license": "MIT",
   "icon": "icon.png",
@@ -62,6 +62,11 @@
         "command": "pulse.setupFull",
         "title": "Pulse: Quick Setup (Full)",
         "icon": "$(rocket)"
+      },
+      {
+        "command": "pulse.repair",
+        "title": "Pulse: Repair Installation",
+        "icon": "$(tools)"
       },
       {
         "command": "pulse.start",

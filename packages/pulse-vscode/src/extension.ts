@@ -7,8 +7,13 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.5.3";
+const CURRENT_VERSION = "0.6.0";
 const CHANGELOG: Record<string, string[]> = {
+  "0.6.0": [
+    "🔧 Auto-repair: Detects and fixes missing MCP/rules on update",
+    "🔔 Improved update notifications",
+    "⚙️ New 'Pulse: Repair Installation' command",
+  ],
   "0.5.3": [
     "📖 Complete README rewrite - now shows full framework features",
   ],
@@ -82,6 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("pulse.init", cmdInit),
     vscode.commands.registerCommand("pulse.setupFull", cmdSetupFull),
+    vscode.commands.registerCommand("pulse.repair", cmdRepair),
     vscode.commands.registerCommand("pulse.start", cmdStart),
     vscode.commands.registerCommand("pulse.checkpoint", cmdCheckpoint),
     vscode.commands.registerCommand("pulse.doctor", cmdDoctor),
@@ -188,20 +194,71 @@ function getWorkspaceRoot(): string | undefined {
 }
 
 /**
+ * Check what Pulse components are missing
+ */
+function checkMissingComponents(workspaceRoot: string): string[] {
+  const missing: string[] = [];
+  
+  if (!fs.existsSync(path.join(workspaceRoot, ".pulse"))) {
+    missing.push(".pulse/ directory");
+  }
+  if (!fs.existsSync(path.join(workspaceRoot, ".cursorrules"))) {
+    missing.push(".cursorrules");
+  }
+  if (!fs.existsSync(path.join(workspaceRoot, ".cursor", "rules", "pulse.mdc"))) {
+    missing.push(".cursor/rules/pulse.mdc");
+  }
+  if (!fs.existsSync(path.join(workspaceRoot, ".cursor", "mcp.json"))) {
+    missing.push(".cursor/mcp.json (MCP Server)");
+  }
+  
+  return missing;
+}
+
+/**
  * Check if extension was updated and show notification
  */
 async function checkForUpdate(context: vscode.ExtensionContext) {
   const lastVersion = context.globalState.get<string>("pulse.lastVersion");
+  const workspaceRoot = getWorkspaceRoot();
   
+  // Always store current version
   if (lastVersion !== CURRENT_VERSION) {
-    // Store new version
     await context.globalState.update("pulse.lastVersion", CURRENT_VERSION);
+  }
+  
+  // Check for missing components in initialized projects
+  if (workspaceRoot) {
+    const pulseDir = path.join(workspaceRoot, ".pulse");
+    const isInitialized = fs.existsSync(pulseDir);
     
-    // Skip notification on first install (no lastVersion)
-    if (!lastVersion) {
-      return;
+    if (isInitialized) {
+      const missing = checkMissingComponents(workspaceRoot);
+      
+      if (missing.length > 0) {
+        // Show repair prompt
+        const missingList = missing.slice(0, 3).join(", ");
+        const action = await vscode.window.showWarningMessage(
+          `Pulse: Missing components detected (${missingList}). Repair installation?`,
+          "Repair Now",
+          "Later"
+        );
+        
+        if (action === "Repair Now") {
+          await cmdRepair();
+          return; // Skip update notification, repair is more important
+        }
+      }
     }
-
+  }
+  
+  // Skip update notification on first install
+  if (!lastVersion) {
+    return;
+  }
+  
+  // Show update notification if version changed
+  if (lastVersion !== CURRENT_VERSION) {
     // Show status bar message briefly
     const updateStatusBar = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
@@ -211,12 +268,12 @@ async function checkForUpdate(context: vscode.ExtensionContext) {
     updateStatusBar.backgroundColor = new vscode.ThemeColor("statusBarItem.prominentBackground");
     updateStatusBar.show();
     
-    // Hide after 10 seconds
-    setTimeout(() => updateStatusBar.dispose(), 10000);
+    // Hide after 15 seconds
+    setTimeout(() => updateStatusBar.dispose(), 15000);
 
     // Show "What's New" notification
     const changes = CHANGELOG[CURRENT_VERSION] || [];
-    const message = `Pulse Framework updated to v${CURRENT_VERSION}!`;
+    const message = `✨ Pulse Framework updated to v${CURRENT_VERSION}!`;
     
     const action = await vscode.window.showInformationMessage(
       message,
@@ -225,7 +282,7 @@ async function checkForUpdate(context: vscode.ExtensionContext) {
     );
 
     if (action === "What's New") {
-      // Show changelog in a quick pick or webview
+      // Show changelog in a quick pick
       const items = changes.map((change) => ({
         label: change,
         description: `v${CURRENT_VERSION}`,
@@ -234,7 +291,7 @@ async function checkForUpdate(context: vscode.ExtensionContext) {
       // Add previous versions' highlights
       const previousVersions = Object.keys(CHANGELOG)
         .filter((v) => v !== CURRENT_VERSION)
-        .slice(0, 2); // Last 2 versions
+        .slice(0, 2);
       
       for (const version of previousVersions) {
         items.push({ label: "", description: `─── v${version} ───` });
@@ -674,6 +731,57 @@ async function cmdSetupFull() {
   }
 
   await runFullSetup(workspaceRoot);
+}
+
+async function cmdRepair() {
+  const workspaceRoot = getWorkspaceRoot();
+  if (!workspaceRoot) {
+    vscode.window.showErrorMessage("Pulse: No workspace folder open.");
+    return;
+  }
+
+  const missing = checkMissingComponents(workspaceRoot);
+  
+  if (missing.length === 0) {
+    vscode.window.showInformationMessage("✅ Pulse installation is complete - nothing to repair.");
+    return;
+  }
+
+  // Show what's missing
+  const missingText = missing.map(m => `• ${m}`).join("\n");
+  
+  const action = await vscode.window.showWarningMessage(
+    `Missing Pulse components:\n${missing.join(", ")}\n\nRepair will run 'pulse init --mcp' to install missing files.`,
+    { modal: true },
+    "Repair",
+    "Cancel"
+  );
+
+  if (action !== "Repair") {
+    return;
+  }
+
+  // Run repair - this re-runs init which is idempotent (won't overwrite existing files)
+  const terminal = vscode.window.createTerminal({
+    name: "Pulse Repair",
+    cwd: workspaceRoot,
+  });
+  terminal.show();
+  terminal.sendText("npx pulse-framework-cli init --hooks --mcp");
+
+  // Verify after delay
+  setTimeout(async () => {
+    const stillMissing = checkMissingComponents(workspaceRoot);
+    if (stillMissing.length === 0) {
+      vscode.window.showInformationMessage(
+        "✅ Pulse repair complete! Restart Cursor to activate MCP server."
+      );
+    } else {
+      vscode.window.showWarningMessage(
+        `⚠️ Some components still missing: ${stillMissing.join(", ")}`
+      );
+    }
+  }, 8000);
 }
 
 async function cmdStart() {
