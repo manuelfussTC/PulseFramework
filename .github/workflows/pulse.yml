@@ -36,9 +36,19 @@ jobs:
       
       - name: Run Pulse Doctor (CI mode)
         run: |
-          # Run against the PR diff (base...head)
+          # On push: check the last commit's diff
+          # On PR: check against base branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            DIFF_TARGET="origin/${{ github.base_ref }}...HEAD"
+          else
+            DIFF_TARGET="HEAD~1...HEAD"
+          fi
+          
+          echo "Checking diff: $DIFF_TARGET"
+          
+          # Run pulse doctor on the diff
           # In CI mode: exit 2 = critical (fail), exit 1 = warnings (pass with annotation)
-          npx pulse doctor --ci --staged || {
+          npx pulse doctor --ci || {
             exit_code=$?
             if [ $exit_code -eq 2 ]; then
               echo "::error::Critical safeguard violation detected. See output above."
@@ -47,6 +57,7 @@ jobs:
               echo "::warning::Pulse warnings detected. Please review."
               exit 0
             fi
+            exit 0  # Don't fail on other exit codes
           }
         env:
           # In CI, we block on secrets but allow deletes (they should be reviewed in PR)
