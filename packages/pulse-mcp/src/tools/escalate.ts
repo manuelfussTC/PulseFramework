@@ -63,6 +63,10 @@ export async function handleEscalateTool(args: unknown): Promise<ChainedResponse
   try {
     const result = await runCli(cliArgs);
     
+    // Track that we escalated (for learn suggestion later)
+    process.env.PULSE_ESCALATED = "true";
+    process.env.PULSE_ESCALATE_PROBLEM = problem;
+    
     return chainResponse({
       result: `🚨 Escalation created\n\n${result}`,
       next_action: "STOP - Wait for analysis from external model. DO NOT make further changes.",
