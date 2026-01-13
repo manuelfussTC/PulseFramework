@@ -227,33 +227,69 @@ async function promptPulseSetup(workspaceRoot: string, hasCursorrules: boolean) 
   }
 }
 
-function updateStatusBar() {
+async function hasUncommittedChanges(): Promise<boolean> {
+  const workspaceRoot = getWorkspaceRoot();
+  if (!workspaceRoot) return false;
+
+  try {
+    const { stdout } = await execAsync("git status --porcelain", { cwd: workspaceRoot });
+    return stdout.trim().length > 0;
+  } catch {
+    return false; // Not a git repo or error
+  }
+}
+
+function isNewDay(lastDate: Date): boolean {
+  const now = new Date();
+  return (
+    lastDate.getDate() !== now.getDate() ||
+    lastDate.getMonth() !== now.getMonth() ||
+    lastDate.getFullYear() !== now.getFullYear()
+  );
+}
+
+async function updateStatusBar() {
   if (!statusBarItem) return;
 
   const config = vscode.workspace.getConfiguration("pulse");
   const reminderMinutes = config.get<number>("checkpointReminderMinutes", 30);
+  const sessionThresholdMinutes = 240; // 4 hours = new session threshold
 
   if (!lastCheckpointAt) {
-    statusBarItem.text = "$(pulse) Pulse: No checkpoint";
+    statusBarItem.text = "$(pulse) Pulse: Ready";
     statusBarItem.backgroundColor = undefined;
     return;
   }
 
   const minutesAgo = Math.floor((Date.now() - lastCheckpointAt.getTime()) / 60_000);
 
+  // Case 1: Just checkpointed
   if (minutesAgo < 1) {
     statusBarItem.text = "$(check) Pulse: Just now";
     statusBarItem.backgroundColor = undefined;
-  } else if (minutesAgo < reminderMinutes) {
+  }
+  // Case 2: Within reminder threshold - all good
+  else if (minutesAgo < reminderMinutes) {
     statusBarItem.text = `$(clock) Pulse: ${minutesAgo}m ago`;
     statusBarItem.backgroundColor = undefined;
-  } else if (minutesAgo > 60) {
-    // Session detection: >60 min is likely a new session, show friendly message
-    const hoursAgo = Math.floor(minutesAgo / 60);
-    const display = hoursAgo >= 24 ? `${Math.floor(hoursAgo / 24)}d` : `${hoursAgo}h`;
-    statusBarItem.text = `$(refresh) Pulse: ${display} (new session?)`;
-    statusBarItem.backgroundColor = undefined; // Don't show warning for new session
-  } else {
+  }
+  // Case 3: New day OR >4h - likely a new session
+  else if (isNewDay(lastCheckpointAt) || minutesAgo >= sessionThresholdMinutes) {
+    // Check for uncommitted changes to decide the message
+    const hasChanges = await hasUncommittedChanges();
+    
+    if (hasChanges) {
+      // Has uncommitted changes from before - show capped warning
+      statusBarItem.text = "$(warning) Pulse: >4h (uncommitted!)";
+      statusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
+    } else {
+      // No changes - this is a fresh session, auto-reset the mental model
+      statusBarItem.text = "$(rocket) Pulse: Ready";
+      statusBarItem.backgroundColor = undefined;
+    }
+  }
+  // Case 4: Between reminder threshold and 4h - show warning
+  else {
     statusBarItem.text = `$(warning) Pulse: ${minutesAgo}m ago`;
     statusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
   }

@@ -9,9 +9,16 @@ This repository contains multiple packages:
 
 ---
 
-## 0.4.5 (2026-01-12)
+## 0.4.5 / Extension 0.4.0 (2026-01-12)
 
-### Improved
+### Added (Extension)
+- **Smart session detection**: Status bar now intelligently handles long breaks
+  - Shows "Ready" (not warning) when >4h with no uncommitted changes
+  - Shows ">4h (uncommitted!)" if old uncommitted changes exist
+  - Auto-detects new day → fresh session
+  - No more "770m ago" nonsense after leaving Cursor open overnight
+
+### Improved (CLI)
 - **Better error messaging in `pulse init`**:
   - `AGENTS.md` creation now shows specific error + actionable hints (permission denied, directory not found, disk full)
   - `.cursorrules` creation now catches and reports errors instead of silently failing
