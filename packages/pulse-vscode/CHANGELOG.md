@@ -2,6 +2,16 @@
 
 All notable changes to the **Pulse Framework** VS Code/Cursor extension.
 
+## [0.5.3] - 2026-01-13
+
+### Changed
+- 📖 **Complete README rewrite** - Now properly describes full Pulse Framework
+  - Was: "Checkpoint Timer" badge
+  - Now: Full feature overview, MCP integration, setup guide
+- Better OpenVSX marketplace presentation
+
+---
+
 ## [0.5.2] - 2026-01-13
 
 ### Added

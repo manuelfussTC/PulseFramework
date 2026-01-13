@@ -1,117 +1,107 @@
-# Pulse Framework - VSCode/Cursor Extension
+# Pulse Framework
 
-> Guardrails, checkpoints, and escalation for AI-assisted development with Cursor Agent Mode.
+> **Guardrails, checkpoints, and escalation for AI-assisted development.**
 
-![Pulse Status Bar](https://img.shields.io/badge/Pulse-Checkpoint%20Timer-blue)
+[![OpenVSX](https://img.shields.io/open-vsx/v/pulse-framework/pulse-framework)](https://open-vsx.org/extension/pulse-framework/pulse-framework)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+Pulse Framework is a **safety system for AI coding** with Cursor, Windsurf, Copilot and other AI assistants. It prevents common pitfalls like runaway agents, forgotten commits, accidental deletions, and endless debugging loops.
 
-### 🕐 Status Bar Timer
-Shows time since your last checkpoint — turns **yellow** after 30 minutes to remind you to checkpoint.
+## 🎯 What Pulse Does
 
-![Status Bar](./docs/statusbar.png)
+| Problem | Pulse Solution |
+|---------|----------------|
+| Agent works 2 hours without saving | ⏱️ **30-minute timer** with checkpoint reminders |
+| Accidental file deletions | 🗑️ **Delete guard** requires confirmation |
+| Secrets committed to repo | 🔐 **Secrets scanner** blocks commits |
+| Stuck in debugging loops | 🔄 **Loop detection** triggers escalation |
+| Lost context after breaks | 📋 **Session detection** shows "Ready" on new day |
+| No idea what changed | 📊 **Status bar** shows time + changes at a glance |
+
+## ✨ Features
+
+### 🚀 One-Click Setup
+Open any project → Click "Setup Pulse" in status bar or Explorer panel → Done!
+
+### 📊 Smart Status Bar
+- Shows time since last checkpoint
+- Turns yellow after 30 minutes
+- Shows "Ready" on new sessions (no false warnings!)
+- Click to create checkpoint
+
+### 📂 Explorer Panel
+Quick access to all Pulse actions:
+- Start Task, Checkpoint, Doctor, Watcher, Escalate, Artifacts
+
+### 🔔 Update Notifications
+See what's new after extension updates with "What's New" dialog.
 
 ### ⌨️ Commands
-Access all Pulse commands from the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
+Access via Command Palette (`Cmd+Shift+P`):
 
 | Command | Description |
 |---------|-------------|
-| **Pulse: Initialize Project** | Set up Pulse in your project |
-| **Pulse: Start New Task** | Create a Start Pulse with 6-element framework |
-| **Pulse: Checkpoint Now** | Create a checkpoint (git context + warnings) |
-| **Pulse: Run Doctor** | Scan for safeguards and red flags |
-| **Pulse: Create Review Checklist** | Generate review checklist |
-| **Pulse: Create Escalation Package** | Build package for external model |
-| **Pulse: Start Watcher** | Enable 30-min reminder timer |
-| **Pulse: Stop Watcher** | Disable reminder timer |
-| **Pulse: Set Profile → Concept/Build/Escalation** | Switch layers |
+| **Pulse: Initialize Project** | Set up Pulse (creates .cursorrules, MCP, hooks) |
+| **Pulse: Quick Setup (Full)** | One-click full setup |
+| **Pulse: Start New Task** | Create structured task with 6-element prompt |
+| **Pulse: Checkpoint Now** | Git commit with safeguard checks |
+| **Pulse: Run Doctor** | Scan for secrets, deletes, loops |
+| **Pulse: Create Escalation Package** | Export context for GPT-4/Claude |
+| **Pulse: Start/Stop Watcher** | Toggle 30-min reminders |
 
-### 🔔 Checkpoint Reminders
-When the watcher is running, you'll get notifications when it's time to checkpoint:
+## 📦 Installation
 
-> ⚠️ Pulse: 32 minutes since last checkpoint. Time to checkpoint!
+### From Cursor/VS Code
+1. Open Extensions (`Cmd+Shift+X`)
+2. Search **"Pulse Framework"**
+3. Click Install
+4. Open a project → Click "Setup Pulse" in status bar
 
-### 🔒 Mixed Enforcement
-Works with `pulse doctor` to scan for:
-- Secrets in code
-- Mass deletions
-- Production URLs
-- Loop patterns (repeated "fix" commits)
+### What Gets Installed
+- `.pulse/` directory for artifacts
+- `.cursorrules` with safeguard rules
+- Git hooks (pre-commit, pre-push) for enforcement
+- MCP server config for Cursor Agent Mode
 
-## Installation
-
-### From VSIX (Local)
-```bash
-cd packages/pulse-vscode
-npm install
-npm run build
-npm run package
-# Install the generated .vsix file
-```
-
-### From Marketplace (Coming Soon)
-Search for "Pulse Framework" in the Extensions marketplace.
-
-## Requirements
-
-- **Pulse CLI** must be installed (`npm install -g @pulseframework/pulse-cli` or available via `npx`)
-- **Git** repository (Pulse uses git for checkpoints)
-
-## Configuration
+## 🔧 Configuration
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `pulse.checkpointReminderMinutes` | `30` | Minutes between checkpoint reminders |
+| `pulse.checkpointReminderMinutes` | `30` | Minutes between reminders |
 | `pulse.showStatusBar` | `true` | Show status bar item |
-| `pulse.autoStartWatcher` | `false` | Auto-start watcher on project open |
-| `pulse.notificationsEnabled` | `true` | Show notification reminders |
+| `pulse.autoStartWatcher` | `false` | Auto-start watcher |
+| `pulse.notificationsEnabled` | `true` | Show notifications |
 
-## Usage with Cursor Agent Mode
+## 🤖 With Cursor Agent Mode
 
-### 1. Start a Session
-1. Open Command Palette → **Pulse: Set Profile → Build**
-2. **Pulse: Start New Task** → Fill in Role, Context, Action
-3. Copy the generated prompt into Cursor Agent Mode
+Pulse integrates with Cursor's Agent Mode via MCP (Model Context Protocol):
 
-### 2. During Agent Mode
-- Status bar shows time since last checkpoint
-- **Pulse: Start Watcher** for automatic reminders
-- Click status bar or run **Pulse: Checkpoint Now** every 5-10 minutes
+1. **Setup**: `Pulse: Initialize Project` with MCP option
+2. **Agent sees**: Safeguard rules in `.cursorrules`
+3. **Agent uses**: MCP tools (`pulse_status`, `pulse_doctor`, `pulse_checkpoint`)
+4. **You see**: Status bar timer + notifications
 
-### 3. When Stuck
-1. **Pulse: Run Doctor** with loop detection
-2. If STOP recommended: **Pulse: Create Escalation Package**
-3. Paste into ChatGPT/Claude → get instructions → paste back into Cursor
+### MCP Tools (for AI Agent)
 
-### 4. Before Merge
-- **Pulse: Create Review Checklist**
-- Fill the checklist in `.pulse/reviews/`
+| Tool | When Agent Calls It |
+|------|---------------------|
+| `pulse_status` | Before every response |
+| `pulse_doctor` | After code changes |
+| `pulse_checkpoint` | Every 5-10 minutes |
+| `pulse_escalate` | When stuck after 2-3 attempts |
 
-## Keyboard Shortcuts (Suggested)
+## 📚 Documentation
 
-Add to your `keybindings.json`:
+- [Pulse Framework Website](https://manuel-fuss.de/pulse)
+- [GitHub Repository](https://github.com/manuelfussTC/PulseFramework)
+- [CLI Documentation](https://github.com/manuelfussTC/PulseFramework/blob/main/docs/tooling/pulse-cli.md)
+- [MCP Documentation](https://github.com/manuelfussTC/PulseFramework/blob/main/docs/tooling/pulse-mcp.md)
 
-```json
-[
-  {
-    "key": "cmd+shift+c",
-    "command": "pulse.checkpoint",
-    "when": "pulse.initialized"
-  },
-  {
-    "key": "cmd+shift+d",
-    "command": "pulse.doctor",
-    "when": "pulse.initialized"
-  }
-]
-```
+## 🆘 Support
 
-## Related
+- **Issues**: [GitHub Issues](https://github.com/manuelfussTC/PulseFramework/issues)
+- **Email**: [kontakt@manuel-fuss.de](mailto:kontakt@manuel-fuss.de)
 
-- [Pulse CLI Documentation](../../docs/tooling/pulse-cli.md)
-- [PULSE Cheatsheet](../../docs/cheatsheet/PULSE-Cheatsheet.md)
-- [Pulse Spec v1](../../spec/pulse-spec-v1.md)
+## 📄 License
 
-## License
-
-MIT
+MIT © Manuel Fuß
