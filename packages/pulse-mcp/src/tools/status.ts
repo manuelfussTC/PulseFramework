@@ -14,6 +14,10 @@ export function registerStatusTool() {
     inputSchema: {
       type: "object" as const,
       properties: {
+        userMessage: {
+          type: "string",
+          description: "The user's latest message (for smart tool suggestions)",
+        },
         verbose: {
           type: "boolean",
           description: "Verbose output with scope bars and recommendation",
@@ -24,7 +28,10 @@ export function registerStatusTool() {
 }
 
 export async function handleStatusTool(args: unknown): Promise<ChainedResponse> {
-  const { verbose } = (args as { verbose?: boolean }) || {};
+  const { userMessage, verbose } = (args as { userMessage?: string; verbose?: boolean }) || {};
+  
+  // Analyze user message for smart tool suggestions
+  const suggestedTool = analyzeUserMessage(userMessage);
   
   const cliArgs = ["status", "--json"];
   if (verbose) {
@@ -99,6 +106,15 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
     // Block agent on: critical findings OR >30 min without checkpoint
     const mustStop = data.criticalFindings > 0 || isOverdue;
     
+    // Add smart tool suggestion if detected
+    if (suggestedTool && !mustStop) {
+      lines.push(``);
+      lines.push(`💡 Suggested: ${suggestedTool.tool} - ${suggestedTool.reason}`);
+      if (!nextAction) {
+        nextAction = `Consider calling ${suggestedTool.tool}`;
+      }
+    }
+    
     return chainResponse({
       result: lines.join("\n"),
       next_action: nextAction,
@@ -113,5 +129,47 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       safeguards_active: true,
     });
   }
+}
+
+/**
+ * Analyze user message to suggest the right tool
+ */
+function analyzeUserMessage(message?: string): { tool: string; reason: string } | null {
+  if (!message) return null;
+  
+  const lower = message.toLowerCase();
+  
+  // New task / feature / start working
+  if (/^(new|start|begin|implement|create|build|add|make)\b/i.test(message) ||
+      /neue[rs]?\s+(feature|aufgabe|task)/i.test(lower) ||
+      /lass uns|let's|fang an/i.test(lower)) {
+    return { tool: "pulse_run", reason: "New task detected - creates branch & work order" };
+  }
+  
+  // Done / finished / PR / merge
+  if (/\b(done|fertig|finished|complete|abgeschlossen|pr|pull.?request|merge|ship)\b/i.test(lower)) {
+    return { tool: "pulse_review", reason: "Completion detected - run review checklist" };
+  }
+  
+  // Wrong / not what I meant / stop
+  if (/\b(wrong|falsch|nein|stop|nicht|no|halt|undo|revert|zurück)\b/i.test(lower) ||
+      /not what i (meant|want)/i.test(lower) ||
+      /das stimmt nicht/i.test(lower)) {
+    return { tool: "pulse_correct", reason: "Correction needed - get back on track" };
+  }
+  
+  // Stuck / help / doesn't work
+  if (/\b(stuck|hilfe|help|doesn'?t work|funktioniert nicht|error|fehler|broken|kaputt)\b/i.test(lower) &&
+      /\b(still|immer noch|again|wieder|multiple|mehrmals)\b/i.test(lower)) {
+    return { tool: "pulse_escalate", reason: "Repeated issues - consider escalation" };
+  }
+  
+  // Explain / what did you do
+  if (/\b(explain|erkläre?|what did|was hast|why|warum|how|wie)\b/i.test(lower) &&
+      /\b(you|du|that|das|this|code)\b/i.test(lower)) {
+    return { tool: "pulse_review", reason: "Explanation requested - review changes" };
+  }
+  
+  return null;
 }
 
