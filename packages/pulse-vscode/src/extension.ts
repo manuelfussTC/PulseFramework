@@ -6,6 +6,24 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+// Version & Changelog
+const CURRENT_VERSION = "0.5.1";
+const CHANGELOG: Record<string, string[]> = {
+  "0.5.1": [
+    "🔔 Update notifications - see what's new after updates",
+    "📊 Status bar shows version on update",
+  ],
+  "0.5.0": [
+    "🚀 Welcome notification for new projects",
+    "📌 Status bar 'Setup Pulse' button",
+    "📂 Explorer panel with Pulse actions",
+  ],
+  "0.4.0": [
+    "⏱️ Smart session detection (no more '770m ago')",
+    "🔄 Auto-reset on new day",
+  ],
+};
+
 // State
 let statusBarItem: vscode.StatusBarItem | undefined;
 let setupStatusBarItem: vscode.StatusBarItem | undefined;
@@ -20,6 +38,9 @@ let pulseTreeDataProvider: PulseTreeDataProvider | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Pulse Framework extension activated");
+
+  // Check for version update and show notification
+  checkForUpdate(context);
 
   // Check if this is a Pulse project
   const workspaceRoot = getWorkspaceRoot();
@@ -158,6 +179,70 @@ export function deactivate() {
 
 function getWorkspaceRoot(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+}
+
+/**
+ * Check if extension was updated and show notification
+ */
+async function checkForUpdate(context: vscode.ExtensionContext) {
+  const lastVersion = context.globalState.get<string>("pulse.lastVersion");
+  
+  if (lastVersion !== CURRENT_VERSION) {
+    // Store new version
+    await context.globalState.update("pulse.lastVersion", CURRENT_VERSION);
+    
+    // Skip notification on first install (no lastVersion)
+    if (!lastVersion) {
+      return;
+    }
+
+    // Show status bar message briefly
+    const updateStatusBar = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left,
+      101
+    );
+    updateStatusBar.text = `$(sparkle) Pulse updated to v${CURRENT_VERSION}!`;
+    updateStatusBar.backgroundColor = new vscode.ThemeColor("statusBarItem.prominentBackground");
+    updateStatusBar.show();
+    
+    // Hide after 10 seconds
+    setTimeout(() => updateStatusBar.dispose(), 10000);
+
+    // Show "What's New" notification
+    const changes = CHANGELOG[CURRENT_VERSION] || [];
+    const message = `Pulse Framework updated to v${CURRENT_VERSION}!`;
+    
+    const action = await vscode.window.showInformationMessage(
+      message,
+      "What's New",
+      "Dismiss"
+    );
+
+    if (action === "What's New") {
+      // Show changelog in a quick pick or webview
+      const items = changes.map((change) => ({
+        label: change,
+        description: `v${CURRENT_VERSION}`,
+      }));
+      
+      // Add previous versions' highlights
+      const previousVersions = Object.keys(CHANGELOG)
+        .filter((v) => v !== CURRENT_VERSION)
+        .slice(0, 2); // Last 2 versions
+      
+      for (const version of previousVersions) {
+        items.push({ label: "", description: `─── v${version} ───` });
+        for (const change of CHANGELOG[version]) {
+          items.push({ label: change, description: `v${version}` });
+        }
+      }
+
+      await vscode.window.showQuickPick(items, {
+        placeHolder: `What's new in Pulse Framework v${CURRENT_VERSION}`,
+        canPickMany: false,
+      });
+    }
+  }
 }
 
 function loadLastCheckpointTime(workspaceRoot: string) {

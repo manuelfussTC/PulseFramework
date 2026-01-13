@@ -9,6 +9,19 @@ This repository contains multiple packages:
 
 ---
 
+## Extension 0.5.1 (2026-01-13)
+
+### Added
+- **Update Notifications**: Shows "What's New" popup after extension updates
+- **Status Bar Update Hint**: Temporary "✨ Pulse updated to v0.5.1!" message (10s)
+- **Changelog Quick Pick**: View recent changes across versions
+
+### Notes
+- First install: no notification (only on updates)
+- Version stored in VS Code globalState
+
+---
+
 ## Extension 0.5.0 (2026-01-13)
 
 ### Added
