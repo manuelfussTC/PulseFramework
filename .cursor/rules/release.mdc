@@ -8,7 +8,22 @@ alwaysApply: false
 
 # 📦 PULSE Release Checklist
 
-When making changes to PULSE packages, **ALL artifacts must be updated together**.
+## ⛔ CRITICAL RULE: ALL ARTIFACTS MUST BE IN SYNC
+
+**NEVER release only one component. ALL must be updated together:**
+
+```
+CLI (npm)     ←→  MCP (npm)     ←→  Extension (OpenVSX)  ←→  Git (repo)
+    ↑________________↑___________________↑____________________↑
+                        ALL MUST MATCH
+```
+
+**Before ANY release, check sync:**
+```bash
+echo "CLI: $(npm view pulse-framework-cli version)"
+echo "MCP: $(npm view pulse-framework-mcp version)"
+echo "Ext: $(curl -s 'https://open-vsx.org/api/pulse-framework/pulse-framework' | node -p 'JSON.parse(require(\"fs\").readFileSync(0)).version')"
+```
 
 ## Components to Update
 
