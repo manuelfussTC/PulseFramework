@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.1";
+const CURRENT_VERSION = "0.9.2";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.2": [
+    "🐛 Fixed reminder spam - now only notifies every 30 min, not every minute",
+  ],
   "0.9.1": [
     "🐛 Fixed --profile → --preset flag for CLI compatibility",
   ],
@@ -984,6 +987,7 @@ async function cmdWatchStart() {
   );
 
   let lastHealthCheck = Date.now();
+  let lastReminderShown = 0; // Track when we last showed a reminder
 
   // Start internal timer for reminders and health checks
   watcherInterval = setInterval(async () => {
@@ -1003,8 +1007,14 @@ async function cmdWatchStart() {
     }
     
     const minutesAgo = Math.floor((now - lastCheckpointAt.getTime()) / 60_000);
+    const minutesSinceReminder = Math.floor((now - lastReminderShown) / 60_000);
 
-    if (minutesAgo >= minutes) {
+    // Only show reminder if:
+    // 1. We're past the threshold (e.g., 30 min)
+    // 2. We haven't shown a reminder in the last 30 min
+    if (minutesAgo >= minutes && minutesSinceReminder >= minutes) {
+      lastReminderShown = now;
+      
       vscode.window
         .showWarningMessage(
           `Pulse: ${minutesAgo} minutes since last checkpoint. Time to checkpoint!`,
