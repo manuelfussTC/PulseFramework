@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.5.1";
+const CURRENT_VERSION = "0.5.2";
 const CHANGELOG: Record<string, string[]> = {
+  "0.5.2": [
+    "📄 Changelog now visible on OpenVSX/Marketplace",
+  ],
   "0.5.1": [
     "🔔 Update notifications - see what's new after updates",
     "📊 Status bar shows version on update",
