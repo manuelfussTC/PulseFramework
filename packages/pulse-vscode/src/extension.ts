@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.0";
+const CURRENT_VERSION = "0.9.1";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.1": [
+    "🐛 Fixed --profile → --preset flag for CLI compatibility",
+  ],
   "0.9.0": [
     "🏥 Automatic health checks every 30 min (configurable)",
     "📊 Monitors uncommitted changes & warns on large changesets",
@@ -553,7 +556,7 @@ async function runFullSetup(workspaceRoot: string) {
     cwd: workspaceRoot,
   });
   terminal.show();
-  terminal.sendText("npx pulse-framework-cli init --hooks --mcp --profile fullstack");
+  terminal.sendText("npx pulse-framework-cli init --hooks --mcp --preset fullstack");
 
   // Update context after a delay
   setTimeout(async () => {
@@ -870,7 +873,7 @@ async function cmdRepair() {
     cwd: workspaceRoot,
   });
   terminal.show();
-  terminal.sendText("npx pulse-framework-cli init --hooks --mcp --profile fullstack");
+  terminal.sendText("npx pulse-framework-cli init --hooks --mcp --preset fullstack");
 
   // Verify after delay
   setTimeout(async () => {
