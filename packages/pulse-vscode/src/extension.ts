@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.2";
+const CURRENT_VERSION = "0.9.3";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.3": [
+    "✨ Smart Checkpoint: Agent creates commit message from chat context",
+  ],
   "0.9.2": [
     "🐛 Fixed reminder spam - now only notifies every 30 min, not every minute",
   ],
@@ -905,15 +908,30 @@ async function cmdCheckpoint() {
   // Quick pick for checkpoint options
   const option = await vscode.window.showQuickPick(
     [
-      { label: "$(save) Quick Checkpoint", description: "Create checkpoint artifact", value: "" },
-      { label: "$(git-commit) Checkpoint + Commit", description: "Create checkpoint and commit", value: "commit" },
+      { label: "$(save) Quick Checkpoint", description: "Create checkpoint artifact (no commit)", value: "" },
+      { label: "$(sparkle) Smart Checkpoint", description: "Agent creates commit from chat context", value: "smart" },
+      { label: "$(git-commit) Manual Commit", description: "Enter commit message manually", value: "commit" },
       { label: "$(history) Inspect Latest Commit", description: "Review auto-committed changes", value: "inspect" },
-      { label: "$(beaker) Run Tests", description: "Checkpoint with test run", value: "test" },
     ],
     { placeHolder: "Checkpoint options" }
   );
 
   if (!option) return;
+
+  // Smart checkpoint: Let agent handle it via MCP
+  if (option.value === "smart") {
+    const prompt = "Please run pulse_checkpoint with a summary of what we accomplished in this session.";
+    await vscode.env.clipboard.writeText(prompt);
+    vscode.window.showInformationMessage(
+      "📋 Prompt copied! Paste in chat to let the agent create a contextual checkpoint with commit.",
+      "Open Chat"
+    ).then(action => {
+      if (action === "Open Chat") {
+        vscode.commands.executeCommand("workbench.action.chat.open");
+      }
+    });
+    return;
+  }
 
   let cmd = "npx pulse-framework-cli checkpoint";
   if (option.value === "commit") {
@@ -925,8 +943,6 @@ async function cmdCheckpoint() {
     cmd += ` -m "${message}"`;
   } else if (option.value === "inspect") {
     cmd += " --inspect-latest";
-  } else if (option.value === "test") {
-    cmd += " --run-tests";
   }
 
   await runPulseCommand(cmd);
