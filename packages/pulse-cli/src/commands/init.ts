@@ -159,9 +159,35 @@ export function registerInitCommand(program: Command): void {
       interactive?: boolean;
     }) => {
       const start = path.resolve(opts.path ?? process.cwd());
-      const repoRoot = await findRepoRoot(start);
+      let repoRoot = await findRepoRoot(start);
+      
       if (!repoRoot) {
-        throw new Error(`Not in a git repository: ${start}`);
+        // Not a git repo - offer to initialize
+        console.log("⚠️  Not a git repository.\n");
+        console.log("Pulse uses Git for checkpoints, commits, and safeguards.\n");
+        console.log("💡 Tip: If you have multiple projects in subfolders,");
+        console.log("   open the specific project folder, not the parent.\n");
+        console.log("   Example: Open /projects/myapp (with .git inside)");
+        console.log("   Not:     Open /projects (containing multiple repos)\n");
+        
+        const shouldInitGit = opts.interactive !== false 
+          ? await promptConfirm("Initialize Git repository now?", true)
+          : true; // Auto-init in non-interactive mode
+          
+        if (shouldInitGit) {
+          const { execSync } = await import("child_process");
+          try {
+            execSync("git init", { cwd: start, stdio: "inherit" });
+            console.log("✅ Git repository initialized\n");
+            repoRoot = start;
+          } catch {
+            console.log("❌ Failed to initialize Git. Continuing without Git...\n");
+            repoRoot = start; // Use start as fallback
+          }
+        } else {
+          console.log("⚠️  Continuing without Git (limited functionality)\n");
+          repoRoot = start;
+        }
       }
 
       // eslint-disable-next-line no-console

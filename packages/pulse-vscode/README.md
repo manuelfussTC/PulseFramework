@@ -49,6 +49,18 @@ Access via Command Palette (`Cmd+Shift+P`):
 | **Pulse: Create Escalation Package** | Export context for GPT-4/Claude |
 | **Pulse: Start/Stop Watcher** | Toggle 30-min reminders |
 
+## ⚠️ Requirements
+
+- **Git repository**: Pulse requires your project to be a Git repo (for checkpoints, commits, safeguards)
+- **One project per workspace**: Open the project folder directly, not a parent folder containing multiple projects
+
+```
+✅ Good: Open /myproject (which contains .git)
+❌ Bad:  Open /projects (which contains /projects/app1/.git and /projects/app2/.git)
+```
+
+If your project doesn't have Git yet, Pulse will offer to initialize it during setup.
+
 ## 📦 Installation
 
 ### From Cursor/VS Code
