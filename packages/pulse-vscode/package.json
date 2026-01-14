@@ -2,7 +2,7 @@
   "name": "pulse-framework",
   "displayName": "Pulse Framework",
   "description": "Guardrails, checkpoints, and escalation for AI-assisted development with Cursor Agent Mode.",
-  "version": "0.9.9",
+  "version": "0.10.0",
   "publisher": "pulse-framework",
   "license": "MIT",
   "icon": "icon.png",
@@ -202,11 +202,6 @@
           "type": "number",
           "default": 30,
           "description": "Minutes between automatic health checks."
-        },
-        "pulse.safeguardCheckMinutes": {
-          "type": "number",
-          "default": 0,
-          "description": "Minutes of inactivity before showing safeguard reminder. Set to 0 to disable (default)."
         }
       }
     }

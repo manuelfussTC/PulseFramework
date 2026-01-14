@@ -7,8 +7,14 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.9";
+const CURRENT_VERSION = "0.10.0";
 const CHANGELOG: Record<string, string[]> = {
+  "0.10.0": [
+    "🔇 Removed safeguard inactive spam completely",
+    "✨ Smart reminder: Only shows if you have uncommitted changes",
+    "✨ Snooze 1h button - pause reminders for an hour",
+    "✨ Stop Watcher button - turn off reminders completely",
+  ],
   "0.9.9": [
     "🔇 Zero Friction: Safeguard check now truly OFF by default",
   ],
@@ -1093,7 +1099,6 @@ async function cmdWatchStart() {
 
   let lastHealthCheck = Date.now();
   let lastReminderShown = 0; // Track when we last showed a reminder
-  let lastSafeguardReminder = 0; // Track safeguard reminder
 
   // Start internal timer for reminders and health checks
   watcherInterval = setInterval(async () => {
@@ -1105,45 +1110,24 @@ async function cmdWatchStart() {
       await runPeriodicHealthCheck();
     }
     
-    // Check if pulse_status has been called recently (safeguards active)
-    const safeguardCheckMinutes = config.get<number>("safeguardCheckMinutes", 0);
-    
-    // Only check if enabled (> 0)
-    if (safeguardCheckMinutes > 0) {
-      const safeguardStatus = checkSafeguardStatus(workspaceRoot, safeguardCheckMinutes);
-      const minutesSinceSafeguardReminder = Math.floor((now - lastSafeguardReminder) / 60_000);
-      
-      if (!safeguardStatus.active && minutesSinceSafeguardReminder >= safeguardCheckMinutes) {
-        lastSafeguardReminder = now;
-        
-        const action = await vscode.window.showWarningMessage(
-          `⚠️ Pulse safeguards not running. The AI agent hasn't called pulse_status recently.`,
-          { modal: false },
-          "How to Fix",
-          "Disable Check"
-        );
-        
-        if (action === "How to Fix") {
-          vscode.window.showInformationMessage(
-            `To activate Pulse safeguards:\n\n` +
-            `1. Open a chat in AGENT MODE (not Plan/Ask)\n` +
-            `2. Send any message to the agent\n` +
-            `3. The agent should automatically call pulse_status\n\n` +
-            `If it doesn't work, the MCP server might not be configured. Run "Pulse: Repair" from Command Palette.`,
-            { modal: true }
-          );
-        } else if (action === "Disable Check") {
-          const config = vscode.workspace.getConfiguration("pulse");
-          await config.update("safeguardCheckMinutes", 0, vscode.ConfigurationTarget.Workspace);
-          vscode.window.showInformationMessage("Safeguard activity check disabled for this workspace.");
-        }
-      }
-    }
-
     if (!notificationsEnabled) return;
 
     // Skip checkpoint reminder if no checkpoint ever made (new project)
     if (!lastCheckpointAt) {
+      return;
+    }
+    
+    // Check if there are actual uncommitted changes before reminding
+    try {
+      const { stdout: gitStatus } = await execAsync("git status --porcelain", { cwd: workspaceRoot });
+      const hasChanges = gitStatus.trim().length > 0;
+      
+      // Don't bother user if there are no changes!
+      if (!hasChanges) {
+        return;
+      }
+    } catch {
+      // If git check fails, skip reminder
       return;
     }
     
@@ -1153,20 +1137,26 @@ async function cmdWatchStart() {
     // Only show reminder if:
     // 1. We're past the threshold (e.g., 30 min)
     // 2. We haven't shown a reminder in the last 30 min
+    // 3. There are actual changes (checked above)
     if (minutesAgo >= minutes && minutesSinceReminder >= minutes) {
       lastReminderShown = now;
       
-      vscode.window
-        .showWarningMessage(
-          `Pulse: ${minutesAgo} minutes since last checkpoint. Time to checkpoint!`,
-          "Checkpoint Now",
-          "Dismiss"
-        )
-        .then((action) => {
-          if (action === "Checkpoint Now") {
-            cmdCheckpoint();
-          }
-        });
+      const action = await vscode.window.showWarningMessage(
+        `Pulse: ${minutesAgo} min since checkpoint. You have uncommitted changes.`,
+        "Checkpoint Now",
+        "Snooze 1h",
+        "Stop Watcher"
+      );
+      
+      if (action === "Checkpoint Now") {
+        cmdCheckpoint();
+      } else if (action === "Snooze 1h") {
+        // Snooze for 1 hour
+        lastReminderShown = now + (60 * 60_000); // Add 1 hour
+        vscode.window.showInformationMessage("Pulse reminders snoozed for 1 hour.");
+      } else if (action === "Stop Watcher") {
+        cmdWatchStop();
+      }
     }
   }, 60_000); // Check every minute
 
