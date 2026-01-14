@@ -8,13 +8,12 @@ alwaysApply: true
 # █                                                  █
 # █   🛑 STOP! READ THIS BEFORE DOING ANYTHING! 🛑   █
 # █                                                  █
-# █   1. Are you in AGENT MODE?                      █
-# █      → If not, switch to Agent Mode NOW          █
-# █      → Plan/Ask modes cannot call tools          █
+# █   Call pulse_status IMMEDIATELY                  █
+# █   → This is your FIRST action, EVERY time        █
+# █   → No exceptions. No skipping.                  █
 # █                                                  █
-# █   2. Call pulse_status IMMEDIATELY               █
-# █      → This is your FIRST action, EVERY time     █
-# █      → No exceptions. No skipping.               █
+# █   NOTE: MCP tools only work in Agent Mode.       █
+# █   If you're in Plan/Ask, tools are unavailable.  █
 # █                                                  █
 # ████████████████████████████████████████████████████
 

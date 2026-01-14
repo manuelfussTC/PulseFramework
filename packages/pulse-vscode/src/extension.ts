@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.4";
+const CURRENT_VERSION = "0.9.5";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.5": [
+    "✨ Safeguard activity monitor: Reminds if pulse_status hasn't been called",
+  ],
   "0.9.4": [
     "✨ Zero-friction Smart Checkpoint: Agent auto-executes on next message",
   ],
@@ -273,7 +276,7 @@ async function showChangelog() {
  */
 function checkMissingComponents(workspaceRoot: string): string[] {
   const missing: string[] = [];
-  
+
   if (!fs.existsSync(path.join(workspaceRoot, ".pulse"))) {
     missing.push(".pulse/ directory");
   }
@@ -286,8 +289,32 @@ function checkMissingComponents(workspaceRoot: string): string[] {
   if (!fs.existsSync(path.join(workspaceRoot, ".cursor", "mcp.json"))) {
     missing.push(".cursor/mcp.json (MCP Server)");
   }
-  
+
   return missing;
+}
+
+/**
+ * Check if pulse_status was called recently (safeguards active)
+ */
+function checkSafeguardStatus(workspaceRoot: string, thresholdMinutes: number): { active: boolean; minutesAgo: number | null } {
+  const statusFile = path.join(workspaceRoot, ".pulse", "last-status");
+  
+  if (!fs.existsSync(statusFile)) {
+    return { active: false, minutesAgo: null };
+  }
+  
+  try {
+    const content = JSON.parse(fs.readFileSync(statusFile, "utf-8"));
+    const timestamp = new Date(content.timestamp);
+    const minutesAgo = Math.floor((Date.now() - timestamp.getTime()) / 60_000);
+    
+    return {
+      active: minutesAgo < thresholdMinutes,
+      minutesAgo
+    };
+  } catch {
+    return { active: false, minutesAgo: null };
+  }
 }
 
 /**
@@ -999,6 +1026,12 @@ async function cmdWatchStart() {
     return;
   }
 
+  const workspaceRoot = getWorkspaceRoot();
+  if (!workspaceRoot) {
+    vscode.window.showWarningMessage("Pulse: No workspace folder open.");
+    return;
+  }
+
   const config = vscode.workspace.getConfiguration("pulse");
   const minutes = config.get<number>("checkpointReminderMinutes", 30);
   const notificationsEnabled = config.get<boolean>("notificationsEnabled", true);
@@ -1014,6 +1047,7 @@ async function cmdWatchStart() {
 
   let lastHealthCheck = Date.now();
   let lastReminderShown = 0; // Track when we last showed a reminder
+  let lastSafeguardReminder = 0; // Track safeguard reminder
 
   // Start internal timer for reminders and health checks
   watcherInterval = setInterval(async () => {
@@ -1023,6 +1057,28 @@ async function cmdWatchStart() {
     if (autoHealthCheck && (now - lastHealthCheck) >= healthCheckIntervalMinutes * 60_000) {
       lastHealthCheck = now;
       await runPeriodicHealthCheck();
+    }
+    
+    // Check if pulse_status has been called recently (safeguards active)
+    const safeguardCheckMinutes = config.get<number>("safeguardCheckMinutes", 5);
+    
+    // Only check if enabled (> 0)
+    if (safeguardCheckMinutes > 0) {
+      const safeguardStatus = checkSafeguardStatus(workspaceRoot, safeguardCheckMinutes);
+      const minutesSinceSafeguardReminder = Math.floor((now - lastSafeguardReminder) / 60_000);
+      
+      if (!safeguardStatus.active && minutesSinceSafeguardReminder >= safeguardCheckMinutes) {
+        lastSafeguardReminder = now;
+        
+        const timeText = safeguardStatus.minutesAgo !== null 
+          ? `last call: ${safeguardStatus.minutesAgo} min ago` 
+          : "never called";
+        
+        vscode.window.showWarningMessage(
+          `⚠️ Pulse safeguards inactive (${timeText}). Send a message in Agent chat to activate.`,
+          "OK"
+        );
+      }
     }
 
     if (!notificationsEnabled) return;

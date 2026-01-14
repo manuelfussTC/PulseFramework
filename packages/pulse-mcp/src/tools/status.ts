@@ -32,6 +32,9 @@ export function registerStatusTool() {
 export async function handleStatusTool(args: unknown): Promise<ChainedResponse> {
   const { userMessage, verbose } = (args as { userMessage?: string; verbose?: boolean }) || {};
   
+  // Write timestamp so extension knows safeguards are active
+  writeStatusTimestamp();
+  
   // Check for checkpoint trigger file from extension
   const checkpointTrigger = checkForCheckpointTrigger();
   
@@ -167,6 +170,27 @@ function checkForCheckpointTrigger(): boolean {
     }
   }
   return false;
+}
+
+/**
+ * Write timestamp file so extension knows pulse_status was called
+ */
+function writeStatusTimestamp(): void {
+  const cwd = process.cwd();
+  const pulseDir = path.join(cwd, ".pulse");
+  const timestampPath = path.join(pulseDir, "last-status");
+  
+  try {
+    if (!fs.existsSync(pulseDir)) {
+      fs.mkdirSync(pulseDir, { recursive: true });
+    }
+    fs.writeFileSync(timestampPath, JSON.stringify({
+      timestamp: new Date().toISOString(),
+      pid: process.pid
+    }));
+  } catch {
+    // Ignore errors - not critical
+  }
 }
 
 /**
