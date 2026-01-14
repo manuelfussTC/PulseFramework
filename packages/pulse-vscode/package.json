@@ -2,7 +2,7 @@
   "name": "pulse-framework",
   "displayName": "Pulse Framework",
   "description": "Guardrails, checkpoints, and escalation for AI-assisted development with Cursor Agent Mode.",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "publisher": "pulse-framework",
   "license": "MIT",
   "icon": "icon.png",
@@ -75,8 +75,13 @@
       },
       {
         "command": "pulse.start",
-        "title": "Pulse: Start New Task",
+        "title": "Pulse: Start New Task (Terminal)",
         "icon": "$(play)"
+      },
+      {
+        "command": "pulse.startAgentTask",
+        "title": "Pulse: Start Agent Task (Chat)",
+        "icon": "$(comment-discussion)"
       },
       {
         "command": "pulse.checkpoint",
@@ -134,6 +139,10 @@
         },
         {
           "command": "pulse.start",
+          "when": "pulse.initialized"
+        },
+        {
+          "command": "pulse.startAgentTask",
           "when": "pulse.initialized"
         },
         {
@@ -196,8 +205,8 @@
         },
         "pulse.safeguardCheckMinutes": {
           "type": "number",
-          "default": 5,
-          "description": "Minutes of inactivity before showing safeguard reminder. Set to 0 to disable."
+          "default": 0,
+          "description": "Minutes of inactivity before showing safeguard reminder. Set to 0 to disable (default)."
         }
       }
     }

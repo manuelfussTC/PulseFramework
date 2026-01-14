@@ -7,8 +7,12 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.7";
+const CURRENT_VERSION = "0.9.8";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.8": [
+    "✨ New: 'Start Agent Task' - opens chat with Pulse prompt",
+    "🔇 Safeguard check disabled by default (was too noisy)",
+  ],
   "0.9.7": [
     "✨ Better safeguard warning with 'How to Fix' instructions",
   ],
@@ -125,6 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("pulse.repair", cmdRepair),
     vscode.commands.registerCommand("pulse.updatePackages", () => updatePulsePackages()),
     vscode.commands.registerCommand("pulse.start", cmdStart),
+    vscode.commands.registerCommand("pulse.startAgentTask", cmdStartAgentTask),
     vscode.commands.registerCommand("pulse.checkpoint", cmdCheckpoint),
     vscode.commands.registerCommand("pulse.doctor", cmdDoctor),
     vscode.commands.registerCommand("pulse.review", cmdReview),
@@ -937,6 +942,36 @@ async function cmdRepair() {
 async function cmdStart() {
   // Open terminal for interactive start
   await runPulseCommand("npx pulse-framework-cli start", { interactive: true });
+}
+
+/**
+ * Start a new task with the AI agent - opens chat with Pulse prompt
+ */
+async function cmdStartAgentTask() {
+  // Ask for task description
+  const task = await vscode.window.showInputBox({
+    prompt: "What do you want to build?",
+    placeHolder: "e.g., Add a login form with validation",
+  });
+  
+  if (!task) return;
+  
+  // Create the prompt for the agent
+  const prompt = `New task: ${task}
+
+Please start by calling pulse_run with this task, then implement it step by step.`;
+  
+  // Copy to clipboard
+  await vscode.env.clipboard.writeText(prompt);
+  
+  // Open chat panel
+  await vscode.commands.executeCommand("workbench.action.chat.open");
+  
+  // Show instruction
+  vscode.window.showInformationMessage(
+    "📋 Task prompt copied! Paste it in the chat (Cmd+V) to start with Pulse safeguards.",
+    "OK"
+  );
 }
 
 async function cmdCheckpoint() {
