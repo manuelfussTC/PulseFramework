@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.10.0";
+const CURRENT_VERSION = "0.10.1";
 const CHANGELOG: Record<string, string[]> = {
+  "0.10.1": [
+    "🐛 Fixed: Timer resets when agent creates checkpoint via MCP",
+  ],
   "0.10.0": [
     "🔇 Removed safeguard inactive spam completely",
     "✨ Smart reminder: Only shows if you have uncommitted changes",
@@ -196,7 +199,18 @@ export function activate(context: vscode.ExtensionContext) {
   // Watch for file changes to detect checkpoints and initialization
   const watcher = vscode.workspace.createFileSystemWatcher("**/.pulse/state.json");
   const pulseWatcher = vscode.workspace.createFileSystemWatcher("**/.pulse");
+  const checkpointWatcher = vscode.workspace.createFileSystemWatcher("**/.pulse/last-checkpoint");
+
+  // Reset timer when MCP creates a checkpoint
+  const onCheckpointCreated = () => {
+    lastCheckpointAt = new Date();
+    updateStatusBar();
+  };
   
+  checkpointWatcher.onDidChange(onCheckpointCreated);
+  checkpointWatcher.onDidCreate(onCheckpointCreated);
+  context.subscriptions.push(checkpointWatcher);
+
   const reloadState = () => {
     const root = getWorkspaceRoot();
     if (root) {

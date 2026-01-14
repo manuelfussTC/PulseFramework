@@ -4,6 +4,8 @@
 
 import { runCli } from "../lib/cli.js";
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
+import * as fs from "fs";
+import * as path from "path";
 
 export function registerCheckpointTool() {
   return {
@@ -48,6 +50,9 @@ export async function handleCheckpointTool(args: unknown): Promise<ChainedRespon
   try {
     const result = await runCli(cliArgs);
     
+    // Write timestamp file so extension can detect checkpoint
+    writeCheckpointTimestamp();
+    
     const commitInfo = skipCommit ? "(log only, no commit)" : "(committed to git)";
     
     // Track checkpoint count for learn suggestions
@@ -87,6 +92,26 @@ export async function handleCheckpointTool(args: unknown): Promise<ChainedRespon
       recommendation: "Check git status and fix conflicts",
       safeguards_active: true,
     });
+  }
+}
+
+/**
+ * Write timestamp file so extension knows checkpoint was created
+ */
+function writeCheckpointTimestamp(): void {
+  const cwd = process.cwd();
+  const pulseDir = path.join(cwd, ".pulse");
+  const timestampPath = path.join(pulseDir, "last-checkpoint");
+  
+  try {
+    if (!fs.existsSync(pulseDir)) {
+      fs.mkdirSync(pulseDir, { recursive: true });
+    }
+    fs.writeFileSync(timestampPath, JSON.stringify({
+      timestamp: new Date().toISOString(),
+    }));
+  } catch {
+    // Ignore errors - not critical
   }
 }
 
