@@ -6,6 +6,8 @@
 
 import { chainResponse, type ChainedResponse } from "../lib/chaining.js";
 import { runCli } from "../lib/cli.js";
+import * as fs from "fs";
+import * as path from "path";
 
 export function registerStatusTool() {
   return {
@@ -29,6 +31,9 @@ export function registerStatusTool() {
 
 export async function handleStatusTool(args: unknown): Promise<ChainedResponse> {
   const { userMessage, verbose } = (args as { userMessage?: string; verbose?: boolean }) || {};
+  
+  // Check for checkpoint trigger file from extension
+  const checkpointTrigger = checkForCheckpointTrigger();
   
   // Analyze user message for smart tool suggestions
   const suggestedTool = analyzeUserMessage(userMessage);
@@ -91,6 +96,19 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       `Findings: ${data.criticalFindings} Critical, ${data.warningFindings || data.findings - data.criticalFindings} Warnings`,
     ];
     
+    // Check for checkpoint trigger (highest priority)
+    if (checkpointTrigger) {
+      lines.unshift(`🔔 CHECKPOINT REQUESTED via Extension - RUN pulse_checkpoint IMMEDIATELY`);
+      lines.unshift(``);
+      return chainResponse({
+        result: lines.join("\n"),
+        next_action: "IMMEDIATELY call pulse_checkpoint with a summary of recent work. User requested via extension.",
+        recommendation: "🔔 USER REQUESTED CHECKPOINT - Execute pulse_checkpoint NOW with summary from chat context",
+        safeguards_active: true,
+        is_critical: true, // Force agent to act
+      });
+    }
+    
     // Add blocking header for critical findings or overdue checkpoint
     if (data.criticalFindings > 0) {
       lines.unshift(`🛑 CRITICAL FINDINGS DETECTED - STOP`);
@@ -129,6 +147,26 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       safeguards_active: true,
     });
   }
+}
+
+/**
+ * Check for checkpoint trigger file from extension
+ * Returns true if trigger exists (and deletes it)
+ */
+function checkForCheckpointTrigger(): boolean {
+  const cwd = process.cwd();
+  const triggerPath = path.join(cwd, ".pulse", "checkpoint-requested");
+  
+  if (fs.existsSync(triggerPath)) {
+    try {
+      // Delete trigger file so it's not processed again
+      fs.unlinkSync(triggerPath);
+      return true;
+    } catch {
+      // Ignore errors
+    }
+  }
+  return false;
 }
 
 /**

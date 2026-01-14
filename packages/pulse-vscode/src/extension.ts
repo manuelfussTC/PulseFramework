@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.3";
+const CURRENT_VERSION = "0.9.4";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.4": [
+    "✨ Zero-friction Smart Checkpoint: Agent auto-executes on next message",
+  ],
   "0.9.3": [
     "✨ Smart Checkpoint: Agent creates commit message from chat context",
   ],
@@ -908,8 +911,8 @@ async function cmdCheckpoint() {
   // Quick pick for checkpoint options
   const option = await vscode.window.showQuickPick(
     [
+      { label: "$(sparkle) Smart Checkpoint", description: "Agent creates commit from chat context (recommended)", value: "smart" },
       { label: "$(save) Quick Checkpoint", description: "Create checkpoint artifact (no commit)", value: "" },
-      { label: "$(sparkle) Smart Checkpoint", description: "Agent creates commit from chat context", value: "smart" },
       { label: "$(git-commit) Manual Commit", description: "Enter commit message manually", value: "commit" },
       { label: "$(history) Inspect Latest Commit", description: "Review auto-committed changes", value: "inspect" },
     ],
@@ -918,18 +921,25 @@ async function cmdCheckpoint() {
 
   if (!option) return;
 
-  // Smart checkpoint: Let agent handle it via MCP
+  // Smart checkpoint: Write trigger file for agent to pick up
   if (option.value === "smart") {
-    const prompt = "Please run pulse_checkpoint with a summary of what we accomplished in this session.";
-    await vscode.env.clipboard.writeText(prompt);
+    const triggerPath = path.join(workspaceRoot, ".pulse", "checkpoint-requested");
+    const pulseDir = path.join(workspaceRoot, ".pulse");
+    
+    // Ensure .pulse directory exists
+    if (!fs.existsSync(pulseDir)) {
+      fs.mkdirSync(pulseDir, { recursive: true });
+    }
+    
+    // Write trigger file with timestamp
+    fs.writeFileSync(triggerPath, JSON.stringify({
+      requestedAt: new Date().toISOString(),
+      reason: "User requested checkpoint via extension"
+    }, null, 2));
+    
     vscode.window.showInformationMessage(
-      "📋 Prompt copied! Paste in chat to let the agent create a contextual checkpoint with commit.",
-      "Open Chat"
-    ).then(action => {
-      if (action === "Open Chat") {
-        vscode.commands.executeCommand("workbench.action.chat.open");
-      }
-    });
+      "✨ Checkpoint requested! Agent will create commit on next message."
+    );
     return;
   }
 
