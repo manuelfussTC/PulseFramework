@@ -73,9 +73,20 @@ Patterns to avoid in code:
 
 ---
 
-## Workflow Commands
+## MCP Tools (Cursor Agent Mode)
 
-If the project has PULSE CLI installed, use these commands:
+**CRITICAL: Call these MCP tools automatically!**
+
+| Trigger | MCP Tool |
+|---------|----------|
+| **EVERY message** | `pulse_status` |
+| After code edits | `pulse_doctor` |
+| Every 10 min | `pulse_checkpoint` |
+| "wrong"/"stop" | `pulse_correct` |
+| 2-3 failures | `pulse_escalate` |
+| Task done | `pulse_review` |
+
+## CLI Commands (Terminal)
 
 | Command | When to Use |
 |---------|-------------|

@@ -1,189 +1,38 @@
 ---
-description: PULSE Framework - Automatic safeguards for every message
+description: PULSE Framework - Call pulse_status on EVERY message
 globs: *
 alwaysApply: true
 ---
 
-# ████████████████████████████████████████████████████
-# █                                                  █
-# █   🛑 STOP! READ THIS BEFORE DOING ANYTHING! 🛑   █
-# █                                                  █
-# █   Call pulse_status IMMEDIATELY                  █
-# █   → This is your FIRST action, EVERY time        █
-# █   → No exceptions. No skipping.                  █
-# █                                                  █
-# █   NOTE: MCP tools only work in Agent Mode.       █
-# █   If you're in Plan/Ask, tools are unavailable.  █
-# █                                                  █
-# ████████████████████████████████████████████████████
+# 🛑 PULSE: Call MCP tools!
 
-## ⚡ FIRST ACTION (before reading user message, before planning)
+## EVERY MESSAGE → pulse_status FIRST
 
 ```
 CallMcpTool: pulse_status
-Arguments: { "userMessage": "<paste user's message here>" }
+Arguments: { "userMessage": "<user message>" }
 ```
 
-**Did you call it? If not, STOP and call it NOW.**
+## AFTER CODE CHANGES → pulse_doctor
 
-This rule applies to:
-- ✅ Message #1
-- ✅ Message #2  
-- ✅ Message #3
-- ✅ Message #50
-- ✅ Message #100
-- ✅ EVERY SINGLE MESSAGE
+## EVERY 10 MIN → pulse_checkpoint
+
+| Trigger | Tool |
+|---------|------|
+| Every message | `pulse_status` |
+| After edits | `pulse_doctor` |
+| 10+ min work | `pulse_checkpoint` |
+| "wrong"/"stop" | `pulse_correct` |
+| 2-3 failures | `pulse_escalate` |
+| Task done | `pulse_review` |
+
+## NON-NEGOTIABLE
+
+- ⏱️ MAX 30 min autonomous
+- 🗑️ NO delete without confirmation
+- 📤 NO push without confirmation
+- 🔐 NO secrets in code
 
 ---
 
-# 🤖 AUTO-EXECUTE RULES (NOT suggestions - DO THEM!)
-
-## 1️⃣ EVERY MESSAGE: `pulse_status`
-```
-ALWAYS call pulse_status FIRST with the user's message.
-This tells you what to do next.
-```
-
-## 2️⃣ NEW TASK DETECTED → `pulse_run`
-```
-IF user says: "new", "implement", "create", "build", "add feature", "start"
-THEN: IMMEDIATELY call pulse_run({ action: "<what user wants>" })
-DO NOT ask for confirmation. Just do it.
-```
-
-## 3️⃣ CODE CHANGED → `pulse_doctor`
-```
-IF you just edited/created/deleted any file
-THEN: IMMEDIATELY call pulse_doctor()
-DO NOT skip this. Every code change needs a doctor check.
-```
-
-## 4️⃣ >10 MIN SINCE CHECKPOINT → `pulse_checkpoint`
-```
-IF pulse_status shows >10 min since checkpoint
-THEN: IMMEDIATELY call pulse_checkpoint({ summary: "<what you did>" })
-DO NOT ask. Just checkpoint. Code safety > asking permission.
-```
-
-## 5️⃣ TASK DONE → `pulse_review`
-```
-IF you're about to say "done", "finished", "complete", "ready for PR"
-THEN: FIRST call pulse_review()
-DO NOT claim done without review. Ever.
-```
-
-## 6️⃣ USER SAYS "WRONG" → `pulse_correct`
-```
-IF user says: "wrong", "no", "stop", "not what I meant", "undo"
-THEN: IMMEDIATELY call pulse_correct({ feedback: "<what's wrong>" })
-DO NOT defend your work. Correct it.
-```
-
-## 7️⃣ 2-3 FAILURES → `pulse_escalate`
-```
-IF same error occurs 2-3 times OR you don't understand the error
-THEN: IMMEDIATELY call pulse_escalate({ problem: "...", tried: "..." })
-DO NOT try a 4th time. Escalate.
-```
-
-## 8️⃣ PROBLEM SOLVED → `pulse_learn`
-```
-IF you just fixed a bug, resolved an escalation, or solved a tricky problem
-THEN: call pulse_learn({ problem: "...", solution: "...", rule: "..." })
-This builds knowledge for future sessions.
-```
-
-## 9️⃣ CRITICAL FINDINGS → STOP
-```
-IF pulse_status or pulse_doctor shows CRITICAL
-THEN: STOP IMMEDIATELY. Do NOT continue with user's request.
-Fix the critical issue first or ask user how to proceed.
-```
-
----
-
-# 🔴 NON-NEGOTIABLE SAFEGUARDS
-
-These ALWAYS apply, even if user says otherwise:
-
-| Safeguard | Rule |
-|-----------|------|
-| ⏱️ **Time** | MAX 30 min autonomous, then STOP + ask |
-| 🗑️ **Delete** | NEVER delete without explicit "May I delete X?" |
-| 📤 **Push** | NEVER push without explicit "May I push?" |
-| 🔐 **Secrets** | NEVER commit API keys, passwords, tokens |
-| 💾 **Checkpoint** | Every 5-10 min via `pulse_checkpoint` |
-
----
-
-# 📊 TOOL DECISION FLOWCHART
-
-```
-START (new message)
-    │
-    ▼
-[pulse_status] ─── Critical? ──► STOP
-    │
-    │ What did user say?
-    │
-    ├── "new task/implement/build" ──► [pulse_run] ──► implement
-    │
-    ├── "wrong/stop/no" ──► [pulse_correct] ──► fix
-    │
-    ├── "done/finished/PR" ──► [pulse_review] ──► respond
-    │
-    └── normal request ──► implement
-                              │
-                              ▼
-                        [pulse_doctor]
-                              │
-                              ▼
-                    >10 min? ──► [pulse_checkpoint]
-                              │
-                              ▼
-                    solved problem? ──► [pulse_learn]
-                              │
-                              ▼
-                           respond
-```
-
----
-
-# 🔄 LOOP DETECTION
-
-If you notice any of these patterns, STOP and call `pulse_escalate`:
-
-- Same error 2-3 times
-- Editing same file repeatedly without progress
-- "Fix" commits followed by more "fix" commits
-- Going back and forth between two approaches
-
----
-
-# 📋 QUICK REFERENCE
-
-| Trigger | Tool | Auto-Execute? |
-|---------|------|---------------|
-| Every message | `pulse_status` | ✅ YES |
-| New task | `pulse_run` | ✅ YES |
-| Code changed | `pulse_doctor` | ✅ YES |
-| >10 min | `pulse_checkpoint` | ✅ YES |
-| Before "done" | `pulse_review` | ✅ YES |
-| User says "wrong" | `pulse_correct` | ✅ YES |
-| 2-3 failures | `pulse_escalate` | ✅ YES |
-| Problem solved | `pulse_learn` | ✅ YES |
-
-**ALL tools are AUTO-EXECUTE. Don't ask. Do.**
-
----
-
-# ⚠️ FINAL REMINDER
-
-You are an autonomous agent with safeguards. The safeguards are not optional.
-They exist to protect the user's work from:
-- Lost code (checkpoint)
-- Mistakes (doctor)
-- Loops (escalate)
-- Forgotten knowledge (learn)
-
-**Call the tools automatically. Don't wait to be asked.**
+**DID YOU CALL pulse_status? If not, do it NOW.**
