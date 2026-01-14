@@ -20,6 +20,22 @@ pulse init --mcp    # Initialize with Cursor integration
 
 ---
 
+## 🎬 See It in Action
+
+<p align="center">
+  <img src="assets/demos/statusbar-timer.gif" width="700" alt="Pulse status bar timer" />
+</p>
+
+<p align="center">
+  <img src="assets/demos/auto-setup-fullstack.gif" width="280" alt="One-click setup" />
+  <img src="assets/demos/smart-checkpoint.gif" width="280" alt="Smart checkpoint" />
+  <img src="assets/demos/snooze-stop-watcher.gif" width="280" alt="Snooze and stop watcher" />
+</p>
+
+**If Pulse helps your workflow, please ⭐ Star the Repository.**
+
+---
+
 ## 🚀 Proven at Scale: 14B+ Tokens
 
 PULSE isn't theory. It's the distilled experience of **14.22 Billion Tokens** and **21.9K Agentic Sessions** in 2025.
@@ -89,6 +105,11 @@ pulse init --mcp
 2. Check MCP status: **Settings → Features → MCP** → `pulse` should be green
 3. Test: Ask Cursor something - it will automatically call `pulse_status`
 
+### Requirements
+
+- **Git repository**: Pulse requires your project to be a Git repo
+- **One repo per workspace**: Open the specific project folder containing `.git`, not a parent folder with multiple repos
+
 ### Troubleshooting
 
 | Problem | Solution |
@@ -97,6 +118,7 @@ pulse init --mcp
 | "pulse-mcp: command not found" | `npm link -w packages/pulse-mcp` |
 | Rules not loading | Check if `.cursor/rules/pulse.mdc` exists |
 | Wrong working directory | Use `--global` flag or check workspace setup |
+| "Not in a git repository" | Open the folder containing `.git`, not a parent |
 
 ### Structure after Init
 
