@@ -74,6 +74,82 @@ pulse init --mcp    # Initialize with Cursor integration
 
 ---
 
+## 🤖 Agent Mode (MCP Tools)
+
+The AI agent automatically calls PULSE tools during your conversation. Here's what it looks like:
+
+### 📊 Status Check (Before Every Response)
+
+<p align="center">
+  <img src="assets/mcp/mcp-status-clean.png" width="700" alt="pulse_status clean" />
+</p>
+
+- **Automatic** – Agent calls `pulse_status` before every response
+- **Checkpoint tracking** – Shows time since last commit
+- **Scope awareness** – Tracks files and lines changed
+
+---
+
+### ⚠️ Checkpoint Overdue Warning
+
+<p align="center">
+  <img src="assets/mcp/mcp-status-overdue.png" width="700" alt="pulse_status overdue" />
+</p>
+
+- **30-minute rule** – Stops the agent when checkpoint is overdue
+- **Protects your work** – Forces a save before continuing
+- **Clear action** – Agent creates checkpoint automatically
+
+---
+
+### 🔑 Secret Detection
+
+<p align="center">
+  <img src="assets/mcp/mcp-doctor-secret.png" width="700" alt="pulse_doctor secret" />
+</p>
+
+- **Pre-commit scan** – Catches API keys before they leak
+- **Blocks commit** – Won't let you push secrets
+- **Shows solution** – Tells you exactly how to fix it
+
+---
+
+### 🔄 Loop Detection
+
+<p align="center">
+  <img src="assets/mcp/mcp-doctor-loop.png" width="700" alt="pulse_doctor loop" />
+</p>
+
+- **Fix-chain detection** – Catches when you're stuck
+- **File churn tracking** – Same file edited 5+ times
+- **Suggests escalation** – Get fresh perspective
+
+---
+
+### 🆘 Escalation (When Stuck)
+
+<p align="center">
+  <img src="assets/mcp/mcp-escalate.png" width="700" alt="pulse_escalate" />
+</p>
+
+- **Automatic trigger** – After 2-3 failed fix attempts
+- **Context export** – Full problem description for GPT-5/Claude
+- **Breaks the loop** – Get expert help, not more guessing
+
+---
+
+### 📚 Learn (Capture Knowledge)
+
+<p align="center">
+  <img src="assets/mcp/mcp-learn.png" width="700" alt="pulse_learn" />
+</p>
+
+- **Save solutions** – After fixing tricky bugs
+- **Auto-updates rules** – Future sessions remember
+- **Project knowledge base** – Gets smarter over time
+
+---
+
 ## 🚀 Proven at Scale: 14B+ Tokens
 
 PULSE isn't theory. It's the distilled experience of **14.22 Billion Tokens** and **21.9K Agentic Sessions** in 2025.
