@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.6";
+const CURRENT_VERSION = "0.9.7";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.7": [
+    "✨ Better safeguard warning with 'How to Fix' instructions",
+  ],
   "0.9.6": [
     "🐛 Fixed: Setup button now ALWAYS shows for uninitialized projects",
   ],
@@ -1075,14 +1078,27 @@ async function cmdWatchStart() {
       if (!safeguardStatus.active && minutesSinceSafeguardReminder >= safeguardCheckMinutes) {
         lastSafeguardReminder = now;
         
-        const timeText = safeguardStatus.minutesAgo !== null 
-          ? `last call: ${safeguardStatus.minutesAgo} min ago` 
-          : "never called";
-        
-        vscode.window.showWarningMessage(
-          `⚠️ Pulse safeguards inactive (${timeText}). Send a message in Agent chat to activate.`,
-          "OK"
+        const action = await vscode.window.showWarningMessage(
+          `⚠️ Pulse safeguards not running. The AI agent hasn't called pulse_status recently.`,
+          { modal: false },
+          "How to Fix",
+          "Disable Check"
         );
+        
+        if (action === "How to Fix") {
+          vscode.window.showInformationMessage(
+            `To activate Pulse safeguards:\n\n` +
+            `1. Open a chat in AGENT MODE (not Plan/Ask)\n` +
+            `2. Send any message to the agent\n` +
+            `3. The agent should automatically call pulse_status\n\n` +
+            `If it doesn't work, the MCP server might not be configured. Run "Pulse: Repair" from Command Palette.`,
+            { modal: true }
+          );
+        } else if (action === "Disable Check") {
+          const config = vscode.workspace.getConfiguration("pulse");
+          await config.update("safeguardCheckMinutes", 0, vscode.ConfigurationTarget.Workspace);
+          vscode.window.showInformationMessage("Safeguard activity check disabled for this workspace.");
+        }
       }
     }
 
