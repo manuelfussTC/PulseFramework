@@ -22,15 +22,53 @@ pulse init --mcp    # Initialize with Cursor integration
 
 ## 🎬 See It in Action
 
-<p align="center">
-  <img src="assets/demos/statusbar-timer.gif" width="700" alt="Pulse status bar timer" />
-</p>
+### ⏱️ Always-On Status Bar Timer
 
 <p align="center">
-  <img src="assets/demos/auto-setup-fullstack.gif" width="280" alt="One-click setup" />
-  <img src="assets/demos/smart-checkpoint.gif" width="280" alt="Smart checkpoint" />
-  <img src="assets/demos/snooze-stop-watcher.gif" width="280" alt="Snooze and stop watcher" />
+  <img src="assets/demos/statusbar-timer.gif" width="800" alt="Pulse status bar timer" />
 </p>
+
+- **Visual checkpoint reminder** – See exactly how long since your last commit
+- **Color-coded warnings** – Green → Yellow → Red as time passes
+- **One-click access** – Click to open checkpoint menu instantly
+
+---
+
+### 🚀 One-Click Project Setup
+
+<p align="center">
+  <img src="assets/demos/auto-setup-fullstack.gif" width="500" alt="One-click setup" />
+</p>
+
+- **Auto-detection** – Pulse recognizes uninitialized projects automatically
+- **Fullstack preset** – Sensible defaults for most projects
+- **Zero config** – MCP server, Git hooks, and Cursor rules installed in one click
+
+---
+
+### 💾 Smart Checkpoint (AI-Generated Commits)
+
+<p align="center">
+  <img src="assets/demos/smart-checkpoint.gif" width="600" alt="Smart checkpoint" />
+</p>
+
+- **Context-aware** – The AI generates commit messages from your chat history
+- **No copy-paste** – Zero friction between coding and committing
+- **Git best practices** – Meaningful, structured commit messages every time
+
+---
+
+### ⏸️ Snooze & Stop Watcher
+
+<p align="center">
+  <img src="assets/demos/snooze-stop-watcher.gif" width="600" alt="Snooze and stop watcher" />
+</p>
+
+- **Non-intrusive reminders** – Only notifies when you have uncommitted changes
+- **Snooze 1 hour** – Take a break without spam
+- **Stop Watcher** – Disable completely when you need deep focus
+
+---
 
 **If Pulse helps your workflow, please ⭐ Star the Repository.**
 
