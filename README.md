@@ -105,7 +105,7 @@ pulse init --mcp    # Initialize with Cursor integration
 ### `pulse status` – Check Project State
 
 <p align="center">
-  <img src="assets/cli/pulse-status.gif" width="650" alt="pulse status" />
+  <img src="assets/cli/pulse-status.png" width="650" alt="pulse status" />
 </p>
 
 ---
@@ -113,15 +113,15 @@ pulse init --mcp    # Initialize with Cursor integration
 ### `pulse doctor` – Scan for Red Flags
 
 <p align="center">
-  <img src="assets/cli/pulse-doctor.gif" width="650" alt="pulse doctor" />
+  <img src="assets/cli/pulse-doctor.png" width="650" alt="pulse doctor" />
 </p>
 
 ---
 
-### `pulse doctor` – Warning Example
+### `pulse doctor` – Warning Example (Secrets + Mass Delete)
 
 <p align="center">
-  <img src="assets/cli/pulse-doctor-warning.gif" width="650" alt="pulse doctor warning" />
+  <img src="assets/cli/pulse-doctor-warning.png" width="650" alt="pulse doctor warning" />
 </p>
 
 ---
@@ -129,7 +129,7 @@ pulse init --mcp    # Initialize with Cursor integration
 ### `pulse run` – Start New Feature
 
 <p align="center">
-  <img src="assets/cli/pulse-run.gif" width="650" alt="pulse run" />
+  <img src="assets/cli/pulse-run.png" width="650" alt="pulse run" />
 </p>
 
 ---
@@ -137,7 +137,7 @@ pulse init --mcp    # Initialize with Cursor integration
 ### `pulse checkpoint` – Save Progress
 
 <p align="center">
-  <img src="assets/cli/pulse-checkpoint.gif" width="650" alt="pulse checkpoint" />
+  <img src="assets/cli/pulse-checkpoint.png" width="650" alt="pulse checkpoint" />
 </p>
 
 ---
@@ -145,7 +145,7 @@ pulse init --mcp    # Initialize with Cursor integration
 ### `pulse doctor --loop` – Detect Fix-Loops
 
 <p align="center">
-  <img src="assets/cli/pulse-loop.gif" width="650" alt="pulse loop detection" />
+  <img src="assets/cli/pulse-loop.png" width="650" alt="pulse loop detection" />
 </p>
 
 ---
