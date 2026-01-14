@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.5";
+const CURRENT_VERSION = "0.9.6";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.6": [
+    "🐛 Fixed: Setup button now ALWAYS shows for uninitialized projects",
+  ],
   "0.9.5": [
     "✨ Safeguard activity monitor: Reminds if pulse_status hasn't been called",
   ],
@@ -133,29 +136,31 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Create status bar
   const config = vscode.workspace.getConfiguration("pulse");
-  if (config.get<boolean>("showStatusBar", true)) {
-    if (isInitialized) {
-      // Show checkpoint timer status bar
-      statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-      statusBarItem.command = "pulse.checkpoint";
-      statusBarItem.tooltip = "Click to create a Pulse checkpoint";
-      context.subscriptions.push(statusBarItem);
-      updateStatusBar();
-      statusBarItem.show();
-    } else {
-      // Show setup button in status bar for non-initialized projects
-      setupStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-      setupStatusBarItem.command = "pulse.setupFull";
-      setupStatusBarItem.text = "$(rocket) Setup Pulse";
-      setupStatusBarItem.tooltip = "Click to initialize Pulse Framework in this project";
-      setupStatusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.prominentBackground");
-      context.subscriptions.push(setupStatusBarItem);
-      setupStatusBarItem.show();
-    }
+  const showStatusBar = config.get<boolean>("showStatusBar", true);
+  
+  if (isInitialized && showStatusBar) {
+    // Show checkpoint timer status bar
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    statusBarItem.command = "pulse.checkpoint";
+    statusBarItem.tooltip = "Click to create a Pulse checkpoint";
+    context.subscriptions.push(statusBarItem);
+    updateStatusBar();
+    statusBarItem.show();
 
     // Update status bar every minute
     const statusInterval = setInterval(updateStatusBar, 60_000);
     context.subscriptions.push({ dispose: () => clearInterval(statusInterval) });
+  } else if (!isInitialized && workspaceRoot) {
+    // ALWAYS show setup button for uninitialized projects (regardless of showStatusBar setting)
+    setupStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    setupStatusBarItem.command = "pulse.setupFull";
+    setupStatusBarItem.text = "$(rocket) Setup Pulse";
+    setupStatusBarItem.tooltip = "Click to initialize Pulse Framework in this project";
+    setupStatusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
+    context.subscriptions.push(setupStatusBarItem);
+    setupStatusBarItem.show();
+    
+    console.log("Pulse: Showing setup button for uninitialized project");
   }
 
   // Create Explorer Tree View
