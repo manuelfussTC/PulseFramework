@@ -20,7 +20,33 @@ pulse init --mcp    # Initialize with Cursor integration
 
 ---
 
-## 🎬 See It in Action
+## ⚡ Before vs After
+
+<p align="center">
+  <img src="assets/diagrams/comparison-before-after.png" width="800" alt="Before vs After PULSE" />
+</p>
+
+---
+
+## 🔄 The Workflow
+
+<p align="center">
+  <img src="assets/workflow/pulse-workflow-animated.gif" width="800" alt="PULSE Workflow Animation" />
+</p>
+
+**Status** → **Run** → **Build** → **Doctor** → **Checkpoint** → *repeat*
+
+---
+
+## 🛡️ The 5 Safeguards
+
+<p align="center">
+  <img src="assets/workflow/safeguards-animated.gif" width="650" alt="PULSE Safeguards" />
+</p>
+
+---
+
+## 🎬 Extension Features
 
 ### ⏱️ Always-On Status Bar Timer
 
@@ -71,6 +97,56 @@ pulse init --mcp    # Initialize with Cursor integration
 ---
 
 **If Pulse helps your workflow, please ⭐ Star the Repository.**
+
+---
+
+## 💻 CLI Commands
+
+### `pulse status` – Check Project State
+
+<p align="center">
+  <img src="assets/cli/pulse-status.gif" width="650" alt="pulse status" />
+</p>
+
+---
+
+### `pulse doctor` – Scan for Red Flags
+
+<p align="center">
+  <img src="assets/cli/pulse-doctor.gif" width="650" alt="pulse doctor" />
+</p>
+
+---
+
+### `pulse doctor` – Warning Example
+
+<p align="center">
+  <img src="assets/cli/pulse-doctor-warning.gif" width="650" alt="pulse doctor warning" />
+</p>
+
+---
+
+### `pulse run` – Start New Feature
+
+<p align="center">
+  <img src="assets/cli/pulse-run.gif" width="650" alt="pulse run" />
+</p>
+
+---
+
+### `pulse checkpoint` – Save Progress
+
+<p align="center">
+  <img src="assets/cli/pulse-checkpoint.gif" width="650" alt="pulse checkpoint" />
+</p>
+
+---
+
+### `pulse doctor --loop` – Detect Fix-Loops
+
+<p align="center">
+  <img src="assets/cli/pulse-loop.gif" width="650" alt="pulse loop detection" />
+</p>
 
 ---
 
@@ -147,6 +223,42 @@ The AI agent automatically calls PULSE tools during your conversation. Here's wh
 - **Save solutions** – After fixing tricky bugs
 - **Auto-updates rules** – Future sessions remember
 - **Project knowledge base** – Gets smarter over time
+
+---
+
+### 🚀 Run (Start New Feature)
+
+<p align="center">
+  <img src="assets/mcp/mcp-run-start.png" width="700" alt="pulse_run" />
+</p>
+
+- **Branch creation** – Auto-creates feature branch
+- **Work order** – Generates structured prompt
+- **Profile activation** – Applies right safeguards
+
+---
+
+### ✅ Review (Pre-Merge Check)
+
+<p align="center">
+  <img src="assets/mcp/mcp-review.png" width="700" alt="pulse_review" />
+</p>
+
+- **Quality checklist** – Automated pre-merge review
+- **Scope validation** – Files, lines, tests
+- **Clear recommendation** – Approve / Review / Block
+
+---
+
+### 🔄 Correct (Course Correction)
+
+<p align="center">
+  <img src="assets/mcp/mcp-correct.png" width="700" alt="pulse_correct" />
+</p>
+
+- **Direction change** – When requirements shift
+- **Safety checkpoint** – Saves before correction
+- **Clear path forward** – New implementation plan
 
 ---
 
@@ -305,6 +417,12 @@ When using Cursor with `--mcp`, the agent automatically calls:
 | File-Churn | Same file changed 5+ times |
 | Pendulum | Similar commit messages repeating |
 | Fix-No-Test | Fix commits without test changes |
+
+### Red Flags Overview
+
+<p align="center">
+  <img src="assets/diagrams/red-flags.png" width="600" alt="PULSE Doctor Red Flags" />
+</p>
 
 ---
 
