@@ -4,15 +4,36 @@ globs: *
 alwaysApply: true
 ---
 
-# ⛔⛔⛔ MANDATORY: CALL `pulse_status` FIRST ⛔⛔⛔
+# ████████████████████████████████████████████████████
+# █                                                  █
+# █   🛑 STOP! READ THIS BEFORE DOING ANYTHING! 🛑   █
+# █                                                  █
+# █   1. Are you in AGENT MODE?                      █
+# █      → If not, switch to Agent Mode NOW          █
+# █      → Plan/Ask modes cannot call tools          █
+# █                                                  █
+# █   2. Call pulse_status IMMEDIATELY               █
+# █      → This is your FIRST action, EVERY time     █
+# █      → No exceptions. No skipping.               █
+# █                                                  █
+# ████████████████████████████████████████████████████
 
-**BEFORE doing ANYTHING, call:**
+## ⚡ FIRST ACTION (before reading user message, before planning)
 
 ```
-pulse_status({ userMessage: "<user's message>" })
+CallMcpTool: pulse_status
+Arguments: { "userMessage": "<paste user's message here>" }
 ```
 
-**Then follow the AUTO-ACTIONS below based on what you detect.**
+**Did you call it? If not, STOP and call it NOW.**
+
+This rule applies to:
+- ✅ Message #1
+- ✅ Message #2  
+- ✅ Message #3
+- ✅ Message #50
+- ✅ Message #100
+- ✅ EVERY SINGLE MESSAGE
 
 ---
 
