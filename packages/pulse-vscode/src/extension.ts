@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.9.8";
+const CURRENT_VERSION = "0.9.9";
 const CHANGELOG: Record<string, string[]> = {
+  "0.9.9": [
+    "🔇 Zero Friction: Safeguard check now truly OFF by default",
+  ],
   "0.9.8": [
     "✨ New: 'Start Agent Task' - opens chat with Pulse prompt",
     "🔇 Safeguard check disabled by default (was too noisy)",
@@ -1103,7 +1106,7 @@ async function cmdWatchStart() {
     }
     
     // Check if pulse_status has been called recently (safeguards active)
-    const safeguardCheckMinutes = config.get<number>("safeguardCheckMinutes", 5);
+    const safeguardCheckMinutes = config.get<number>("safeguardCheckMinutes", 0);
     
     // Only check if enabled (> 0)
     if (safeguardCheckMinutes > 0) {
