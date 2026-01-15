@@ -10,7 +10,7 @@ import * as path from "path";
 export function registerCheckpointTool() {
   return {
     name: "pulse_checkpoint",
-    description: "Create Git checkpoint WITH COMMIT: Logs status, commits all changes, detects red flags. ALWAYS provide a summary!",
+    description: "Create Git checkpoint WITH COMMIT. Stages all changes, commits with summary, resets timer. ALWAYS provide summary - DO NOT set skipCommit!",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -24,7 +24,8 @@ export function registerCheckpointTool() {
         },
         skipCommit: {
           type: "boolean",
-          description: "Skip the automatic commit (only create log, not recommended)",
+          description: "DEPRECATED - DO NOT USE. Always commits. Only for edge cases.",
+          default: false,
         },
       },
       required: ["summary"],

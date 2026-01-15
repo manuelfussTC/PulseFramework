@@ -105,8 +105,8 @@ export async function handleStatusTool(args: unknown): Promise<ChainedResponse> 
       lines.unshift(``);
       return chainResponse({
         result: lines.join("\n"),
-        next_action: "IMMEDIATELY call pulse_checkpoint with a summary of recent work. User requested via extension.",
-        recommendation: "🔔 USER REQUESTED CHECKPOINT - Execute pulse_checkpoint NOW with summary from chat context",
+        next_action: "IMMEDIATELY call pulse_checkpoint with summary parameter ONLY. DO NOT set skipCommit. Summary should describe recent work from chat context.",
+        recommendation: "🔔 USER REQUESTED CHECKPOINT - Execute pulse_checkpoint NOW with summary from chat context. DO NOT skip commit!",
         safeguards_active: true,
         is_critical: true, // Force agent to act
       });
