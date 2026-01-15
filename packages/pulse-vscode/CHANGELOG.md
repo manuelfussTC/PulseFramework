@@ -2,6 +2,98 @@
 
 All notable changes to the **Pulse Framework** VS Code/Cursor extension.
 
+## [0.10.2] - 2026-01-15
+
+### Fixed
+- 🐛 **Smart Checkpoint timer reset** - Timer now reliably resets when agent creates checkpoint via MCP
+  - Added polling fallback because VS Code FileSystemWatcher is unreliable for external process writes
+  - Polls state.json and last-checkpoint files for up to 60 seconds after requesting smart checkpoint
+
+---
+
+## [0.10.1] - 2026-01-15
+
+### Fixed
+- 🐛 **Timer resets when agent creates checkpoint via MCP** - FileSystemWatcher on last-checkpoint file
+
+---
+
+## [0.10.0] - 2026-01-14
+
+### Added
+- 🔇 **Removed safeguard inactive spam** - No more notifications when safeguards are inactive
+- ✨ **Smart reminder** - Only shows checkpoint reminder if you have uncommitted changes
+- ✨ **Snooze 1h button** - Pause reminders for an hour
+- ✨ **Stop Watcher button** - Turn off reminders completely from the notification
+
+---
+
+## [0.9.9] - 2026-01-14
+
+### Fixed
+- 🔇 **Zero Friction** - Safeguard check now truly OFF by default
+
+---
+
+## [0.9.8] - 2026-01-14
+
+### Added
+- ✨ **Start Agent Task** - Opens chat with Pulse prompt for starting tasks with safeguards
+
+### Changed
+- 🔇 **Safeguard check disabled by default** - Was too noisy for some workflows
+
+---
+
+## [0.9.7] - 2026-01-14
+
+### Fixed
+- ✨ **Better safeguard warning** - Now shows 'How to Fix' instructions
+
+---
+
+## [0.9.6] - 2026-01-14
+
+### Fixed
+- 🐛 **Setup button always shows** - For uninitialized projects, regardless of settings
+
+---
+
+## [0.9.5] - 2026-01-14
+
+### Added
+- ✨ **Safeguard activity monitor** - Reminds if pulse_status hasn't been called recently
+
+---
+
+## [0.9.4] - 2026-01-13
+
+### Added
+- ✨ **Zero-friction Smart Checkpoint** - Agent auto-executes on next message
+
+---
+
+## [0.9.3] - 2026-01-13
+
+### Added
+- ✨ **Smart Checkpoint** - Agent creates commit message from chat context
+
+---
+
+## [0.9.2] - 2026-01-13
+
+### Fixed
+- 🐛 **Reminder spam** - Now only notifies every 30 min, not every minute
+
+---
+
+## [0.9.1] - 2026-01-13
+
+### Fixed
+- 🐛 **CLI flag** - Fixed --profile → --preset for CLI compatibility
+
+---
+
 ## [0.9.0] - 2026-01-13
 
 ### Added

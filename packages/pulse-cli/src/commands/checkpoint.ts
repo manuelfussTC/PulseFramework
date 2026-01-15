@@ -117,15 +117,26 @@ export function registerCheckpointCommand(program: Command): void {
           }
         }
 
-        // Optional commit (staged only)
+        // Optional commit (auto-stage all changes)
         if (opts.message) {
-          // eslint-disable-next-line no-console
-          console.log(`\nCreating commit: ${opts.message}`);
-          const res = await exec("git", ["commit", "-m", opts.message], { cwd: repoRoot });
-          if (res.exitCode !== 0) {
+          // Stage all changes first
+          await exec("git", ["add", "-A"], { cwd: repoRoot });
+          
+          // Check if there's anything to commit
+          const statusCheck = await exec("git", ["diff", "--cached", "--quiet"], { cwd: repoRoot });
+          if (statusCheck.exitCode !== 0) {
+            // There are staged changes, commit them
             // eslint-disable-next-line no-console
-            console.error(res.stderr || res.stdout);
-            process.exit(res.exitCode);
+            console.log(`\nCreating commit: ${opts.message}`);
+            const res = await exec("git", ["commit", "-m", opts.message], { cwd: repoRoot });
+            if (res.exitCode !== 0) {
+              // eslint-disable-next-line no-console
+              console.error(res.stderr || res.stdout);
+              // Don't exit - still update state
+            }
+          } else {
+            // eslint-disable-next-line no-console
+            console.log(`\n(No changes to commit)`);
           }
         }
 

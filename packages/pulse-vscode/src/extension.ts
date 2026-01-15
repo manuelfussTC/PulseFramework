@@ -7,8 +7,11 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.10.1";
+const CURRENT_VERSION = "0.10.2";
 const CHANGELOG: Record<string, string[]> = {
+  "0.10.2": [
+    "🐛 Fixed: Smart checkpoint now reliably resets timer (polling fallback)",
+  ],
   "0.10.1": [
     "🐛 Fixed: Timer resets when agent creates checkpoint via MCP",
   ],
@@ -1018,11 +1021,20 @@ async function cmdCheckpoint() {
   if (option.value === "smart") {
     const triggerPath = path.join(workspaceRoot, ".pulse", "checkpoint-requested");
     const pulseDir = path.join(workspaceRoot, ".pulse");
+    const statePath = path.join(pulseDir, "state.json");
     
     // Ensure .pulse directory exists
     if (!fs.existsSync(pulseDir)) {
       fs.mkdirSync(pulseDir, { recursive: true });
     }
+    
+    // Remember current state.json mtime for polling
+    let lastStateMtime = 0;
+    try {
+      if (fs.existsSync(statePath)) {
+        lastStateMtime = fs.statSync(statePath).mtimeMs;
+      }
+    } catch { /* ignore */ }
     
     // Write trigger file with timestamp
     fs.writeFileSync(triggerPath, JSON.stringify({
@@ -1033,6 +1045,45 @@ async function cmdCheckpoint() {
     vscode.window.showInformationMessage(
       "✨ Checkpoint requested! Agent will create commit on next message."
     );
+    
+    // Poll for state.json changes (FileSystemWatcher is unreliable for external processes)
+    let pollCount = 0;
+    const maxPolls = 60; // Poll for up to 60 seconds
+    const pollInterval = setInterval(() => {
+      pollCount++;
+      
+      try {
+        // Check if state.json was updated
+        if (fs.existsSync(statePath)) {
+          const currentMtime = fs.statSync(statePath).mtimeMs;
+          if (currentMtime > lastStateMtime) {
+            // State was updated - reload and reset timer
+            loadLastCheckpointTime(workspaceRoot);
+            clearInterval(pollInterval);
+            return;
+          }
+        }
+        
+        // Also check if last-checkpoint file was created/updated recently
+        const lastCheckpointPath = path.join(pulseDir, "last-checkpoint");
+        if (fs.existsSync(lastCheckpointPath)) {
+          const checkpointMtime = fs.statSync(lastCheckpointPath).mtimeMs;
+          // If updated in the last 2 seconds, treat as new checkpoint
+          if (Date.now() - checkpointMtime < 2000) {
+            lastCheckpointAt = new Date();
+            updateStatusBar();
+            clearInterval(pollInterval);
+            return;
+          }
+        }
+      } catch { /* ignore errors */ }
+      
+      // Stop polling after max attempts
+      if (pollCount >= maxPolls) {
+        clearInterval(pollInterval);
+      }
+    }, 1000);
+    
     return;
   }
 
