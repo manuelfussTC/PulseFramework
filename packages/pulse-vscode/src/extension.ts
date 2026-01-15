@@ -7,10 +7,13 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Version & Changelog
-const CURRENT_VERSION = "0.10.3";
+const CURRENT_VERSION = "0.10.4";
 const CHANGELOG: Record<string, string[]> = {
-  "0.10.3": [
+  "0.10.4": [
     "🐛 Fixed: Smart checkpoint polling interval leak on rapid clicks",
+    "🐛 Fixed: Smart checkpoint baseline comparison for accurate detection",
+  ],
+  "0.10.3": [
     "🐛 Fixed: Smart checkpoint now reliably resets timer (polling fallback)",
   ],
   "0.10.1": [
